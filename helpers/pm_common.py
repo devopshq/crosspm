@@ -26,45 +26,18 @@ CMAKEPM_ERRORCODES = (
     CMAKEPM_ERRORCODE_NO_FILES_TO_PACK,
     CMAKEPM_ERRORCODE_SERVER_CONNECT_ERROR,
     CMAKEPM_ERRORCODE_PACKAGE_NOT_FOUND,
+    CMAKEPM_ERRORCODE_PACKAGE_BRANCH_NOT_FOUND,
+    CMAKEPM_ERRORCODE_VERSION_PATTERN_NOT_MATCH,
     CMAKEPM_ERRORCODE_UNKNOWN_OUTTYPE,
     CMAKEPM_ERRORCODE_FILE_IO,
     CMAKEPM_ERRORCODE_WRONGARGS,
     CMAKEPM_ERRORCODE_CONFIG_NOT_DEFINED,
     CMAKEPM_ERRORCODE_CONFIG_NOT_EXIST,
     CMAKEPM_ERRORCODE_CONFIG_IO_ERROR,
-) = range( 13 )
+) = range( 15 )
 
 OPT_SOURCES = []
 
-class OptDict:
-    def __init__(self, parser_args, optparse=False, optparse_args=None, optparse_args_names=None):
-
-        entries = {}
-
-        if optparse:
-            # parser_args came from optparse
-
-            for item in dir( parser_args ):
-                if item not in ( 'ensure_value', 'read_file', 'read_module', ):
-                    entries[ item ] = parser_args.__getattribute__( item )
-
-            if optparse_args:
-
-                n = len( optparse_args )
-                for i, item in enumerate( optparse_args_names ):
-
-                    entries[ item ] = optparse_args[ i ]  if n > i-1  else ''
-
-        else:
-            # parser_args came from argparse
-
-            for item in dir( parser_args ):
-                entries[ item ] = parser_args.__getattribute__( item )
-
-        self.__dict__.update( entries )
-
-    #def __repr__(self):
-    #    return '<%s>' % str('\n '.join('%s : %s' % (k, repr(v)) for (k, v) in self.__dict.iteritems()))
 
 def warning(*args, **kwargs):
 
@@ -188,9 +161,9 @@ def extractArchive(archive_name, dst_dir_path):
 # - file "cmakepm.config" located at working dir
 # - file "cmakepm.config" located at cmakepm source dir
 
-def __readConfig(filepath=None):
+def read_config(filepath=None):
 
-    result = ''
+    result = {}
 
     if filepath is None:
 
@@ -218,7 +191,7 @@ def __readConfig(filepath=None):
 
         else:
 
-            warning( 'Error: config file was not defined. Cheched path: \n\t[{}]\n\t[{}]'.format(
+            warning( 'Error: config file not defined. Checked paths: \n\t[{}]\n\t[{}]'.format(
                 local_config_path,
                 default_config_path,
             ))
@@ -236,9 +209,11 @@ def __readConfig(filepath=None):
 
     try:
         
-        f       = open( filepath )
-        result  = f.read()
+        f      = open( filepath )
+        result = json.loads( f.read() )
         f.close()
+
+        
 
     except Exception as e:
 
@@ -252,22 +227,30 @@ def __readConfig(filepath=None):
 
     return result
 
-def load_config(filepath=None):
+def parse_config(data):
 
-    global OPT_SOURCES
+    result = {
+        'sources': [],
+    }
 
-    json_data_str = __readConfig( filepath )
-    json_obj      = json.loads( json_data_str )
-
-    for item_str in json_obj[ 'sources' ]:
+    for item_str in data[ 'sources' ]:
         
         item_list = item_str.split()
 
-        OPT_SOURCES.append({
+        result[ 'sources' ].append({
             'connector_type': item_list[ 0 ],
             'server_url':     item_list[ 1 ],
             'repos':          [ x.strip() for x in item_list[ 2 ].split( ',' ) ],
             'auth_type':      item_list[ 3 ],
             'auth':           ( item_list[ 4 ], item_list[ 5 ], ),
         })
-        
+
+    return result
+
+def load_config(filepath=None):
+
+    config_data = read_config( filepath )
+    config_dict = parse_config( config_data )
+
+    OPT_SOURCES.extend( config_dict[ 'sources' ] )
+    

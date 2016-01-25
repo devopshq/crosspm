@@ -3,14 +3,18 @@
 
 import sys
 
-from helpers import pm_common
+import cpm
+
 
 def main():
+
+    sys.stderr.write('\n\nWARNING! Calling "pm_pack.py <args>" is DEPRECATED!\n\tUse "cmp.py pack <args>" instead!\n\n')
+    sys.stderr.flush()
     
-    pm_common.createArchive(
-        sys.argv[ 1 ],  # archive_name
-        sys.argv[ 2 ],  # src_dir_path
-    )
+    sys.argv.insert( 1, 'pack' )
+
+    cpm.main()
     
+
 if __name__ == '__main__':
     main()

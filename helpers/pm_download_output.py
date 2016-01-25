@@ -87,12 +87,11 @@ def _output_type_json(out_format, out_filepath, out_prefix, packages):
 
 def _get_var_name(out_prefix, package):
 
-    result = '{}{}_ROOT'.format( out_prefix.upper(), package.upper() )
+    result = '{}{}_ROOT'.format( out_prefix, package )
 
+    result = result.upper()
     result = result.replace( '-', '_' )
-
-    # remove unused symbols
-    result = re.sub( r'[^a-zA-Z_]', '', result )
+    result = re.sub( r'[^A-Z_0-9]', '', result )
 
     if not result[ 0 ].isalpha()  or '_' == result[ 0 ]:
 
