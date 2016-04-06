@@ -79,6 +79,12 @@ def make_parser_download( subparsers ):
         help='path to configuration file',
     )
 
+    group_general.add_argument( '--depslock-path',
+        metavar='FILE',
+        default=pm_common.CMAKEPM_DEPENDENCYLOCK_FILENAME,
+        help='path to file with locked dependencies (default: ./%(default)s)'
+    )
+
     group_output = parser.add_argument_group( 'output arguments' )
 
     group_output.add_argument( '--out-format',
@@ -177,12 +183,13 @@ def check_args_cmd_pack(args):
 def cmd_download(args):
 
     cpm_downloader = api.CrosspmDownloader({
-        'osname':     args.osname,
-        'arch':       args.arch,
-        'compiler':   args.compiler,
-        'out_format': args.out_format,
-        'output':     args.output,
-        'out_prefix': args.out_prefix,
+        'osname':        args.osname,
+        'arch':          args.arch,
+        'compiler':      args.compiler,
+        'out_format':    args.out_format,
+        'output':        args.output,
+        'out_prefix':    args.out_prefix,
+        'depslock_path': args.depslock_path,
     })
 
     cpm_downloader.set_config_from_file( args.config )

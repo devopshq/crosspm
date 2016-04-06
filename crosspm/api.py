@@ -38,13 +38,16 @@ class CrosspmDownloader:
 
     def __init__(self, options_dict):
 
-        self.__config            = None
-        self.__option_osname     = options_dict[ 'osname'     ]
-        self.__option_arch       = options_dict[ 'arch'       ]
-        self.__option_compiler   = options_dict[ 'compiler'   ]
-        self.__option_out_format = options_dict[ 'out_format' ]
-        self.__option_output     = options_dict[ 'output'     ]
-        self.__option_out_prefix = options_dict[ 'out_prefix' ]
+        self.__config               = None
+        self.__option_osname        = options_dict[ 'osname'        ]
+        self.__option_arch          = options_dict[ 'arch'          ]
+        self.__option_compiler      = options_dict[ 'compiler'      ]
+        self.__option_out_format    = options_dict[ 'out_format'    ]
+        self.__option_output        = options_dict[ 'output'        ]
+        self.__option_out_prefix    = options_dict[ 'out_prefix'    ]
+        self.__option_depslock_path = options_dict[ 'depslock_path' ]
+
+        self.__option_depslock_path = os.path.realpath( self.__option_depslock_path )
 
     def set_config(self, data):
 
@@ -223,14 +226,23 @@ class CrosspmDownloader:
 
         return not len( errors )
 
+    def get_packages(self, depslock_filepath=None):
 
+        if depslock_filepath is None:
+            
+            depslock_filepath = self.__option_depslock_path
 
-    def get_packages(self):
-
-        pm_common.warning( 'Reading {} ...'.format( pm_common.CMAKEPM_DEPENDENCYLOCK_FILENAME ) )
+        pm_common.warning( 'Reading dependencies ... [{}]'.format( depslock_filepath ))
 
         package_list = []
-        self.get_packages_inner( self.__option_osname, self.__option_arch, self.__option_compiler, os.getcwd(), [], package_list )
+        self.get_packages_inner(
+            depslock_filepath,
+            self.__option_osname,
+            self.__option_arch,
+            self.__option_compiler,            
+            [],
+            package_list,
+        )
 
         pm_common.warning( 'Check dependencies ...' )
 
@@ -255,9 +267,9 @@ class CrosspmDownloader:
         pm_common.warning( 'Done!' )
 
 
-    def get_packages_inner(self, osname, arch, compiler, current_path, root_package, result):
+    def get_packages_inner(self, depslock_filepath, osname, arch, compiler, root_package, result):
 
-        packages = pm_common.getDependencies( os.path.join( current_path, pm_common.CMAKEPM_DEPENDENCYLOCK_FILENAME ) )
+        packages = pm_common.getDependencies( depslock_filepath )
         root     = pm_common.get_cmakepm_root()
 
         root_packages = os.path.join(root, 'cache')
@@ -317,6 +329,7 @@ class CrosspmDownloader:
                 archived_package_tmp      = '{archived_package}_tmp'.format(**locals())
                 extracted_package         = '{root_packages}/{lib_rel_path}'.format(**locals())
                 extracted_package         = extracted_package.replace( '\\', '/' )
+                package_depslock_filepath = os.path.join( extracted_package, pm_common.CMAKEPM_DEPENDENCYLOCK_FILENAME )
                 package_short_url         = '{lib_rel_path}/{package}.{version}.tar.gz'.format(**locals())
                 package_full_url          = self.join_package_path( current_source[ 'server_url' ], current_repo, package_short_url )
 
@@ -378,11 +391,13 @@ class CrosspmDownloader:
                 ])
 
                 # recursive download dependencies
-                if( os.path.exists( os.path.join( extracted_package, pm_common.CMAKEPM_DEPENDENCYLOCK_FILENAME ) ) ):
+                
+
+                if( os.path.exists( package_depslock_filepath )):
                     pm_common.warning( 'Search dependencies for package [{package}] ...'.format(**locals()) )
 
                     root_package.append( package_name )
-                    self.get_packages_inner( osname, arch, compiler, extracted_package, root_package, result )
+                    self.get_packages_inner( package_depslock_filepath, osname, arch, compiler, root_package, result )
                     root_package.pop()
 
                     pm_common.warning( 'Dependencies for package [{package}] done!'.format(**locals()) )
