@@ -28,19 +28,31 @@
 import sys
 import argparse
 
+import crosspm
 import crosspm.api as api
 from crosspm.helpers import pm_common
 from crosspm.helpers import pm_download_output
 
+
 def make_parser():
 
     # create the top-level parser
-    parser = argparse.ArgumentParser(prog='PROG')
+    parser = argparse.ArgumentParser(
+        prog='PROG',
+        description="CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)".format(
+            version=crosspm.__version__,
+        ),
+        epilog="Copyright (c) 2016 Iaroslav Akimov <iaroslavscript@gmail.com> site: https://github.com/devopshq/crosspm"
+    )
 
-    #parser.add_argument('--foo', action='store_true', help='foo help')
+    parser.add_argument( '--version',
+        action='version',
+        version=crosspm.__version__,
+    )
+
     subparsers = parser.add_subparsers(help='sub-command help')
 
-    # create the parser for the "a" command
+    # create the parser for the subcommands
     make_parser_download( subparsers )
     make_parser_promote( subparsers )
     make_parser_pack( subparsers )
