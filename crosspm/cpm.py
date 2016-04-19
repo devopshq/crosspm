@@ -214,6 +214,11 @@ def main():
     parser = make_parser()
     args   = parser.parse_args()
 
+    if not vars( args ):
+        # no args were passed
+        parser.print_help()
+        sys.exit( pm_common.CMAKEPM_ERRORCODE_WRONGARGS )
+
     args.check_args( args )
     args.call_cmd( args )
 
