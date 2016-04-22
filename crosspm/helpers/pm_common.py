@@ -93,9 +93,6 @@ def getPackageParams(i, line):
         warning( 'Error: wrong syntax at line {}. File: [{}]'.format( i, filepath ) )
         sys.exit( CMAKEPM_ERRORCODE_WRONGSYNTAX )
 
-    if parts[ 1 ] == '*':
-        parts[ 1 ] = '*.*.*.*'
-
     name    = parts[ 0 ]
     version = tuple( parts[ 1 ].split( '.' ) )
     branch  = parts[ 2 ] if n == 3 else 'master'

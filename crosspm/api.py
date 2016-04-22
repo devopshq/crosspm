@@ -26,6 +26,7 @@
 import sys
 import os
 import collections
+import fnmatch
 
 from crosspm.helpers import pm_common
 from crosspm.helpers import pm_download_output
@@ -534,15 +535,7 @@ class CrosspmPromoter:
 
             libs = data_tree[ d_name ][ d_branch ]
 
-
-            def version_filter_fn( v ):
-
-                lambda_f = lambda pair: pair[0] == '*' or int(pair[0]) == pair[1]
-
-                return all( map( lambda_f, zip( d_version, v[ 1 ] )))
-
-
-            versions = list( filter( version_filter_fn, libs ))
+            versions = [v for v in libs if fnmatch.fnmatch(v[0], '.'.join(d_version))]
 
             if not versions:
 
