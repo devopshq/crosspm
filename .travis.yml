@@ -3,15 +3,19 @@ language: python
 python: "3.5"
 install: true
 before_script:
-  - export AA="111"
-  - printenv
+  - apt-get install -y tree
+  - export BUILD_DIR="$(pwd)/build"
+  - export VERSION_TAG="$TRAVIS_BUILD_NUMBER-feature-issue_26"
 script:
-  - export BB="222"
+  - echo "--- BUILD ---"
   - printenv
+  - mkdir -p "$BUILD_DIR"
+  - python setup.py egg_info --tag-build="$VERSION_TAG" sdist --dist-dir "$BUILD_DIR" bdist_wheel --dist-dir "$BUILD_DIR"
+  - tree -a
+  - python setup.py test
+  - tree -a
 after_success:
-  - export CC="333"
   - printenv
 after_failure:
-  - export DD="444"
   - printenv
 
