@@ -58,6 +58,13 @@ setup(
         'crosspm',
         'crosspm.helpers',
     ],
+    setup_requires=[
+        'pytest-runner',
+        'wheel',
+    ],
+    tests_require=[
+        'pytest',
+    ],
     install_requires=[
         'requests',
     ],
