@@ -1,0 +1,17 @@
+# https://travis-ci.org/devopshq/crosspm
+language: python
+python: "3.5"
+install: true
+before_script:
+  - export AA="111"
+  - printenv
+script:
+  - export BB="222"
+  - printenv
+after_success:
+  - export CC="333"
+  - printenv
+after_failure:
+  - export DD="444"
+  - printenv
+
