@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # The MIT License (MIT)
 # 
@@ -24,7 +24,59 @@
 
 
 set -e
-set -x
+#set -x
+
+
+. "scripts/common.sh"
+
+export DEVOPS_BUILD_BRANCH="$TRAVIS_BRANCH"
+export DEVOPS_BUILD_PULL_REQUEST_NUMBER="$TRAVIS_PULL_REQUEST"
+export DEVOPS_BUILD_NUMBER="$TRAVIS_BUILD_NUMBER"
+
+export DEVOPS_BUILD_RELEASE=false
+export DEVOPS_BUILD_DEVELOP=false
+export DEVOPS_BUILD_CI_INFO=false
+export DEVOPS_BUILD_MERGE=false
+
+read -r DEVOPS_BUILD_RELEASE DEVOPS_BUILD_DEVELOP DEVOPS_BUILD_CI_INFO DEVOPS_BUILD_MERGE <<< $(parse_branch $DEVOPS_BUILD_BRANCH $DEVOPS_BUILD_PULL_REQUEST_NUMBER)
+
+
+if {bool "$DEVOPS_BUILD_MERGE"} || {! bool "$DEVOPS_BUILD_CI_INFO"}; then
+
+    echo "need check build status link at README"
+fi
+
+if bool "$DEVOPS_BUILD_DEVELOP"; then
+
+    echo "need update __version__"
+
+    version_append_build_number "crosspm/__init__.py" "${DEVOPS_BUILD_NUMBER}"
+fi
+
+if ! bool "$DEVOPS_BUILD_CI_INFO"; then
+
+    echo "need check tag is not exists"
+    echo "need pypi upload"
+    echo "need git tag"
+fi
+
+# ----------- build -------------------
+rm -rf "$BUILD_DIR"
+mkdir -p "$BUILD_DIR"
+
+python3 setup.py egg_info sdist --dist-dir "$BUILD_DIR" bdist_wheel --dist-dir "$BUILD_DIR"
+
+# ----------- tests -------------------
+python3 setup.py test
+
+error "ERROR: not implemented"
+
+
+#r'release[/\](?P<major>\d+)\.(?P<minor>\d+)(?P<patch>\.\d+)?'
+
+
+
+
 
 #MIN CODE FOR LOCAL BUILD:
 #
@@ -49,10 +101,11 @@ PACKAGE_NAME="crosspm"
 VERSION_TAG=".${DEVOPS_BUILD_NUMBER}${DEVOPS_BUILD_SUFFIX}"
 VERSION_TAG=${VERSION_TAG//-/_}
 
-rm -rf build
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-. /home/user/venv/bin/activate
+#. /home/user/venv/bin/activate
+
 
 python setup.py egg_info --tag-build="$VERSION_TAG" sdist --dist-dir "$BUILD_DIR" bdist_wheel --dist-dir "$BUILD_DIR"
 
