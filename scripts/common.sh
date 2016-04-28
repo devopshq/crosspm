@@ -96,15 +96,22 @@ function version_append_build_number() {
     sed -i "s/^__version__\s*=\s*[\'\"]\(.\+\)[\'\"]/__version__ = \'\1.${BUILD_NU}\'/" $FILENAME
 }
 
-function test_travis_build_status_link() {
+function get_url_travis_build_status() {
 
-    local BUILD_STATUS_LINK="https://travis-ci.org/devopshq/crosspm.svg?branch="
-    local BRANCH_URLENCODE=$(python3 -c "import urllib.parse; print(urllib.parse.quote_plus('$TRAVIS_BRANCH'))")
-
-    cat README.rst | grep -q "${BUILD_STATUS_LINK}${BRANCH_URLENCODE}\$"
+    local BRANCH_NAME="$1"
+    local BRANCH_URLENCODE=$(python3 -c "import urllib.parse; print(urllib.parse.quote_plus('$BRANCH_NAME'))")
+    
+    echo "https://travis-ci.org/devopshq/crosspm.svg?branch=${BRANCH_URLENCODE}"
 }
 
-function test_tag_not_exists() {
+
+function git_tag_exists() {
+
+    local TAG_VALUE="$1"
+    [ "$(git tag -l ${TAG_VALUE})" ] && return 0 || return 1
+}
+
+function check_git_tag_exists() {
 
     local TAG_VALUE="$1"
     [ "$(git tag -l ${TAG_VALUE})" ] && error "ERROR: git tag '${TAG_VALUE}' already exists"

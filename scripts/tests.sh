@@ -22,9 +22,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-. assert.sh --verbose
+DEVOPS_CHECKOUT_DIR="$(dirname "$(dirname "$(readlink --canonicalize --no-newline "${BASH_SOURCE:-$0}")")")"
 
-. common.sh
+cd "$DEVOPS_CHECKOUT_DIR"
+
+
+. scripts/assert.sh --verbose
+
+. scripts/common.sh
+
 
 assert_raises "bool true" 0
 assert_raises "bool false" 1
@@ -58,6 +64,19 @@ assert "extract_version_from_file $BB 2>&1 | grep -q 'ERROR.*version.*$BB'"
 
 assert "version_append_build_number $AA dev33"
 assert "extract_version_from_file $AA" "1.2.3.dev33"
+
+assert "get_url_travis_build_status feature/issue_18" "https://travis-ci.org/devopshq/crosspm.svg?branch=feature%2Fissue_18"
+
+
+# MOCK
+function git() {
+    # emulate: git tag -l TAG_NAME
+    [ "$3" = "v1.0" ] && echo "v1.0"
+}
+
+assert_raises "git_tag_exists v1.0" 0
+assert_raises "git_tag_exists v1.1" 1
+
 
 # end of test suite
 assert_end "build-on-server.sh"

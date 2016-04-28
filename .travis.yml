@@ -31,8 +31,5 @@ before_script:
 script:
   - printenv
   - ./scripts/build-on-server.sh
-after_success:
-  - printenv
-after_failure:
-  - printenv
+
 

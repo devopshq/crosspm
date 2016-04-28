@@ -27,106 +27,78 @@ set -e
 #set -x
 
 
+DEVOPS_CHECKOUT_DIR="$(dirname "$(dirname "$(readlink --canonicalize --no-newline "${BASH_SOURCE:-$0}")")")"
+
+echo "DEVOPS_CHECKOUT_DIR=$DEVOPS_CHECKOUT_DIR"
+
+cd "$DEVOPS_CHECKOUT_DIR"
+
+echo "pwd=$(pwd)"
+
+
 . "scripts/common.sh"
 
-export DEVOPS_BUILD_BRANCH="$TRAVIS_BRANCH"
-export DEVOPS_BUILD_PULL_REQUEST_NUMBER="$TRAVIS_PULL_REQUEST"
-export DEVOPS_BUILD_NUMBER="$TRAVIS_BUILD_NUMBER"
 
-export DEVOPS_BUILD_RELEASE=false
-export DEVOPS_BUILD_DEVELOP=false
-export DEVOPS_BUILD_CI_INFO=false
-export DEVOPS_BUILD_MERGE=false
+TRAVIS_BRANCH="develop" #"feature/issue_26"
+TRAVIS_PULL_REQUEST="false"
+TRAVIS_BUILD_NUMBER="34"
+
+DEVOPS_BUILD_BRANCH="$TRAVIS_BRANCH"
+DEVOPS_BUILD_PULL_REQUEST_NUMBER="$TRAVIS_PULL_REQUEST"
+DEVOPS_BUILD_NUMBER="$TRAVIS_BUILD_NUMBER"
+DEVOPS_BUILD_DIR="$(pwd)/build"
+DEVOPS_BUILD_VERSION_FROM_FILE="$(extract_version_from_file crosspm/__init__.py)"
+DEVOPS_BUILD_VERSION="${DEVOPS_BUILD_VERSION_FROM_FILE}"
+
+DEVOPS_BUILD_RELEASE=false
+DEVOPS_BUILD_DEVELOP=false
+DEVOPS_BUILD_CI_INFO=false
+DEVOPS_BUILD_MERGE=false
 
 read -r DEVOPS_BUILD_RELEASE DEVOPS_BUILD_DEVELOP DEVOPS_BUILD_CI_INFO DEVOPS_BUILD_MERGE <<< $(parse_branch $DEVOPS_BUILD_BRANCH $DEVOPS_BUILD_PULL_REQUEST_NUMBER)
 
 
-if {bool "$DEVOPS_BUILD_MERGE"} || {! bool "$DEVOPS_BUILD_CI_INFO"}; then
+if bool "$DEVOPS_BUILD_MERGE" || ! bool "$DEVOPS_BUILD_CI_INFO"; then
 
-    echo "need check build status link at README"
+    echo "INFO: check README.rst contain correct url to travis build status"
+
+    cat README.rst | grep -q "$(get_url_travis_build_status $DEVOPS_BUILD_BRANCH)\$" || error "ERROR: file README.rst contains incorrect url to travis build status"
 fi
 
 if bool "$DEVOPS_BUILD_DEVELOP"; then
 
-    echo "need update __version__"
+    version_append_build_number "crosspm/__init__.py" "dev${DEVOPS_BUILD_NUMBER}"
 
-    version_append_build_number "crosspm/__init__.py" "${DEVOPS_BUILD_NUMBER}"
+    DEVOPS_BUILD_VERSION="$(extract_version_from_file crosspm/__init__.py)"
+
+    echo "INFO: __version__ changed from '$DEVOPS_BUILD_VERSION_FROM_FILE' to '$DEVOPS_BUILD_VERSION'"
 fi
+
+echo "INFO: building"
+
+rm -rf "$DEVOPS_BUILD_DIR"
+mkdir -p "$DEVOPS_BUILD_DIR"
+
+python3 setup.py egg_info sdist --dist-dir "$DEVOPS_BUILD_DIR" bdist_wheel --dist-dir "$DEVOPS_BUILD_DIR"
+
+echo "INFO: content of build dir"
+ls -l "$DEVOPS_BUILD_DIR"
+
+echo "INFO: testing"
+
+python3 setup.py test
+
 
 if ! bool "$DEVOPS_BUILD_CI_INFO"; then
 
-    echo "need check tag is not exists"
+    echo "INFO: check git tag is not exists"
+
+    DEVOPS_BUILD_GIT_TAG="v${DEVOPS_BUILD_VERSION}"
+
+    git_tag_exists $DEVOPS_BUILD_GIT_TAG && error "ERROR: git tag '${DEVOPS_BUILD_VERSION}' already exists"
+
+    git tag "$DEVOPS_BUILD_GIT_TAG"
+    echo "git push origin $DEVOPS_BUILD_GIT_TAG"
+    
     echo "need pypi upload"
-    echo "need git tag"
 fi
-
-# ----------- build -------------------
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
-
-python3 setup.py egg_info sdist --dist-dir "$BUILD_DIR" bdist_wheel --dist-dir "$BUILD_DIR"
-
-# ----------- tests -------------------
-python3 setup.py test
-
-error "ERROR: not implemented"
-
-
-#r'release[/\](?P<major>\d+)\.(?P<minor>\d+)(?P<patch>\.\d+)?'
-
-
-
-
-
-#MIN CODE FOR LOCAL BUILD:
-#
-# export OutDirectory="/home/user/src/teamcity_output"
-# export DEVOPS_ARTIFACTS_TASKS_FILE="/home/user/src/teamcity_output_package/artifacts_tasks.txt"
-# export DEVOPS_OUT_PACKAGE_DIR="/home/user/src/teamcity_output_package"
-# export DEVOPS_BUILD_NUMBER="1"
-# export DEVOPS_BUILD_SUFFIX="feature-python-package"
-# rm -rf "$OutDirectory"
-# mkdir -p "$OutDirectory"
-# rm -rf "$DEVOPS_OUT_PACKAGE_DIR"
-# mkdir -p "$DEVOPS_OUT_PACKAGE_DIR"
-
-#MIN CODE FOR LOCAL BUILD:
-
-cd "$1"
-
-CURRENT_DIR="$1"
-BUILD_DIR="$CURRENT_DIR/build"
-PYPI_REPO_NAME="devopshq-pypi"
-PACKAGE_NAME="crosspm"
-VERSION_TAG=".${DEVOPS_BUILD_NUMBER}${DEVOPS_BUILD_SUFFIX}"
-VERSION_TAG=${VERSION_TAG//-/_}
-
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
-
-#. /home/user/venv/bin/activate
-
-
-python setup.py egg_info --tag-build="$VERSION_TAG" sdist --dist-dir "$BUILD_DIR" bdist_wheel --dist-dir "$BUILD_DIR"
-
-SDIST_PACKAGE_FILENAME=$(ls -1 ${BUILD_DIR}/${PACKAGE_NAME}-*.tar.gz)
-SDIST_PACKAGE_VERSION=$(sed -n "s/.\+\/${PACKAGE_NAME}-\(.\+\).tar.gz/\1/p" <<< $SDIST_PACKAGE_FILENAME)
-
-BDIST_PACKAGE_FILENAME=$(ls -1 ${BUILD_DIR}/${PACKAGE_NAME}-*.whl)
-BDIST_PACKAGE_VERSION=$(sed -n "s/.\+\/${PACKAGE_NAME}-\(.\+\).whl/\1/p" <<< $BDIST_PACKAGE_FILENAME)
-
-#cp -v $SDIST_PACKAGE_FILENAME $OutDirectory
-#cp -v $BDIST_PACKAGE_FILENAME $OutDirectory
-
-cp -v $SDIST_PACKAGE_FILENAME $DEVOPS_OUT_PACKAGE_DIR
-cp -v $BDIST_PACKAGE_FILENAME $DEVOPS_OUT_PACKAGE_DIR
-
-SDIST_PACKAGE_NAME=$(basename $SDIST_PACKAGE_FILENAME)
-BDIST_PACKAGE_NAME=$(basename $BDIST_PACKAGE_FILENAME)
-
-echo "${SDIST_PACKAGE_NAME};${PYPI_REPO_NAME}/${PACKAGE_NAME}/$SDIST_PACKAGE_VERSION/${SDIST_PACKAGE_NAME}" >> "$DEVOPS_ARTIFACTS_TASKS_FILE"
-# use $SDIST_PACKAGE_VERSION as version here
-echo "${BDIST_PACKAGE_NAME};${PYPI_REPO_NAME}/${PACKAGE_NAME}/$SDIST_PACKAGE_VERSION/${BDIST_PACKAGE_NAME}" >> "$DEVOPS_ARTIFACTS_TASKS_FILE"
-
-echo "upload list:"
-cat "$DEVOPS_ARTIFACTS_TASKS_FILE"
