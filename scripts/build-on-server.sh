@@ -28,20 +28,11 @@ set -e
 
 
 DEVOPS_CHECKOUT_DIR="$(dirname "$(dirname "$(readlink --canonicalize --no-newline "${BASH_SOURCE:-$0}")")")"
-
-echo "DEVOPS_CHECKOUT_DIR=$DEVOPS_CHECKOUT_DIR"
-
 cd "$DEVOPS_CHECKOUT_DIR"
-
-echo "pwd=$(pwd)"
 
 
 . "scripts/common.sh"
 
-
-TRAVIS_BRANCH="develop" #"feature/issue_26"
-TRAVIS_PULL_REQUEST="false"
-TRAVIS_BUILD_NUMBER="34"
 
 DEVOPS_BUILD_BRANCH="$TRAVIS_BRANCH"
 DEVOPS_BUILD_PULL_REQUEST_NUMBER="$TRAVIS_PULL_REQUEST"
