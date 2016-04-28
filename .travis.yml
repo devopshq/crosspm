@@ -31,5 +31,17 @@ before_script:
 script:
   - printenv
   - ./scripts/build-on-server.sh
-
-
+before_deploy:
+  - ls -l build/
+deploy:
+  provider: pypi
+  user: somelogin
+  password: somepasswd
+  server: https://pypi.python.org/pypi
+  distributions: "sdist bdist_wheel"
+  file:
+    - build/*.whl
+    - build/*.tar.gz
+  on:
+    condition: /bin/false
+    tags: true
