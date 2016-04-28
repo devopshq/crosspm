@@ -23,20 +23,24 @@
 # SOFTWARE.
 
 
-set -e
-#set -x
+set -e -v -x
 
 
 DEVOPS_CHECKOUT_DIR="$(dirname "$(dirname "$(readlink --canonicalize --no-newline "${BASH_SOURCE:-$0}")")")"
 cd "$DEVOPS_CHECKOUT_DIR"
 
-
 . "scripts/common.sh"
+
+
+# TODO: check we are under travis
+# TODO: check version has correct syntax
+# TODO: check release branch verssion corelate to __version__
 
 
 DEVOPS_BUILD_BRANCH="$TRAVIS_BRANCH"
 DEVOPS_BUILD_PULL_REQUEST_NUMBER="$TRAVIS_PULL_REQUEST"
 DEVOPS_BUILD_NUMBER="$TRAVIS_BUILD_NUMBER"
+DEVOPS_BUILD_ID="$TRAVIS_BUILD_ID"
 DEVOPS_BUILD_DIR="$(pwd)/build"
 DEVOPS_BUILD_VERSION_FROM_FILE="$(extract_version_from_file crosspm/__init__.py)"
 DEVOPS_BUILD_VERSION="${DEVOPS_BUILD_VERSION_FROM_FILE}"
@@ -51,7 +55,7 @@ read -r DEVOPS_BUILD_RELEASE DEVOPS_BUILD_DEVELOP DEVOPS_BUILD_CI_INFO DEVOPS_BU
 
 if bool "$DEVOPS_BUILD_MERGE" || ! bool "$DEVOPS_BUILD_CI_INFO"; then
 
-    echo "INFO: check README.rst contain correct url to travis build status"
+    echo "INFO:  ======== check README.rst contain correct url to travis build status"
 
     cat README.rst | grep -q "$(get_url_travis_build_status $DEVOPS_BUILD_BRANCH)\$" || error "ERROR: file README.rst contains incorrect url to travis build status"
 fi
@@ -62,34 +66,37 @@ if bool "$DEVOPS_BUILD_DEVELOP"; then
 
     DEVOPS_BUILD_VERSION="$(extract_version_from_file crosspm/__init__.py)"
 
-    echo "INFO: __version__ changed from '$DEVOPS_BUILD_VERSION_FROM_FILE' to '$DEVOPS_BUILD_VERSION'"
+    echo "INFO:  ======== __version__ changed from '$DEVOPS_BUILD_VERSION_FROM_FILE' to '$DEVOPS_BUILD_VERSION'"
 fi
 
-echo "INFO: building"
+echo "INFO: ======== building..."
 
 rm -rf "$DEVOPS_BUILD_DIR"
 mkdir -p "$DEVOPS_BUILD_DIR"
 
 python3 setup.py egg_info sdist --dist-dir "$DEVOPS_BUILD_DIR" bdist_wheel --dist-dir "$DEVOPS_BUILD_DIR"
 
-echo "INFO: content of build dir"
+echo "INFO:  ======== content of build dir"
 ls -l "$DEVOPS_BUILD_DIR"
 
-echo "INFO: testing"
+echo "INFO:  ======== testing..."
 
 python3 setup.py test
 
 
 if ! bool "$DEVOPS_BUILD_CI_INFO"; then
 
-    echo "INFO: check git tag is not exists"
+    echo "INFO: ========  check git tag is not exists"
 
     DEVOPS_BUILD_GIT_TAG="v${DEVOPS_BUILD_VERSION}"
 
-    git_tag_exists $DEVOPS_BUILD_GIT_TAG && error "ERROR: git tag '${DEVOPS_BUILD_VERSION}' already exists"
+    git_tag_exists "$DEVOPS_BUILD_GIT_TAG" && error "ERROR: git tag '${DEVOPS_BUILD_VERSION}' already exists"
 
-    git tag "$DEVOPS_BUILD_GIT_TAG"
-    echo "git push origin $DEVOPS_BUILD_GIT_TAG"
+    git_set_tag "$DEVOPS_BUILD_GIT_TAG" "$DEVOPS_BUILD_ID"
+
+    git_tag_exists "$DEVOPS_BUILD_GIT_TAG" || error "ERROR: git tag was not set"
+
+    git push origin --tags
     
-    echo "need pypi upload"
+    echo "INFO: ======== need pypi upload"
 fi

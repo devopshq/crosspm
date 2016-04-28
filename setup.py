@@ -24,7 +24,6 @@
 # SOFTWARE.
 
 
-#from distutils.core import setup
 from setuptools import setup
 
 import crosspm
@@ -37,6 +36,7 @@ setup(
     author='Iaroslav Akimov',
     author_email='iaroslavscript@gmail.com',
     url='https://github.com/devopshq/crosspm.git',
+    download_url='https://github.com/devopshq/crosspm/tarball/' + crosspm.__version__,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

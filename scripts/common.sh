@@ -104,15 +104,17 @@ function get_url_travis_build_status() {
     echo "https://travis-ci.org/devopshq/crosspm.svg?branch=${BRANCH_URLENCODE}"
 }
 
-
 function git_tag_exists() {
 
     local TAG_VALUE="$1"
-    [ "$(git tag -l ${TAG_VALUE})" ] && return 0 || return 1
+
+    [ "$(git tag -l ${TAG_VALUE})" ]
 }
 
-function check_git_tag_exists() {
+function git_set_tag() {
 
     local TAG_VALUE="$1"
-    [ "$(git tag -l ${TAG_VALUE})" ] && error "ERROR: git tag '${TAG_VALUE}' already exists"
+    local BUILD_ID="$2"
+
+    git tag -a "$TAG_VALUE" -m"build log https://travis-ci.org/devopshq/crosspm/builds/${BUILD_ID}"
 }
