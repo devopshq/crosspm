@@ -96,7 +96,7 @@ if ! bool "$DEVOPS_BUILD_CI_INFO"; then
 
     git_tag_exists "$DEVOPS_BUILD_GIT_TAG" || error "ERROR: git tag was not set"
 
-    git push origin --tags
+    git push --quiet "https://${GH_TOKEN}@github.com/devopshq/crosspm" --tags
     
     echo "INFO: ======== need pypi upload"
 fi
