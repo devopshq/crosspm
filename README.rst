@@ -1,5 +1,5 @@
 # crosspm
 Cross Package Manager
 
-.. image:: https://travis-ci.org/devopshq/crosspm.svg?branch=feature%2Fissue_26
+.. image:: https://travis-ci.org/devopshq/crosspm.svg?branch=develop
   :target: https://travis-ci.org/devopshq/crosspm

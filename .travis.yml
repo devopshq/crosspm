@@ -5,7 +5,7 @@ before_script:
 - "./scripts/tests.sh"
 script:
 - printenv
-- "./scripts/build-on-server.sh"
+- TRAVIS_BRANCH="develop" ./scripts/build-on-server.sh
 before_deploy:
 - ls -l build/
 deploy:
@@ -13,6 +13,7 @@ deploy:
   user: iaroslavscript
   password:
     secure: R1HHgxpiD4B8lJbemyCb4OKuWpSxeuLGmhSNNkdmK5oMNx79fgLs0Yq3LsfFSBS4dsmm6cziUnXpLRcHbyZCHbN2YPNnqo3M4q3K459U9S1pZFqn79sKupJ6hsKki94e8nAxJtZX01YpgY8pEs97vH2xQtnEZLmiJouIA/Fok5K5ko6LmFUQz71m84gHCcSPIB3soXfQnztiqNYhb6vGBLGHiXxa+BekBDKxZLgSIu99k2vIZET2YgJ+/8GLKDP4QnsoefKRik+zZFhtzEHlDBzWzKNzmPxcTn6mwDeTaFRajvJ0NSEGUF0Ty5dhjIf/1nj7KW/mc3QXThZAnFuVDzhelbQm482fzk1MUFJIsl15UPS4TitjsZu18iSix1/gnDs3ntRiTNmlOaYfSMBbKcxNgeHm+F18DOJSUgWuK4FHiUQT66N2lHJflKRHjw9672W9ND7zTz9TSU3BszM4aF6us8x2AFihmVrjgTYDVBg2hbULSBPauCTIPpquOAfZbKA2Sneox/XgXSnZ9QemyFp02tUQT4Y0+AcFOY7uYgVajZeIo1oY89zrr80KS3hDoNcY3wUGGsEod2NUQ4ajkiXCQP0dpTkFMLkzlLVN1cXIBTG9EGJIr7br6sQSK/H5mgiaYcDtvKT3byswQumFfaJ5TBTlUr7Wt+kHSi95DSI=
-  server: https://testpypi.python.org
+  server: https://testpypi.python.org/pypi
   distributions: sdist bdist_wheel
-  all_branches: true
+  on:
+    all_branches: true
