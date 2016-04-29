@@ -1,15 +1,18 @@
 language: python
 python: '3.5'
+before_install:
+  - GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
 install: true
 before_script:
-- "./scripts/tests.sh"
-- git config --global user.email "iaroslavscript@gmail.com"
-- git config --global user.name "iaroslavscript"
+  - "./scripts/tests.sh"
+  - git config --global user.email "iaroslavscript@gmail.com"
+  - git config --global user.name "iaroslavscript"
 script:
-- printenv
-- TRAVIS_BRANCH="develop" ./scripts/build-on-server.sh
+  - printenv
+  - TRAVIS_BRANCH="develop" ./scripts/build-on-server.sh
 before_deploy:
-- ls -l build/
+  - ls -l build/
+  - (. scripts/common.sh; is_flag_need_push_tags) && (GH_TOKEN="$(cat $GH_TOKEN_FILE)" git push --quiet "https://${GH_TOKEN}@github.com/devopshq/crosspm" --tags) || echo "by the way GH_TOKEN=$GH_TOKEN"
 deploy:
   provider: pypi
   user: iaroslavscript
@@ -19,6 +22,9 @@ deploy:
   distributions: sdist bdist_wheel
   on:
     all_branches: true
+after_script:
+  - echo "yes we run after_script"
+  - echo "" > $GH_TOKEN_FILE
 env:
   global:
     secure: wcjGU0eeWMrOwA9CQvqGGqzloTU4x9vgH3K6i1VpSRHcmrZ/GbZgfl++qEudx+TwdHu+0kw8Wr6G3bVel2PD8LSmWPXRErB0rCT5sl/hSmqSGMQw1wh1YpDoJiDddbPt/1BV76Wm8mQC0zPLivxx7Egp2GvXTmakYkIybU4Fl0j2ZBogLtkvLStSKKQKlvzWGga9bp7Yl+At2H3uTi9Vrxd8JvHkmrq1D3/OEr+D8ZW41QnJz+ZQ3ocIwxgrk1B1lKTA52IENAIL58KGzVR37nAPN+MwNSo0KlfEJRy5RkykThuNQ0AQ8mmyYXkuPauwuLSywkIY3NEQ8sk0xnWs6fwBvb4HRs0+swNUkufdaSIETZv4MlBrVvRzTgEcNijco4XzgIMdzUiHg2HaP8zZLsEmUiEyZPniliVJ4fMyYAHPUUp3Q+7zsnYNhg+rbNXiCMxjCGnrD3/gcHHr2fIaKF7VC8gxfz146oTMCPF0sK0sX2Jo/B8FfR93GYpyUcGAYbY8vO29hf7nUT3YszgXhFTKd8Ka8rzz4TuSarQoRAdQ0nID5GdCttVCiRWHLokBVuo50zocDK6+u8DpAN+7A7P2Yja2987jePg7TZQMPyVNnv+0KNnpjmOcPSvt9eUYy9DMQl4wPsKPG5sMh1/6C2mXBn7qE8lPa8izl40KpVA=

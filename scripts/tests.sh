@@ -93,6 +93,15 @@ assert_raises "git_set_tag v1.0 100500" 0
 assert_raises "git_set_tag v1.0 100501" 1
 assert_raises "git_set_tag v1.1 100500" 1
 
+# ======== test set/is_flag_need_push_tags
+AA=$(mktemp -d)
+assert_raises "[ ! -f '$AA/DEVOPS_FLAG_NEED_PUSH_TAGS' ]"
+assert_raises "(cd $AA; is_flag_need_push_tags)" 1
+#assert_raises "(cd $AA; set_flag_need_push_tags) && [ -f '$AA/DEVOPS_FLAG_NEED_PUSH_TAGS' ] || /bin/false"
+assert_raises "(cd $AA; set_flag_need_push_tags)"
+assert_raises "[ -f '$AA/DEVOPS_FLAG_NEED_PUSH_TAGS' ]"
+assert_raises "(cd $AA; is_flag_need_push_tags)"
+
 
 # TODO: test functions receive enoung args
 # TODO: test TRAVIS vars set and check values

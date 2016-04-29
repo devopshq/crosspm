@@ -118,3 +118,13 @@ function git_set_tag() {
 
     git tag -a "$TAG_VALUE" -m"build log https://travis-ci.org/devopshq/crosspm/builds/${BUILD_ID}"
 }
+
+function set_flag_need_push_tags() {
+
+    touch "./DEVOPS_FLAG_NEED_PUSH_TAGS"
+}
+
+function is_flag_need_push_tags() {
+
+    [ -f "./DEVOPS_FLAG_NEED_PUSH_TAGS" ]
+}
