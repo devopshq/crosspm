@@ -1,47 +1,17 @@
-# https://travis-ci.org/devopshq/crosspm
-
-# The MIT License (MIT)
-# 
-# Copyright (c) 2015 Iaroslav Akimov <iaroslavscript@gmail.com>
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-
 language: python
-python: "3.5"
+python: '3.5'
 install: true
 before_script:
-  - ./scripts/tests.sh
+- "./scripts/tests.sh"
 script:
-  - printenv
-  - ./scripts/build-on-server.sh
+- printenv
+- "./scripts/build-on-server.sh"
 before_deploy:
-  - ls -l build/
+- ls -l build/
 deploy:
   provider: pypi
-  user: somelogin
-  password: somepasswd
-  server: https://pypi.python.org/pypi
-  distributions: "sdist bdist_wheel"
-  file:
-    - build/*.whl
-    - build/*.tar.gz
-  on:
-    condition: /bin/false
-    tags: true
+  user: iaroslavscript
+  password:
+    secure: R1HHgxpiD4B8lJbemyCb4OKuWpSxeuLGmhSNNkdmK5oMNx79fgLs0Yq3LsfFSBS4dsmm6cziUnXpLRcHbyZCHbN2YPNnqo3M4q3K459U9S1pZFqn79sKupJ6hsKki94e8nAxJtZX01YpgY8pEs97vH2xQtnEZLmiJouIA/Fok5K5ko6LmFUQz71m84gHCcSPIB3soXfQnztiqNYhb6vGBLGHiXxa+BekBDKxZLgSIu99k2vIZET2YgJ+/8GLKDP4QnsoefKRik+zZFhtzEHlDBzWzKNzmPxcTn6mwDeTaFRajvJ0NSEGUF0Ty5dhjIf/1nj7KW/mc3QXThZAnFuVDzhelbQm482fzk1MUFJIsl15UPS4TitjsZu18iSix1/gnDs3ntRiTNmlOaYfSMBbKcxNgeHm+F18DOJSUgWuK4FHiUQT66N2lHJflKRHjw9672W9ND7zTz9TSU3BszM4aF6us8x2AFihmVrjgTYDVBg2hbULSBPauCTIPpquOAfZbKA2Sneox/XgXSnZ9QemyFp02tUQT4Y0+AcFOY7uYgVajZeIo1oY89zrr80KS3hDoNcY3wUGGsEod2NUQ4ajkiXCQP0dpTkFMLkzlLVN1cXIBTG9EGJIr7br6sQSK/H5mgiaYcDtvKT3byswQumFfaJ5TBTlUr7Wt+kHSi95DSI=
+  server: https://testpypi.python.org
+  distributions: sdist bdist_wheel
