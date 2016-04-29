@@ -3,6 +3,8 @@ python: '3.5'
 install: true
 before_script:
 - "./scripts/tests.sh"
+- git config --global user.email "builds@travis-ci.com"
+- git config --global user.name "Travis CI"
 script:
 - printenv
 - TRAVIS_BRANCH="develop" ./scripts/build-on-server.sh
