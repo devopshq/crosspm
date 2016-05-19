@@ -169,7 +169,7 @@ def make_output(out_format, out_filepath, out_prefix, packages):
     if out_format not in _OUTPUT_FORMAT_MAP:
         raise pm_common.CrosspmException(
             pm_common.CMAKEPM_ERRORCODE_UNKNOWN_OUTTYPE,
-            'Error: unknown output type: [{}]'.format( out_format ),
+            'unknown output type: [{}]'.format( out_format ),
         )
 
     f = _OUTPUT_FORMAT_MAP[ out_format ]

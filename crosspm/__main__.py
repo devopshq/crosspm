@@ -102,7 +102,7 @@ def make_parser_download( subparsers ):
 
     group_general.add_argument( '--depslock-path',
         metavar='FILE',
-        default=pm_common.CMAKEPM_DEPENDENCYLOCK_FILENAME,
+        default=pm_common.CROSSPM_DEPENDENCYLOCK_FILENAME,
         help='path to file with locked dependencies (default: ./%(default)s)'
     )
 
@@ -177,14 +177,14 @@ def check_args_cmd_download(args):
         if args.output:
 
             raise pm_common.CrosspmExceptionWrongArgs(
-                "Error: no need argument '-o|--output' when argument '--out-format={}'".format(
+                "no need argument '-o|--output' when argument '--out-format={}'".format(
                     args.out_format,
             ))
 
     elif not args.output:
 
         raise pm_common.CrosspmExceptionWrongArgs(
-            "Error: argument '-o|--output' required when argument '--out-format={}'".format(
+            "argument '-o|--output' required when argument '--out-format={}'".format(
                 args.out_format,
         ))
 
@@ -236,7 +236,7 @@ def main():
         args = parser.parse_args()
 
     except SystemExit:
-        sys.exit( pm_common.CMAKEPM_ERRORCODE_WRONGARGS )
+        sys.exit( pm_common.CROSSPM_ERRORCODE_WRONGARGS )
 
     try:
         if not vars( args ):
@@ -260,7 +260,7 @@ def main():
 
         log.exception( e )
         log.critical( 'Unknown error occurred!' )
-        sys.exit( pm_common.CMAKEPM_ERRORCODE_UNKNOWN_ERROR )
+        sys.exit( pm_common.CROSSPM_ERRORCODE_UNKNOWN_ERROR )
 
 
 if __name__ == '__main__':
