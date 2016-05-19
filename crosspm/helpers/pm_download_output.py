@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2015 Iaroslav Akimov <iaroslavscript@gmail.com>
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,11 +23,14 @@
 # SOFTWARE.
 
 
-import sys
 import os
 import re
 
 from crosspm.helpers import pm_common
+
+
+log = logging.getLogger( __name__ )
+
 
 def _output_type_stdout(out_format, out_filepath, out_prefix, packages):
 
@@ -49,9 +52,11 @@ def _output_type_shell(out_format, out_filepath, out_prefix, packages):
 
     _write_to_file( result, out_filepath )
 
-    pm_common.warning( 'Write packages info to file [{}]\n\tcontent:'.format( out_filepath ))
-    pm_common.warning( result )
-
+    log.info(
+        'Write packages info to file [%s]\n\tcontent:\n\t%s',
+        out_filepath,
+        result,
+    )
 
 def _output_type_cmd(out_format, out_filepath, out_prefix, packages):
 
@@ -66,9 +71,11 @@ def _output_type_cmd(out_format, out_filepath, out_prefix, packages):
 
     _write_to_file( result, out_filepath )
 
-    pm_common.warning( 'Write packages info to file [{}]\n\tcontent:'.format( out_filepath ))
-    pm_common.warning( result )
-
+    log.info(
+        'Write packages info to file [%s]\n\tcontent:\n\t%s',
+        out_filepath,
+        result,
+    )
 
 def _output_type_python(out_format, out_filepath, out_prefix, packages):
 
@@ -85,8 +92,11 @@ def _output_type_python(out_format, out_filepath, out_prefix, packages):
 
     _write_to_file( result, out_filepath )
 
-    pm_common.warning( 'Write packages info to file [{}]\n\tcontent:'.format( out_filepath ))
-    pm_common.warning( result )
+    log.info(
+        'Write packages info to file [%s]\n\tcontent:\n\t%s',
+        out_filepath,
+        result,
+    )
 
 
 def _output_type_json(out_format, out_filepath, out_prefix, packages):
@@ -104,8 +114,11 @@ def _output_type_json(out_format, out_filepath, out_prefix, packages):
 
     _write_to_file( result, out_filepath )
 
-    pm_common.warning( 'Write packages info to file [{}]\n\tcontent:'.format( out_filepath ))
-    pm_common.warning( result )
+    log.info(
+        'Write packages info to file [%s]\n\tcontent:%s',
+        out_filepath,
+        result,
+    )
 
 
 def _get_var_name(out_prefix, package):
@@ -130,17 +143,16 @@ def _write_to_file(text, out_filepath):
 
     if not os.path.exists( out_dir_path ):
 
-        pm_common.warning(
-            'mkdirs [{}] ..'.format( out_dir_path ),
-            end='',
-        )
+        log.info( 'mkdirs [%s] ...', out_dir_path )
         os.makedirs( out_dir_path )
-        pm_common.warning( 'Done!' )
 
     elif not os.path.isdir( out_dir_path ):
 
-        pm_common.warning( 'Unable to make directory [{}]. File with the same name exists'.format( out_dir_path ))
-        sys.exit( pm_common.CMAKEPM_ERRORCODE_FILE_IO )
+        raise pm_common.CrosspmException(
+            pm_common.CMAKEPM_ERRORCODE_FILE_IO,
+            'Unable to make directory [{}]. File with the same name exists'.format(
+                out_dir_path
+        ))
 
     with open( out_filepath, 'w+' ) as f:
 
@@ -154,9 +166,10 @@ def get_output_types():
 def make_output(out_format, out_filepath, out_prefix, packages):
 
     if out_format not in _OUTPUT_FORMAT_MAP:
-
-        pm_common.warning( 'Error: unknown output type: [{}]'.format( out_format ))
-        sys.exit( pm_common.CMAKEPM_ERRORCODE_UNKNOWN_OUTTYPE )
+        raise pm_common.CrosspmException(
+            pm_common.CMAKEPM_ERRORCODE_UNKNOWN_OUTTYPE,
+            'Error: unknown output type: [{}]'.format( out_format ),
+        )
 
     f = _OUTPUT_FORMAT_MAP[ out_format ]
 

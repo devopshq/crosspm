@@ -3,19 +3,19 @@
 
 
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2015 Iaroslav Akimov <iaroslavscript@gmail.com>
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,13 +25,17 @@
 # SOFTWARE.
 
 
-import sys
 import argparse
+import logging
+import sys
 
 import crosspm
 import crosspm.api as api
 from crosspm.helpers import pm_common
 from crosspm.helpers import pm_download_output
+
+
+log = logging.getLogger( __name__ )
 
 
 def make_parser():
@@ -85,6 +89,11 @@ def make_parser_download( subparsers ):
     )
 
     group_general = parser.add_argument_group( 'general arguments' )
+
+    group_general.add_argument( '--log',
+        metavar='LEVEL',
+        help='path to configuration file',
+    )
 
     group_general.add_argument( '-c', '--config',
         metavar='FILE',
@@ -160,26 +169,24 @@ def make_parser_pack( subparsers ):
 
 def check_args_cmd_download(args):
 
-    if not all( (args.osname, args.arch, args.compiler, )):
-
-        pm_common.warning( '\nError: not enought arguments\n')
-        parser.print_usage()
-        sys.exit( pm_common.CMAKEPM_ERRORCODE_WRONGARGS )
-
+    if args.log:
+        logging.basicConfig(level=int(args.log))
 
     if 'stdout' == args.out_format:
 
         if args.output:
 
-            pm_common.warning( "\nError: no need argument '-o|--output' when argument '--out-format={}'\n".format( args.out_format ))
-            parser.print_usage()
-            sys.exit( pm_common.CMAKEPM_ERRORCODE_WRONGARGS )
+            raise pm_common.CrosspmExceptionWrongArgs(
+                "Error: no need argument '-o|--output' when argument '--out-format={}'".format(
+                    args.out_format,
+            ))
 
     elif not args.output:
 
-        pm_common.warning( "\nError: argument '-o|--output' required when argument '--out-format={}'\n".format( args.out_format ))
-        parser.print_usage()
-        sys.exit( pm_common.CMAKEPM_ERRORCODE_WRONGARGS )
+        raise pm_common.CrosspmExceptionWrongArgs(
+            "Error: argument '-o|--output' required when argument '--out-format={}'".format(
+                args.out_format,
+        ))
 
 
 def check_args_cmd_promote(args):
@@ -224,16 +231,38 @@ def cmd_pack(args):
 def main():
 
     parser = make_parser()
-    args   = parser.parse_args()
 
-    if not vars( args ):
-        # no args were passed
-        parser.print_help()
+    try:
+        args = parser.parse_args()
+
+    except SystemExit:
         sys.exit( pm_common.CMAKEPM_ERRORCODE_WRONGARGS )
 
-    args.check_args( args )
-    args.call_cmd( args )
+    try:
+        if not vars( args ):
+            raise pm_common.CrosspmExceptionWrongArgs( 'too few arguments' )
+
+        args.check_args( args )
+        args.call_cmd( args )
+
+    except pm_common.CrosspmExceptionWrongArgs as e:
+
+        parser.print_usage()
+        log.critical( e.error_msg )
+        sys.exit( e.error_code )
+
+    except pm_common.CrosspmException as e:
+
+        log.critical( e.error_msg )
+        sys.exit( e.error_code )
+
+    except Exception as e:
+
+        log.exception( e )
+        log.critical( 'Unknown error occurred!' )
+        sys.exit( pm_common.CMAKEPM_ERRORCODE_UNKNOWN_ERROR )
 
 
 if __name__ == '__main__':
+
     main()

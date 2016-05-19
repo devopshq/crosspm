@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2015 Iaroslav Akimov <iaroslavscript@gmail.com>
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,16 +23,21 @@
 # SOFTWARE.
 
 
-import sys
 import os
 import collections
 import fnmatch
+import logging
+
+from __future__ import print_function # support for print to stderr from Python 2.7
+
+# third-party
+import requests
 
 from crosspm.helpers import pm_common
 from crosspm.helpers import pm_download_output
 
-# third-party
-import requests
+
+log = logging.getLogger( __name__ )
 
 
 class CrosspmDownloader:
@@ -59,7 +64,7 @@ class CrosspmDownloader:
         data = pm_common.read_config( filepath )
         self.set_config( data )
 
-    def download_package(self, auth, package_url, save_path, out_error_list):
+    def download_package(self, auth, package_url, save_path, package_name):
 
         chunk_size  = 1024
         result      = False
@@ -93,18 +98,23 @@ class CrosspmDownloader:
 
             result = True
 
+        # TODO: check requests' exception not all exeption
+        # TODO: check all exeption
         except Exception as e:
 
-            out_error_list.append( repr( e ) )
-
+            code = pm_common.CMAKEPM_ERRORCODE_SERVER_CONNECT_ERROR
+            msg = 'FAILED to download package {} at url: [{}]'.format(
+                package_name,
+                package_url,
+            )
+            raise pm_common.CrosspmException( code, msg ) from e
 
         return result
 
 
-    def package_exists(self, auth, package_url, out_error_list):
+    def package_exists(self, auth, package_url):
 
-        package_found = False
-        error_occured = False
+        result = False
 
         try:
             r = requests.get(
@@ -117,23 +127,31 @@ class CrosspmDownloader:
 
             r.close()
 
-            package_found = True
+            result = True
 
         except requests.exceptions.HTTPError as e:
 
             if 404 != e.response.status_code:
 
-                error_occured = True
-                out_error_list.append( repr( e ) )
+                code = pm_common.CMAKEPM_ERRORCODE_SERVER_CONNECT_ERROR
+                msg = 'FAILED to search package {} at url: [{}]'.format(
+                    package_name,
+                    package_full_url,
+                )
+                raise pm_common.CrosspmException( code, msg ) from e
 
-
+        # TODO: check requests' exception not all exeption
         except Exception as e:
 
-            error_occured = True
-            out_error_list.append( repr( e ) )
+            code = pm_common.CMAKEPM_ERRORCODE_SERVER_CONNECT_ERROR
+            msg = 'FAILED to search package {} at url: [{}]'.format(
+                package_name,
+                package_full_url,
+            )
+            raise pm_common.CrosspmException( code, msg ) from e
 
 
-        return ( package_found, error_occured, )
+        return result
 
 
     def join_package_path(self, server_url, repo, path):
@@ -159,20 +177,20 @@ class CrosspmDownloader:
                 for item in nodes:
                     left_side += '    |' if item else '     '
 
-                pm_common.warning( left_side + '    |' )
-                pm_common.warning( '{}    +--{}'.format(
+                s = left_side + '    |\n{}    +--{}'.format(
                     left_side,
                     k,
-                ))
+                )
+                print( s, file=sys.stderr )
 
                 if v:
                     nodes.append( 1 if i < n-1 else 0 )
                     print_deps_tree_inner( v, nodes )
                     nodes.pop()
 
-        pm_common.warning( '\nROOT+' )
+        print( '\nROOT+', file=sys.stderr )
         print_deps_tree_inner( deps_tree )
-        pm_common.warning( '\n' + '='*80 )
+        print( '\n' + '='*80, file=sys.stderr )
 
 
     def make_deps_tree(self, package_list):
@@ -220,32 +238,33 @@ class CrosspmDownloader:
 
         for package, package_names in errors.items():
 
-            pm_common.warning( 'ERROR: Project link multiple versions of package [{}]:'.format( package ) )
-
-            for package_name in package_names:
-                pm_common.warning( '    {}'.format( package_name ) )
+            log.error(
+                'Project link multiple versions of package [%s]:%s',
+                package,
+                ''.join( '\n    {}'.format( x ) for x in package_names ),
+            )
 
         return not len( errors )
 
     def get_packages(self, depslock_filepath=None):
 
         if depslock_filepath is None:
-            
+
             depslock_filepath = self.__option_depslock_path
 
-        pm_common.warning( 'Reading dependencies ... [{}]'.format( depslock_filepath ))
+        log.info( 'Reading dependencies ... [%s]', depslock_filepath )
 
         package_list = []
         self.get_packages_inner(
             depslock_filepath,
             self.__option_osname,
             self.__option_arch,
-            self.__option_compiler,            
+            self.__option_compiler,
             [],
             package_list,
         )
 
-        pm_common.warning( 'Check dependencies ...' )
+        log.info( 'Check dependencies ...' )
 
         package_deps_tree = self.make_deps_tree( package_list )
 
@@ -253,8 +272,10 @@ class CrosspmDownloader:
 
         unique_package_list = []
         if not self.check_dependencies( package_list, unique_package_list ):
-            pm_common.warning("Error: aborting due to previous error")
-            sys.exit( pm_common.CMAKEPM_ERRORCODE_MULTIPLE_DEPS )
+            raise pm_common.CrosspmException(
+                pm_common.CMAKEPM_ERRORCODE_MULTIPLE_DEPS,
+                'Error: aborting due to previous error',
+            )
 
         unique_package_list = sorted( unique_package_list, key=lambda x: x[2] )
 
@@ -265,7 +286,7 @@ class CrosspmDownloader:
             unique_package_list
         )
 
-        pm_common.warning( 'Done!' )
+        log.info( 'Done!' )
 
 
     def get_packages_inner(self, depslock_filepath, osname, arch, compiler, root_package, result):
@@ -319,7 +340,7 @@ class CrosspmDownloader:
                         ))
 
 
-            pm_common.warning( 'Search package [{package}] ...'.format(**locals()) )
+            log.info( 'Search package [{package}] ...'.format(**locals()) )
 
             for ( current_source, current_repo, curr_osname, curr_arch, curr_compiler ) in package_params_list:
 
@@ -341,38 +362,25 @@ class CrosspmDownloader:
                     if os.path.exists( archived_package_tmp ):
                         os.remove( archived_package_tmp )
 
-                    error_str                    = []
-                    package_found, error_occured = self.package_exists(
+
+                    package_found = self.package_exists(
                         current_source[ 'auth' ],
                         package_full_url,
-                        error_str,
                     )
-
-                    if error_occured:
-
-                        pm_common.warning( 'FAILED to search package {} at url: [{}]\n'.format( package_name, package_full_url ))
-                        pm_common.warning( '    with message {}\n'.format( error_str[ 0 ] ))
-                        sys.exit( pm_common.CMAKEPM_ERRORCODE_SERVER_CONNECT_ERROR )
 
                     if not package_found:
 
                         checked_package_urls.append( package_full_url )
                         continue
 
-                    pm_common.warning( 'Downloading ...' )
+                    log.info( 'Downloading ...' )
 
                     package_downloaded = self.download_package(
                         current_source[ 'auth' ],
                         package_full_url,
                         archived_package_tmp,
-                        error_str,
+                        package_name,
                     )
-
-                    if not package_downloaded:
-
-                        pm_common.warning( 'FAILED to download {}\n'.format( package_name ))
-                        pm_common.warning( '    with message {}\n'.format( error_str[ 0 ] ))
-                        sys.exit( pm_common.CMAKEPM_ERRORCODE_SERVER_CONNECT_ERROR )
 
                     os.renames( archived_package_tmp, archived_package )
 
@@ -380,7 +388,7 @@ class CrosspmDownloader:
                 # extract package
                 if not os.path.exists( extracted_package ):
 
-                    pm_common.warning( 'Extracting archive ...' )
+                    log.info( 'Extracting archive ...' )
                     pm_common.extractArchive( archived_package, extracted_package )
 
 
@@ -392,28 +400,31 @@ class CrosspmDownloader:
                 ])
 
                 # recursive download dependencies
-                
+
 
                 if( os.path.exists( package_depslock_filepath )):
-                    pm_common.warning( 'Search dependencies for package [{package}] ...'.format(**locals()) )
+                    log.info( 'Search dependencies for package [%s] ...', package )
 
                     root_package.append( package_name )
                     self.get_packages_inner( package_depslock_filepath, osname, arch, compiler, root_package, result )
                     root_package.pop()
 
-                    pm_common.warning( 'Dependencies for package [{package}] done!'.format(**locals()) )
+                    log.info( 'Dependencies for package [%s] done!', package )
 
 
 
                 break
 
             else:
-                pm_common.warning( 'FAILED to download package {}\n    next path was checked:\n'.format( package_name ))
+                msg = 'FAILED to download package [{}]\n    next path was checked:{}'.format(
+                    package_name,
+                    ''.join( '\n    [{}]'.format( x ) for x in checked_package_urls ),
+                )
 
-                for item in checked_package_urls:
-                    pm_common.warning( '    [{}]\n'.format( item ))
-
-                sys.exit( pm_common.CMAKEPM_ERRORCODE_PACKAGE_NOT_FOUND )
+                raise pm_common.CrosspmException(
+                    pm_common.CMAKEPM_ERRORCODE_PACKAGE_NOT_FOUND,
+                    msg,
+                )
 
 
 class CrosspmPromoter:
@@ -504,7 +515,7 @@ class CrosspmPromoter:
                     '?list&deep=1&listFolders=0&mdTimestamps=1&includeRootPath=1',
                 )
 
-                print( 'get request: {}'.format( request_url ))
+                log.info( 'GET request: %s', request_url )
 
                 r = requests.get(
                     request_url,
@@ -522,16 +533,18 @@ class CrosspmPromoter:
         for (d_name, d_version, d_branch,) in deps_list:
 
             if d_name not in data_tree:
-
-                pm_common.warning( 'Error: unknown package [{}]'.format( d_name ))
-
-                sys.exit( pm_common.CMAKEPM_ERRORCODE_PACKAGE_NOT_FOUND )
+                raise pm_common.CrosspmException(
+                    pm_common.CMAKEPM_ERRORCODE_PACKAGE_NOT_FOUND,
+                    'Error: unknown package [{}]'.format( d_name ),
+                )
 
             if d_branch not in data_tree[ d_name ]:
-
-                pm_common.warning( 'Error: unknown branch [{}] of package [{}]'.format( d_branch, d_name ))
-
-                sys.exit( pm_common.CMAKEPM_ERRORCODE_PACKAGE_BRANCH_NOT_FOUND )
+                raise pm_common.CrosspmException(
+                    pm_common.CMAKEPM_ERRORCODE_PACKAGE_BRANCH_NOT_FOUND,
+                    'Error: unknown branch [{}] of package [{}]'.format(
+                        d_branch,
+                        d_name,
+                ))
 
             libs = data_tree[ d_name ][ d_branch ]
 
@@ -539,13 +552,13 @@ class CrosspmPromoter:
 
             if not versions:
 
-                pm_common.warning( 'Error: pattern [{ver}] does not match any version of package [{pkg}] for branch [{br}] '.format(
-                    ver='.'.join( d_version ),
-                    pkg=d_name,
-                    br=d_branch,
+                raise pm_common.CrosspmException(
+                    pm_common.CMAKEPM_ERRORCODE_VERSION_PATTERN_NOT_MATCH,
+                    'Error: pattern [{ver}] does not match any version of package [{pkg}] for branch [{br}] '.format(
+                        ver='.'.join( d_version ),
+                        pkg=d_name,
+                        br=d_branch,
                 ))
-
-                sys.exit( pm_common.CMAKEPM_ERRORCODE_VERSION_PATTERN_NOT_MATCH )
 
             current_version = max( versions, key=lambda x: x[ 1 ] )
 
