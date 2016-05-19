@@ -218,24 +218,26 @@ def read_config(filepath=None):
 
     if filepath is None:
 
-        config_path_list = [
-            os.getenv( 'CROSSPM_CONFIG_PATH' ),
-            os.path.join( os.getcwd(), CROSSPM_CONFIG_DEFAULT_FILENAME ),
-        ]
+        env_var_name    = 'CROSSPM_CONFIG_PATH'
+        config_path_env = os.getenv( env_var_name )
+        config_path_cwd = os.path.join( os.getcwd(), CROSSPM_CONFIG_DEFAULT_FILENAME )
 
-        for item in config_path_list:
+        if config_path_env:
 
-            if item  and  os.path.exists( item ):
+            log.info( 'Enviroment variable CROSSPM_CONFIG_PATH is set' )
+            filepath = item
 
-                filepath = item
-                break
+        elif os.path.exists( config_path_cwd ):
+
+            log.info( 'Found config file at working directory', config_path_cwd )
+            filepath = item
+
         else:
 
             raise CrosspmException(
                 CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
-                'config file not defined. Checked paths: [{}]'.format(
-                    '] ['.join( config_path_list ),
-            ))
+                'path to config file is not set',
+            )
 
 
     filepath = os.path.realpath( filepath )

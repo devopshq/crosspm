@@ -38,6 +38,37 @@ from crosspm.helpers import pm_download_output
 log = logging.getLogger( __name__ )
 
 
+class LogLevelAction(argparse.Action):
+
+    @staticmethod
+    def getChoicesList():
+
+        return {
+            'critical': logging.CRITICAL,
+            'error':    logging.ERROR,
+            'warning':  logging.WARNING,
+            'info':     logging.INFO,
+            'debug':    logging.DEBUG,
+        }
+
+    def __init__(self, *args, **kwargs):
+
+        if 'choices' in kwargs:
+            raise RuntimeError( 'Do not set choices to LogLevelAction' )
+
+        kwargs.update( {
+            'choices': self.getChoicesList(),
+        })
+
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+
+        setattr( namespace, self.dest, values )
+
+        logging.basicConfig( level=self.getChoicesList().get( values ))
+
+
 def make_parser():
 
     # create the top-level parser
@@ -52,6 +83,13 @@ def make_parser():
     parser.add_argument( '--version',
         action='version',
         version=crosspm.__version__,
+    )
+
+    parser.add_argument( '--log',
+        action=LogLevelAction,
+        default='warning',
+        help='log level',
+        metavar='LEVEL',
     )
 
     subparsers = parser.add_subparsers(help='sub-command help')
@@ -89,11 +127,6 @@ def make_parser_download( subparsers ):
     )
 
     group_general = parser.add_argument_group( 'general arguments' )
-
-    group_general.add_argument( '--log',
-        metavar='LEVEL',
-        help='path to configuration file',
-    )
 
     group_general.add_argument( '-c', '--config',
         metavar='FILE',
@@ -166,11 +199,7 @@ def make_parser_pack( subparsers ):
     )
 
 
-
 def check_args_cmd_download(args):
-
-    if args.log:
-        logging.basicConfig(level=int(args.log))
 
     if 'stdout' == args.out_format:
 

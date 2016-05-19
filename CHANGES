@@ -1,0 +1,4 @@
+Enviroment variable "CMAKEPM_CONFIG_PATH" is OBSOLETE! Use "CROSSPM_CONFIG_PATH" instead!
+Enviroment variable "CMAKEPM_CACHE_ROOT" is OBSOLETE! Use "CROSSPM_CACHE_ROOT" instead!
+Default config name changed from "cmakepm.config" to "crosspm.config"
+No more looking for "crosspm.config" at crosspm source dir
