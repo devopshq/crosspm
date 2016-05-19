@@ -35,7 +35,7 @@ log = logging.getLogger( __name__ )
 
 def main():
 
-    log.warning('Calling "pm_promote_deps.py <args>" is DEPRECATED! Use "cmp.py promote <args>" instead!')
+    log.warning('Calling "pm_arti_download.py <args>" is DEPRECATED! Use "cmp.py download <args>" instead!')
 
     sys.argv.insert( 1, 'download' )
     crosspm.main()
