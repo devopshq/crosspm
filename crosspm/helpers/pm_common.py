@@ -23,6 +23,8 @@
 # SOFTWARE.
 
 
+from __future__ import print_function # support for print to stderr from Python 2.7
+
 import contextlib
 import json
 import logging
@@ -86,6 +88,13 @@ class CrosspmExceptionNoArgs(CrosspmExceptionWrongArgs):
     def __init__(self):
 
         super().__init__( CMAKEPM_ERRORCODE_WRONGARGS )
+
+
+def print_stderr(*args, **kwargs):
+
+    kwargs.update( {'file': sys.stderr} )
+
+    print( *args, **kwargs )
 
 def get_cmakepm_root():
 

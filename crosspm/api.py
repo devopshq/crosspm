@@ -28,8 +28,6 @@ import collections
 import fnmatch
 import logging
 
-from __future__ import print_function # support for print to stderr from Python 2.7
-
 # third-party
 import requests
 

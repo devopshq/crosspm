@@ -248,12 +248,12 @@ def main():
     except pm_common.CrosspmExceptionWrongArgs as e:
 
         parser.print_usage()
-        log.critical( e.error_msg )
+        log.critical( e.msg )
         sys.exit( e.error_code )
 
     except pm_common.CrosspmException as e:
 
-        log.critical( e.error_msg )
+        log.critical( e.msg )
         sys.exit( e.error_code )
 
     except Exception as e:

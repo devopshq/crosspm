@@ -27,7 +27,7 @@
 import logging
 import sys
 
-import cpm
+import crosspm.__main__ as crosspm
 
 
 log = logging.getLogger( __name__ )
@@ -38,7 +38,7 @@ def main():
     log.warning( 'Calling "pm_pack.py <args>" is DEPRECATED! Use "cmp.py pack <args>" instead!' )
 
     sys.argv.insert( 1, 'pack' )
-    cpm.main()
+    crosspm.main()
 
 
 if __name__ == '__main__':
