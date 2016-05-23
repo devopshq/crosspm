@@ -26,6 +26,7 @@
 
 
 import argparse
+import collections
 import logging
 import sys
 
@@ -38,36 +39,19 @@ from crosspm.helpers import pm_download_output
 log = logging.getLogger( __name__ )
 
 
-class LogLevelAction(argparse.Action):
+def get_verbosity_levels():
 
-    @staticmethod
-    def getChoicesList():
+    return collections.OrderedDict([
+        ( 'critical', logging.CRITICAL, ),
+        ( 'error',    logging.ERROR, ),
+        ( 'warning',  logging.WARNING, ),
+        ( 'info',     logging.INFO, ),
+        ( 'debug',    logging.DEBUG, ),
+    ])
 
-        return {
-            'critical': logging.CRITICAL,
-            'error':    logging.ERROR,
-            'warning':  logging.WARNING,
-            'info':     logging.INFO,
-            'debug':    logging.DEBUG,
-        }
+def get_default_verbosity_level():
 
-    def __init__(self, *args, **kwargs):
-
-        if 'choices' in kwargs:
-            raise RuntimeError( 'Do not set choices to LogLevelAction' )
-
-        kwargs.update( {
-            'choices': self.getChoicesList(),
-        })
-
-        super().__init__(*args, **kwargs)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-
-        setattr( namespace, self.dest, values )
-
-        logging.basicConfig( level=self.getChoicesList().get( values ))
-
+    return 'warning'
 
 def make_parser():
 
@@ -85,10 +69,16 @@ def make_parser():
         version=crosspm.__version__,
     )
 
-    parser.add_argument( '--log',
-        action=LogLevelAction,
-        default='warning',
-        help='log level',
+    parser.add_argument( '-v', '--verbose',
+        action='store_true',
+        help='increase output verbosity (default: %(default)s)',
+    )
+
+    parser.add_argument( '--verbosity',
+        choices=get_verbosity_levels().keys(),
+        help='set output verbosity level: [%(choices)s] (default: {})'.format(
+            get_default_verbosity_level(),
+        ),
         metavar='LEVEL',
     )
 
@@ -100,7 +90,6 @@ def make_parser():
     make_parser_pack( subparsers )
 
     return parser
-
 
 def make_parser_download( subparsers ):
 
@@ -157,7 +146,6 @@ def make_parser_download( subparsers ):
         help='prefix for output variable name (default: no prefix at all)',
     )
 
-
 def make_parser_promote( subparsers ):
 
     parser = subparsers.add_parser( 'promote',
@@ -175,7 +163,6 @@ def make_parser_promote( subparsers ):
         metavar='FILE',
         help='path to configuration file',
     )
-
 
 def make_parser_pack( subparsers ):
 
@@ -198,7 +185,6 @@ def make_parser_pack( subparsers ):
         help='source directory path',
     )
 
-
 def check_args_cmd_download(args):
 
     if 'stdout' == args.out_format:
@@ -217,16 +203,13 @@ def check_args_cmd_download(args):
                 args.out_format,
         ))
 
-
 def check_args_cmd_promote(args):
 
     pass
 
-
 def check_args_cmd_pack(args):
 
     pass
-
 
 def cmd_download(args):
 
@@ -243,7 +226,6 @@ def cmd_download(args):
     cpm_downloader.set_config_from_file( args.config )
     cpm_downloader.get_packages()
 
-
 def cmd_promote(args):
 
     cpm_promoter = api.CrosspmPromoter()
@@ -251,11 +233,37 @@ def cmd_promote(args):
     cpm_promoter.set_config_from_file( args.config )
     cpm_promoter.promote_packages()
 
-
 def cmd_pack(args):
 
     pm_common.createArchive( args.out, args.src )
 
+def set_logging_level(value):
+
+    if 'debug' != value:
+        pass
+
+    logging.basicConfig( level=get_verbosity_levels().get( value ))
+
+def check_args(args):
+
+    log_level = getDefaultVerbosityLevel()
+
+    if args.verbose  and  args.log:
+        raise pm_common.CrosspmExceptionWrongArgs(
+            'implicit requirements --verbose and --verbosity'
+        )
+
+    elif args.verbose:
+        log_level = 'info'
+
+    elif args.verbosity:
+        log_level = args.verbosity
+
+    set_logging_level( log_level )
+
+    if args.check_args is not None:
+
+        args.check_args( args )
 
 def main():
 
@@ -271,7 +279,7 @@ def main():
         if not vars( args ):
             raise pm_common.CrosspmExceptionWrongArgs( 'too few arguments' )
 
-        args.check_args( args )
+        check_args( args )
         args.call_cmd( args )
 
     except pm_common.CrosspmExceptionWrongArgs as e:
