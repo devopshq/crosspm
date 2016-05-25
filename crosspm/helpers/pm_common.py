@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2015 Iaroslav Akimov <iaroslavscript@gmail.com>
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,58 +25,77 @@
 
 from __future__ import print_function # support for print to stderr from Python 2.7
 
+import contextlib
+import json
+import logging
 import os
+import shutil
 import sys
 import tarfile
 import zipfile
-import contextlib
-import shutil
-import json
 
 from requests.packages.urllib3 import disable_warnings
 disable_warnings()
 
 
-CMAKEPM_DEPENDENCY_FILENAME      = 'dependencies.txt'
-CMAKEPM_DEPENDENCYLOCK_FILENAME  = '{}.lock'.format(CMAKEPM_DEPENDENCY_FILENAME)
-CMAKEPM_CONFIG_DEFAULT_FILENAME  = 'cmakepm.config'
+log = logging.getLogger( __name__ )
 
-CMAKEPM_ERRORCODES = (
-    CMAKEPM_ERRORCODE_SUCCESS,
-    CMAKEPM_ERRORCODE_FILEDEPSNOTFOUND,
-    CMAKEPM_ERRORCODE_WRONGSYNTAX,
-    CMAKEPM_ERRORCODE_MULTIPLE_DEPS,
-    CMAKEPM_ERRORCODE_NO_FILES_TO_PACK,
-    CMAKEPM_ERRORCODE_SERVER_CONNECT_ERROR,
-    CMAKEPM_ERRORCODE_PACKAGE_NOT_FOUND,
-    CMAKEPM_ERRORCODE_PACKAGE_BRANCH_NOT_FOUND,
-    CMAKEPM_ERRORCODE_VERSION_PATTERN_NOT_MATCH,
-    CMAKEPM_ERRORCODE_UNKNOWN_OUTTYPE,
-    CMAKEPM_ERRORCODE_FILE_IO,
-    CMAKEPM_ERRORCODE_WRONGARGS,
-    CMAKEPM_ERRORCODE_CONFIG_NOT_DEFINED,
-    CMAKEPM_ERRORCODE_CONFIG_NOT_EXIST,
-    CMAKEPM_ERRORCODE_CONFIG_IO_ERROR,
-) = range( 15 )
+CROSSPM_DEPENDENCY_FILENAME      = 'dependencies.txt'
+CROSSPM_DEPENDENCYLOCK_FILENAME  = '{}.lock'.format(CROSSPM_DEPENDENCY_FILENAME)
+CROSSPM_CONFIG_DEFAULT_FILENAME  = 'crosspm.config'
+
+CROSSPM_ERRORCODES = (
+    CROSSPM_ERRORCODE_SUCCESS,
+    CROSSPM_ERRORCODE_UNKNOWN_ERROR,
+    CROSSPM_ERRORCODE_WRONGARGS,
+    CROSSPM_ERRORCODE_FILEDEPSNOTFOUND,
+    CROSSPM_ERRORCODE_WRONGSYNTAX,
+    CROSSPM_ERRORCODE_MULTIPLE_DEPS,
+    CROSSPM_ERRORCODE_NO_FILES_TO_PACK,
+    CROSSPM_ERRORCODE_SERVER_CONNECT_ERROR,
+    CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
+    CROSSPM_ERRORCODE_PACKAGE_BRANCH_NOT_FOUND,
+    CROSSPM_ERRORCODE_VERSION_PATTERN_NOT_MATCH,
+    CROSSPM_ERRORCODE_UNKNOWN_OUTTYPE,
+    CROSSPM_ERRORCODE_FILE_IO,
+    CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
+    CROSSPM_ERRORCODE_CONFIG_IO_ERROR,
+    CROSSPM_ERRORCODE_UNKNOWN_ARCHIVE,
+) = range( 16 )
 
 OPT_SOURCES = []
 
 
-def warning(*args, **kwargs):
+class CrosspmException(Exception):
+
+    def __init__(self, error_code, msg=''):
+
+        super().__init__( msg )
+        self.error_code = error_code
+        self.msg = msg
+
+
+class CrosspmExceptionWrongArgs(CrosspmException):
+
+    def __init__(self, msg=''):
+
+        super().__init__( CROSSPM_ERRORCODE_WRONGARGS, msg )
+
+
+def print_stderr(*args, **kwargs):
 
     kwargs.update( {'file': sys.stderr} )
 
     print( *args, **kwargs )
 
-def get_cmakepm_root():
+def get_crosspm_cache_root():
 
-    root = os.getenv( 'CMAKEPM_CACHE_ROOT' )
+    root = os.getenv( 'CROSSPM_CACHE_ROOT' )
 
     if not root:
-        
-        home_dir = os.getenv( 'APPDATA' )  if os.name == 'nt'  else os.getenv( 'HOME' )
 
-        root     = os.path.join( home_dir, '.cmakepm' )
+        home_dir = os.getenv( 'APPDATA' )  if os.name == 'nt'  else os.getenv( 'HOME' )
+        root     = os.path.join( home_dir, '.crosspm' )
 
     return root
 
@@ -90,8 +109,10 @@ def getPackageParams(i, line):
     n       = len( parts )
 
     if n not in (2, 3,):
-        warning( 'Error: wrong syntax at line {}. File: [{}]'.format( i, filepath ) )
-        sys.exit( CMAKEPM_ERRORCODE_WRONGSYNTAX )
+        raise CrosspmException(
+            CROSSPM_ERRORCODE_WRONGSYNTAX,
+            'wrong syntax at line {}. File: [{}]'.format( i, filepath )
+        )
 
     name    = parts[ 0 ]
     version = tuple( parts[ 1 ].split( '.' ) )
@@ -105,8 +126,10 @@ def getDependencies(filepath):
     result = []
 
     if not os.path.exists( filepath ):
-        warning( 'Error: file not found: [{}]'.format( filepath ) )
-        sys.exit( CMAKEPM_ERRORCODE_FILEDEPSNOTFOUND )
+        raise CrosspmException(
+            CROSSPM_ERRORCODE_FILEDEPSNOTFOUND,
+            'file not found: [{}]'.format( filepath ),
+        )
 
     with open(filepath, 'r') as f:
         for i, line in enumerate(f):
@@ -139,8 +162,12 @@ def createArchive(archive_name, src_dir_path):
         files_to_pack.append( ( real_path, rel_path, ))
 
     if not files_to_pack:
-        warning( 'Error: no files to pack, directory [{}] is empty'.format( src_dir_path ) )
-        sys.exit( CMAKEPM_ERRORCODE_NO_FILES_TO_PACK )
+        raise CrosspmException(
+            CROSSPM_ERRORCODE_NO_FILES_TO_PACK,
+            'no files to pack, directory [{}] is empty'.format(
+                src_dir_path
+            ),
+        )
 
 
 
@@ -171,79 +198,72 @@ def extractArchive(archive_name, dst_dir_path):
             zf.extractall( path=dst_dir_path_tmp )
 
     else:
-        warning( 'Error: unknown archive type. File: [{}]'.format( archive_name ))
+        raise CrosspmException(
+            CROSSPM_ERRORCODE_UNKNOWN_ARCHIVE,
+            'unknown archive type. File: [{}]'.format( archive_name ),
+        )
 
     os.renames( dst_dir_path_tmp, dst_dir_path )
 
-# order of priority:
-# - option "--config" passed to script or argument filepath of api call
-# - enviroment variable "CMAKEPM_CONFIG_PATH"
-# - file "cmakepm.config" located at working dir
-# - file "cmakepm.config" located at cmakepm source dir
-
 def read_config(filepath=None):
+
+    """
+    order of priority:
+     - option "--config" passed to script or argument filepath of api call
+     - enviroment variable "CROSSPM_CONFIG_PATH"
+     - file "crosspm.config" located at working dir
+    """
 
     result = {}
 
     if filepath is None:
 
-        env_config_path     = os.getenv( 'CMAKEPM_CONFIG_PATH' )
-        local_config_path   = os.path.join( os.getcwd(), CMAKEPM_CONFIG_DEFAULT_FILENAME )
-        default_config_path = os.path.join( os.path.dirname( os.path.realpath( __file__ )), '..', CMAKEPM_CONFIG_DEFAULT_FILENAME )
+        env_var_name    = 'CROSSPM_CONFIG_PATH'
+        config_path_env = os.getenv( env_var_name )
+        config_path_cwd = os.path.join( os.getcwd(), CROSSPM_CONFIG_DEFAULT_FILENAME )
 
-        config_path_list    = [
-                env_config_path,
-                local_config_path,
-                default_config_path,
-        ]
+        if config_path_env:
 
-        if env_config_path is not None:
-            
-            filepath = env_config_path
+            log.info( 'Enviroment variable CROSSPM_CONFIG_PATH is set' )
+            filepath = config_path_env
 
-        elif os.path.exists( local_config_path ):
+        elif os.path.exists( config_path_cwd ):
 
-            filepath = local_config_path
-
-        elif os.path.exists( default_config_path ):
-
-            filepath = default_config_path
+            log.info( 'Found config file at working directory [%s]', config_path_cwd )
+            filepath = config_path_cwd
 
         else:
 
-            warning( 'Error: config file not defined. Checked paths: \n\t[{}]\n\t[{}]'.format(
-                local_config_path,
-                default_config_path,
-            ))
-            sys.exit( CMAKEPM_ERRORCODE_CONFIG_NOT_DEFINED )
+            raise CrosspmException(
+                CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
+                'path to config file is not set',
+            )
 
-    
+
     filepath = os.path.realpath( filepath )
 
     if not os.path.exists( filepath ):
-        
-        warning( 'Error: config file not found at given path: [{}]'.format( filepath ))
-        sys.exit( CMAKEPM_ERRORCODE_CONFIG_NOT_EXIST )
+        raise CrosspmException(
+            CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
+            'config file not found at given path: [{}]'.format( filepath )
+        )
 
-    warning( 'Reading config file... [{}]'.format( filepath ))
+    log.info( 'Reading config file... [%s]', filepath )
 
     try:
-        
-        f      = open( filepath )
-        result = json.loads( f.read() )
-        f.close()
 
-        
+        with open( filepath ) as f:
+            result = json.loads( f.read() )
 
     except Exception as e:
+        log.exception( e )
 
-        warning( 'Error: catch exception while reading config file: [{}]\n\tException type: {}\n\tMessage: {}'.format(
+        code = CROSSPM_ERRORCODE_CONFIG_IO_ERROR
+        msg = 'catch exception while reading config file: [{}]'.format(
             filepath,
-            type( e ),
-            repr( e ),
-        ))
-        sys.exit( CMAKEPM_ERRORCODE_CONFIG_IO_ERROR )
+        )
 
+        raise CrosspmException( code, msg ) from e
 
     return result
 
@@ -254,7 +274,7 @@ def parse_config(data):
     }
 
     for item_str in data[ 'sources' ]:
-        
+
         item_list = item_str.split()
 
         result[ 'sources' ].append({
@@ -273,4 +293,3 @@ def load_config(filepath=None):
     config_dict = parse_config( config_data )
 
     OPT_SOURCES.extend( config_dict[ 'sources' ] )
-    
