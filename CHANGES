@@ -1,4 +1,9 @@
-Enviroment variable "CMAKEPM_CONFIG_PATH" is OBSOLETE! Use "CROSSPM_CONFIG_PATH" instead!
-Enviroment variable "CMAKEPM_CACHE_ROOT" is OBSOLETE! Use "CROSSPM_CACHE_ROOT" instead!
-Default config name changed from "cmakepm.config" to "crosspm.config"
-No more looking for "crosspm.config" at crosspm source dir
+Common:
+    Enviroment variable "CMAKEPM_CONFIG_PATH" is OBSOLETE! Use "CROSSPM_CONFIG_PATH" instead!
+    Enviroment variable "CMAKEPM_CACHE_ROOT" is OBSOLETE! Use "CROSSPM_CACHE_ROOT" instead!
+    Default config name changed from "cmakepm.config" to "crosspm.config"
+    No more looking for "crosspm.config" at crosspm source dir
+    new argument -o|--option"
+    new argument "-v|--verbose" "--verbosity=LEVEL"
+CMD download:
+    No more shorten form "-o" for argument "--output" because it conflicts with "-o|--option" argument

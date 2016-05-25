@@ -225,12 +225,12 @@ def read_config(filepath=None):
         if config_path_env:
 
             log.info( 'Enviroment variable CROSSPM_CONFIG_PATH is set' )
-            filepath = item
+            filepath = config_path_env
 
         elif os.path.exists( config_path_cwd ):
 
-            log.info( 'Found config file at working directory', config_path_cwd )
-            filepath = item
+            log.info( 'Found config file at working directory [%s]', config_path_cwd )
+            filepath = config_path_cwd
 
         else:
 
@@ -252,9 +252,8 @@ def read_config(filepath=None):
 
     try:
 
-        f      = open( filepath )
-        result = json.loads( f.read() )
-        f.close()
+        with open( filepath ) as f:
+            result = json.loads( f.read() )
 
     except Exception as e:
         log.exception( e )
@@ -265,7 +264,6 @@ def read_config(filepath=None):
         )
 
         raise CrosspmException( code, msg ) from e
-
 
     return result
 

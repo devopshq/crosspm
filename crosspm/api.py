@@ -179,16 +179,16 @@ class CrosspmDownloader:
                     left_side,
                     k,
                 )
-                print( s, file=sys.stderr )
+                pm_common.print_stderr( s )
 
                 if v:
                     nodes.append( 1 if i < n-1 else 0 )
                     print_deps_tree_inner( v, nodes )
                     nodes.pop()
 
-        print( '\nROOT+', file=sys.stderr )
+        pm_common.print_stderr( '\nROOT+' )
         print_deps_tree_inner( deps_tree )
-        print( '\n' + '='*80, file=sys.stderr )
+        pm_common.print_stderr( '\n' + '='*80 )
 
 
     def make_deps_tree(self, package_list):

@@ -69,6 +69,18 @@ def make_parser():
         version=crosspm.__version__,
     )
 
+    subparsers = parser.add_subparsers(help='sub-command help')
+
+    # create the parser for the subcommands
+    make_parser_download( subparsers )
+    make_parser_promote( subparsers )
+    make_parser_pack( subparsers )
+
+    return parser
+
+def add_common_arguments(parser):
+
+    # TODO: find out why add_parser(parents) raise error when used with subparsers
     parser.add_argument( '-v', '--verbose',
         action='store_true',
         help='increase output verbosity (default: %(default)s)',
@@ -82,16 +94,7 @@ def make_parser():
         metavar='LEVEL',
     )
 
-    subparsers = parser.add_subparsers(help='sub-command help')
-
-    # create the parser for the subcommands
-    make_parser_download( subparsers )
-    make_parser_promote( subparsers )
-    make_parser_pack( subparsers )
-
-    return parser
-
-def make_parser_download( subparsers ):
+def make_parser_download(subparsers):
 
     parser = subparsers.add_parser( 'download',
         help='a download help',
@@ -101,6 +104,8 @@ def make_parser_download( subparsers ):
         check_args=check_args_cmd_download,
         call_cmd=cmd_download,
     )
+
+    add_common_arguments( parser )
 
     parser.add_argument( 'osname',
         metavar='<OS>',
@@ -122,6 +127,11 @@ def make_parser_download( subparsers ):
         help='path to configuration file',
     )
 
+    group_general.add_argument( '-o', '--option',
+        action='append',
+        help='extra options',
+    )
+
     group_general.add_argument( '--depslock-path',
         metavar='FILE',
         default=pm_common.CROSSPM_DEPENDENCYLOCK_FILENAME,
@@ -136,7 +146,7 @@ def make_parser_download( subparsers ):
         default='stdout',
         help='output data format. Avalible format types:[%(choices)s] (default: %(default)s)',
     )
-    group_output.add_argument( '-o', '--output',
+    group_output.add_argument( '--output',
         metavar='FILE',
         help='output file name (required if --out_format is not stdout)',
     )
@@ -146,16 +156,18 @@ def make_parser_download( subparsers ):
         help='prefix for output variable name (default: no prefix at all)',
     )
 
-def make_parser_promote( subparsers ):
+def make_parser_promote(subparsers):
 
     parser = subparsers.add_parser( 'promote',
         help='a promote help',
     )
 
     parser.set_defaults(
-        check_args=check_args_cmd_promote,
+        check_args=None,
         call_cmd=cmd_promote,
     )
+
+    add_common_arguments( parser )
 
     group_general = parser.add_argument_group( 'general arguments' )
 
@@ -164,14 +176,19 @@ def make_parser_promote( subparsers ):
         help='path to configuration file',
     )
 
-def make_parser_pack( subparsers ):
+    group_general.add_argument( '-o', '--option',
+        action='append',
+        help='extra options',
+    )
+
+def make_parser_pack(subparsers):
 
     parser = subparsers.add_parser( 'pack',
         help='a pack help',
     )
 
     parser.set_defaults(
-        check_args=check_args_cmd_pack,
+        check_args=None,
         call_cmd=cmd_pack,
     )
 
@@ -192,24 +209,16 @@ def check_args_cmd_download(args):
         if args.output:
 
             raise pm_common.CrosspmExceptionWrongArgs(
-                "no need argument '-o|--output' when argument '--out-format={}'".format(
+                "no need argument '--output' when argument '--out-format={}'".format(
                     args.out_format,
             ))
 
     elif not args.output:
 
         raise pm_common.CrosspmExceptionWrongArgs(
-            "argument '-o|--output' required when argument '--out-format={}'".format(
+            "argument '--output' required when argument '--out-format={}'".format(
                 args.out_format,
         ))
-
-def check_args_cmd_promote(args):
-
-    pass
-
-def check_args_cmd_pack(args):
-
-    pass
 
 def cmd_download(args):
 
@@ -239,16 +248,22 @@ def cmd_pack(args):
 
 def set_logging_level(value):
 
-    if 'debug' != value:
-        pass
+    format_str='%(levelname)s:%(message)s'
 
-    logging.basicConfig( level=get_verbosity_levels().get( value ))
+    if 'debug' == value:
 
-def check_args(args):
+        format_str='%(levelname)s:%(name)s:%(message)s'
 
-    log_level = getDefaultVerbosityLevel()
+    logging.basicConfig(
+        format=format_str,
+        level=get_verbosity_levels().get( value ),
+    )
 
-    if args.verbose  and  args.log:
+def check_common_args(args):
+
+    log_level = get_default_verbosity_level()
+
+    if args.verbose  and  args.verbosity:
         raise pm_common.CrosspmExceptionWrongArgs(
             'implicit requirements --verbose and --verbosity'
         )
@@ -260,6 +275,10 @@ def check_args(args):
         log_level = args.verbosity
 
     set_logging_level( log_level )
+
+def check_args(args):
+
+    check_common_args( args )
 
     if args.check_args is not None:
 
