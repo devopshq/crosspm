@@ -1,324 +1,179 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)
 
-# The MIT License (MIT)
-#
-# Copyright (c) 2015 Iaroslav Akimov <iaroslavscript@gmail.com>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+Usage:
+    crosspm download <OS> <ARCH> <CL> [options]
+    crosspm promote [options]
+    crosspm pack <OUT> <SOURCE> [options]
+    crosspm -h | --help
+    crosspm --version
 
+Options:
+    <OS>                        Target operation system name.
+    <ARCH>                      Target build architecture type.
+    <CL>                        Current compiler name.
+    <OUT>                       Output file.
+    <SOURCE>                    Source directory path.
+    -h, --help                  Show this screen.
+    --version                   Show version.
+    -v, --verbose               Increase output verbosity.
+    --verbosity=LEVEL           Set output verbosity level: ({verb_level}) [default: {verb_default}].
+    -c=FILE, --config=FILE      Path to configuration file.
+    -o=OPTION, --option=OPTION  Extra options.
+    --depslock-path=FILE        Path to file with locked dependencies [default: ./{deps_lock_default}]
+    --out-format=TYPE           Output data format. Available formats:({out_format}) [default: {out_format_default}]
+    --output=FILE               Output file name (required if --out_format is not stdout)
+    --out-prefix=PREFIX         Prefix for output variable name [default: ] (no prefix at all)
 
-import argparse
-import collections
+"""
+
+from docopt import docopt
 import logging
 import sys
 
-import crosspm
-import crosspm.api as api
-from crosspm.helpers import pm_common
-from crosspm.helpers import pm_download_output
+import __init__ as crosspm
+import api
+from helpers import pm_common
+from helpers import pm_download_output
+
+log = logging.getLogger(__name__)
 
 
-log = logging.getLogger( __name__ )
-
-
-def get_verbosity_levels():
-
-    return collections.OrderedDict([
-        ( 'critical', logging.CRITICAL, ),
-        ( 'error',    logging.ERROR, ),
-        ( 'warning',  logging.WARNING, ),
-        ( 'info',     logging.INFO, ),
-        ( 'debug',    logging.DEBUG, ),
-    ])
-
-def get_default_verbosity_level():
-
-    return 'warning'
-
-def make_parser():
-
-    # create the top-level parser
-    parser = argparse.ArgumentParser(
-        prog='PROG',
-        description="CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)".format(
-            version=crosspm.__version__,
-        ),
-        epilog="Copyright (c) 2016 Iaroslav Akimov <iaroslavscript@gmail.com> site: https://github.com/devopshq/crosspm"
+def get_verbosity_level(level=None):
+    levels = (
+        ('critical', logging.CRITICAL, False),
+        ('error', logging.ERROR, False),
+        ('warning', logging.WARNING, True),
+        ('info', logging.INFO, False),
+        ('debug', logging.DEBUG, False),
     )
+    if level is None:
+        return ', '.join([x[0] for x in levels])
 
-    parser.add_argument( '--version',
-        action='version',
-        version=crosspm.__version__,
-    )
+    default = None
+    for x in levels:
+        if type(level) == 'str':
+            if x[0] == level.lower():
+                return x[1]
+        if x[2]:
+            default = x[1]
 
-    subparsers = parser.add_subparsers(help='sub-command help')
+    return default
 
-    # create the parser for the subcommands
-    make_parser_download( subparsers )
-    make_parser_promote( subparsers )
-    make_parser_pack( subparsers )
-
-    return parser
-
-def add_common_arguments(parser):
-
-    # TODO: find out why add_parser(parents) raise error when used with subparsers
-    parser.add_argument( '-v', '--verbose',
-        action='store_true',
-        help='increase output verbosity (default: %(default)s)',
-    )
-
-    parser.add_argument( '--verbosity',
-        choices=get_verbosity_levels().keys(),
-        help='set output verbosity level: [%(choices)s] (default: {})'.format(
-            get_default_verbosity_level(),
-        ),
-        metavar='LEVEL',
-    )
-
-def make_parser_download(subparsers):
-
-    parser = subparsers.add_parser( 'download',
-        help='a download help',
-    )
-
-    parser.set_defaults(
-        check_args=check_args_cmd_download,
-        call_cmd=cmd_download,
-    )
-
-    add_common_arguments( parser )
-
-    parser.add_argument( 'osname',
-        metavar='<OS>',
-        help='target operation system name',
-    )
-    parser.add_argument( 'arch',
-        metavar='<ARCH>',
-        help='target build architecture type',
-    )
-    parser.add_argument( 'compiler',
-        metavar='<CL>',
-        help='current compiler name',
-    )
-
-    group_general = parser.add_argument_group( 'general arguments' )
-
-    group_general.add_argument( '-c', '--config',
-        metavar='FILE',
-        help='path to configuration file',
-    )
-
-    group_general.add_argument( '-o', '--option',
-        action='append',
-        help='extra options',
-    )
-
-    group_general.add_argument( '--depslock-path',
-        metavar='FILE',
-        default=pm_common.CROSSPM_DEPENDENCYLOCK_FILENAME,
-        help='path to file with locked dependencies (default: ./%(default)s)'
-    )
-
-    group_output = parser.add_argument_group( 'output arguments' )
-
-    group_output.add_argument( '--out-format',
-        metavar='TYPE',
-        choices=pm_download_output.get_output_types(),
-        default='stdout',
-        help='output data format. Avalible format types:[%(choices)s] (default: %(default)s)',
-    )
-    group_output.add_argument( '--output',
-        metavar='FILE',
-        help='output file name (required if --out_format is not stdout)',
-    )
-    group_output.add_argument( '--out-prefix',
-        metavar='PREFIX',
-        default='',
-        help='prefix for output variable name (default: no prefix at all)',
-    )
-
-def make_parser_promote(subparsers):
-
-    parser = subparsers.add_parser( 'promote',
-        help='a promote help',
-    )
-
-    parser.set_defaults(
-        check_args=None,
-        call_cmd=cmd_promote,
-    )
-
-    add_common_arguments( parser )
-
-    group_general = parser.add_argument_group( 'general arguments' )
-
-    group_general.add_argument( '-c', '--config',
-        metavar='FILE',
-        help='path to configuration file',
-    )
-
-    group_general.add_argument( '-o', '--option',
-        action='append',
-        help='extra options',
-    )
-
-def make_parser_pack(subparsers):
-
-    parser = subparsers.add_parser( 'pack',
-        help='a pack help',
-    )
-
-    parser.set_defaults(
-        check_args=None,
-        call_cmd=cmd_pack,
-    )
-
-    parser.add_argument( 'out',
-        metavar='<OUT>',
-        help='output file',
-    )
-
-    parser.add_argument( 'src',
-        metavar='<SOURCE>',
-        help='source directory path',
-    )
-
-def check_args_cmd_download(args):
-
-    if 'stdout' == args.out_format:
-
-        if args.output:
-
-            raise pm_common.CrosspmExceptionWrongArgs(
-                "no need argument '--output' when argument '--out-format={}'".format(
-                    args.out_format,
-            ))
-
-    elif not args.output:
-
-        raise pm_common.CrosspmExceptionWrongArgs(
-            "argument '--output' required when argument '--out-format={}'".format(
-                args.out_format,
-        ))
 
 def cmd_download(args):
+    if args['--out-format'] == 'stdout':
+        if args['--output']:
+            raise pm_common.CrosspmExceptionWrongArgs(
+                "unwanted argument '--output' while argument '--out-format={}'".format(
+                    args['--out-format'],
+                ))
+    elif not args['--output']:
+        raise pm_common.CrosspmExceptionWrongArgs(
+            "argument '--output' required when argument '--out-format={}'".format(
+                args['--out-format'],
+            ))
 
-    cpm_downloader = api.CrosspmDownloader({
-        'osname':        args.osname,
-        'arch':          args.arch,
-        'compiler':      args.compiler,
-        'out_format':    args.out_format,
-        'output':        args.output,
-        'out_prefix':    args.out_prefix,
-        'depslock_path': args.depslock_path,
-    })
+    param = {
+        'osname': ['<OS>', ''],
+        'arch': ['<ARCH>', ''],
+        'compiler': ['<CL>', ''],
+        'out_format': ['--out-format', ''],
+        'output': ['--output', ''],
+        'out_prefix': ['--out-prefix', ''],
+        'depslock_path': ['--depslock-path', ''],
+    }
 
-    cpm_downloader.set_config_from_file( args.config )
+    for k, v in param.items():
+        param[k] = args[v[0]] if v[0] in args else v[1]
+
+    cpm_downloader = api.CrosspmDownloader(param)
+    cpm_downloader.set_config_from_file(args['--config'])
     cpm_downloader.get_packages()
 
+
 def cmd_promote(args):
-
     cpm_promoter = api.CrosspmPromoter()
-
-    cpm_promoter.set_config_from_file( args.config )
+    cpm_promoter.set_config_from_file(args['--config'])
     cpm_promoter.promote_packages()
 
-def cmd_pack(args):
 
-    pm_common.createArchive( args.out, args.src )
+def cmd_pack(args):
+    pm_common.createArchive(args['<OUT>'], args['<SOURCE>'])
+
 
 def set_logging_level(value):
+    format_str = '%(levelname)s:%(message)s'
 
-    format_str='%(levelname)s:%(message)s'
-
-    if 'debug' == value:
-
-        format_str='%(levelname)s:%(name)s:%(message)s'
+    if value.lower() == 'debug':
+        format_str = '%(levelname)s:%(name)s:%(message)s'
 
     logging.basicConfig(
         format=format_str,
-        level=get_verbosity_levels().get( value ),
+        level=get_verbosity_level(value),
     )
 
+
 def check_common_args(args):
+    log_level = ''
 
-    log_level = get_default_verbosity_level()
-
-    if args.verbose  and  args.verbosity:
+    if args['--verbose'] and args['--verbosity']:
         raise pm_common.CrosspmExceptionWrongArgs(
             'implicit requirements --verbose and --verbosity'
         )
 
-    elif args.verbose:
+    if args['--verbose']:
         log_level = 'info'
 
-    elif args.verbosity:
-        log_level = args.verbosity
+    elif args['--verbosity']:
+        log_level = args['--verbosity']
 
-    set_logging_level( log_level )
+    set_logging_level(log_level)
 
-def check_args(args):
-
-    check_common_args( args )
-
-    if args.check_args is not None:
-
-        args.check_args( args )
 
 def main():
+    args = docopt(__doc__.format(version=crosspm.__version__,
+                                 verb_level=get_verbosity_level(),
+                                 verb_default=get_verbosity_level(0),
+                                 deps_lock_default=pm_common.CROSSPM_DEPENDENCYLOCK_FILENAME,
+                                 out_format=pm_download_output.get_output_types(),
+                                 out_format_default='stdout',
+                                 ),
+                  version=crosspm.__version__)
 
-    parser = make_parser()
+    if type(args) is str:
+        print(args)
+        exit()
 
     try:
-        args = parser.parse_args()
+        check_common_args(args)
 
-    except SystemExit:
-        sys.exit( pm_common.CROSSPM_ERRORCODE_WRONGARGS )
+        if args['download']:
+            cmd_download(args)
 
-    try:
-        if not vars( args ):
-            raise pm_common.CrosspmExceptionWrongArgs( 'too few arguments' )
+        elif args['promote']:
+            cmd_promote(args)
 
-        check_args( args )
-        args.call_cmd( args )
+        elif args['pack']:
+            cmd_pack(args)
 
     except pm_common.CrosspmExceptionWrongArgs as e:
-
-        parser.print_usage()
-        log.critical( e.msg )
-        sys.exit( e.error_code )
+        print(__doc__)
+        log.critical(e.msg)
+        sys.exit(e.error_code)
 
     except pm_common.CrosspmException as e:
-
-        log.critical( e.msg )
-        sys.exit( e.error_code )
+        log.critical(e.msg)
+        sys.exit(e.error_code)
 
     except Exception as e:
-
-        log.exception( e )
-        log.critical( 'Unknown error occurred!' )
-        sys.exit( pm_common.CROSSPM_ERRORCODE_UNKNOWN_ERROR )
+        log.exception(e)
+        log.critical('Unknown error occurred!')
+        sys.exit(pm_common.CROSSPM_ERRORCODE_UNKNOWN_ERROR)
 
 
 if __name__ == '__main__':
-
     main()
