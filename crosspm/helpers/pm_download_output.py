@@ -108,20 +108,17 @@ def _write_to_file(text, out_filepath):
     out_dir_path = os.path.dirname(out_filepath)
 
     if not os.path.exists(out_dir_path):
-
         log.info('mkdirs [%s] ...', out_dir_path)
         os.makedirs(out_dir_path)
 
     elif not os.path.isdir(out_dir_path):
-
         raise pm_common.CrosspmException(
-            pm_common.CMAKEPM_ERRORCODE_FILE_IO,
+            pm_common.CROSSPM_ERRORCODE_FILE_IO,
             'Unable to make directory [{}]. File with the same name exists'.format(
                 out_dir_path
             ))
 
     with open(out_filepath, 'w+') as f:
-
         f.write(text)
 
 
@@ -132,7 +129,7 @@ def get_output_types():
 def make_output(out_format, out_filepath, out_prefix, packages):
     if out_format not in _OUTPUT_FORMAT_MAP:
         raise pm_common.CrosspmException(
-            pm_common.CMAKEPM_ERRORCODE_UNKNOWN_OUTTYPE,
+            pm_common.CROSSPM_ERRORCODE_UNKNOWN_OUTTYPE,
             'unknown output type: [{}]'.format(out_format),
         )
 

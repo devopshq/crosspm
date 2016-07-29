@@ -57,7 +57,6 @@ class CrosspmExceptionWrongArgs(CrosspmException):
 
 def print_stderr(*args, **kwargs):
     kwargs.update({'file': sys.stderr})
-
     print(*args, **kwargs)
 
 
@@ -72,10 +71,6 @@ def get_crosspm_cache_root():
 
 
 def getPackageParams(i, line):
-    name = ''
-    version = ''
-    branch = ''
-
     parts = line.split()
     n = len(parts)
 
@@ -92,7 +87,7 @@ def getPackageParams(i, line):
     return (name, version, branch,)
 
 
-def getDependencies(filepath):
+def get_dependencies(filepath):
     result = []
 
     if not os.path.exists(filepath):
@@ -103,7 +98,6 @@ def getDependencies(filepath):
 
     with open(filepath, 'r') as f:
         for i, line in enumerate(f):
-
             line = line.strip()
 
             if not line or line.startswith('#'):
@@ -139,7 +133,6 @@ def createArchive(archive_name, src_dir_path):
         )
 
     with contextlib.closing(tarfile.TarFile.open(archive_name_tmp, 'w:gz')) as tf:
-
         for real_path, rel_path in files_to_pack:
             tf.add(real_path, arcname=rel_path)
 
@@ -154,12 +147,10 @@ def extractArchive(archive_name, dst_dir_path):
         shutil.rmtree(dst_dir_path_tmp)
 
     if tarfile.is_tarfile(archive_name):
-
         with contextlib.closing(tarfile.TarFile.open(archive_name, 'r:*')) as tf:
             tf.extractall(path=dst_dir_path_tmp)
 
     elif zipfile.is_zipfile(archive_name):
-
         with contextlib.closing(zipfile.ZipFile(archive_name, mode='r')) as zf:
             zf.extractall(path=dst_dir_path_tmp)
 
@@ -183,23 +174,19 @@ def read_config(filepath=None):
     result = {}
 
     if filepath is None:
-
         env_var_name = 'CROSSPM_CONFIG_PATH'
         config_path_env = os.getenv(env_var_name)
         config_path_cwd = os.path.join(os.getcwd(), CROSSPM_CONFIG_DEFAULT_FILENAME)
 
         if config_path_env:
-
             log.info('Enviroment variable CROSSPM_CONFIG_PATH is set')
             filepath = config_path_env
 
         elif os.path.exists(config_path_cwd):
-
             log.info('Found config file at working directory [%s]', config_path_cwd)
             filepath = config_path_cwd
 
         else:
-
             raise CrosspmException(
                 CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
                 'path to config file is not set',
@@ -216,7 +203,6 @@ def read_config(filepath=None):
     log.info('Reading config file... [%s]', filepath)
 
     try:
-
         with open(filepath) as f:
             result = json.loads(f.read())
 
