@@ -10,8 +10,8 @@ setup(
     version=crosspm.__version__,
     description='Cross Package Manager',
     license='MIT',
-    author='Iaroslav Akimov',
-    author_email='iaroslavscript@gmail.com',
+    author='Alexander Kovalev',
+    author_email='akovalev@ptsecurity.com',
     url='https://github.com/devopshq/crosspm.git',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -33,6 +33,14 @@ setup(
     packages=[
         'crosspm',
         'crosspm.helpers',
+    ],
+    setup_requires=[
+        'pytest-runner',
+        'wheel',
+    ],
+    tests_require=[
+        'pytest',
+        'pytest-flask',
     ],
     install_requires=[
         'requests',
