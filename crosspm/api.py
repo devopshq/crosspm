@@ -317,7 +317,7 @@ class CrosspmDownloader:
                 # extract package
                 if not os.path.exists(extracted_package):
                     log.info('Extracting archive ...')
-                    pm_common.extractArchive(archived_package, extracted_package)
+                    pm_common.extract_archive(archived_package, extracted_package)
 
                 result.append([
                     list(root_package),

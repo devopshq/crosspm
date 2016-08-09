@@ -6,7 +6,7 @@ from setuptools import setup
 import crosspm
 
 setup(
-    name='crosspm',
+    name='cpm',
     version=crosspm.__version__,
     description='Cross Package Manager',
     license='MIT',

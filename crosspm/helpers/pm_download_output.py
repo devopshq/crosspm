@@ -14,7 +14,7 @@ def _output_type_stdout(out_format, out_filepath, out_prefix, packages):
         print('{out_prefix}{package}: {extracted_package}'.format(**locals()))
 
 
-def _output_type_shell(out_format, out_filepath, out_prefix, packages):
+def _output_type_shell(out_format, out_file_path, out_prefix, packages):
     result = '\n'
 
     for (root_package, package, package_name, extracted_package,) in packages:
@@ -23,11 +23,11 @@ def _output_type_shell(out_format, out_filepath, out_prefix, packages):
 
     result += '\n'
 
-    _write_to_file(result, out_filepath)
+    _write_to_file(result, out_file_path)
 
     log.info(
         'Write packages info to file [%s]\n\tcontent:\n\t%s',
-        out_filepath,
+        out_file_path,
         result,
     )
 
@@ -76,7 +76,7 @@ def _output_type_json(out_format, out_filepath, out_prefix, packages):
 
     for i, (root_package, package, package_name, extracted_package,) in enumerate(packages):
         curr_var_name = _get_var_name(out_prefix, package)
-        comma = ',' if i < n - 1  else ''
+        comma = ',' if i < n - 1 else ''
         result += "\t\"{curr_var_name}\": \"{extracted_package}\"{comma}\n".format(**locals())
 
     result += '}\n'

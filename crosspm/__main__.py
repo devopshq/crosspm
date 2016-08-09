@@ -102,7 +102,7 @@ def cmd_promote(args):
 
 
 def cmd_pack(args):
-    pm_common.createArchive(args['<OUT>'], args['<SOURCE>'])
+    pm_common.create_archive(args['<OUT>'], args['<SOURCE>'])
 
 
 def set_logging_level(value):

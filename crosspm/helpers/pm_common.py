@@ -64,51 +64,51 @@ def get_crosspm_cache_root():
     root = os.getenv('CROSSPM_CACHE_ROOT')
 
     if not root:
-        home_dir = os.getenv('APPDATA') if os.name == 'nt'  else os.getenv('HOME')
+        home_dir = os.getenv('APPDATA') if os.name == 'nt' else os.getenv('HOME')
         root = os.path.join(home_dir, '.crosspm')
 
     return root
 
 
-def getPackageParams(i, line):
+def get_package_params(i, line):
     parts = line.split()
     n = len(parts)
 
     if n not in (2, 3,):
         raise CrosspmException(
             CROSSPM_ERRORCODE_WRONGSYNTAX,
-            'wrong syntax at line {}. File: [{}]'.format(i, filepath)
+            'wrong syntax at line {}. File: [{}]'.format(i, file_path)
         )
 
     name = parts[0]
     version = tuple(parts[1].split('.'))
     branch = parts[2] if n == 3 else 'master'
 
-    return (name, version, branch,)
+    return name, version, branch
 
 
-def get_dependencies(filepath):
+def get_dependencies(file_path):
     result = []
 
-    if not os.path.exists(filepath):
+    if not os.path.exists(file_path):
         raise CrosspmException(
             CROSSPM_ERRORCODE_FILEDEPSNOTFOUND,
-            'file not found: [{}]'.format(filepath),
+            'file not found: [{}]'.format(file_path),
         )
 
-    with open(filepath, 'r') as f:
+    with open(file_path, 'r') as f:
         for i, line in enumerate(f):
             line = line.strip()
 
             if not line or line.startswith('#'):
                 continue
 
-            result.append(getPackageParams(i, line))
+            result.append(get_package_params(i, line))
 
         return result
 
 
-def createArchive(archive_name, src_dir_path):
+def create_archive(archive_name, src_dir_path):
     archive_name = os.path.realpath(archive_name)
     src_dir_path = os.path.realpath(src_dir_path)
     files_to_pack = []
@@ -139,7 +139,7 @@ def createArchive(archive_name, src_dir_path):
     os.renames(archive_name_tmp, archive_name)
 
 
-def extractArchive(archive_name, dst_dir_path):
+def extract_archive(archive_name, dst_dir_path):
     dst_dir_path_tmp = '{}_tmp'.format(dst_dir_path)
 
     # remove temp dir
@@ -163,28 +163,26 @@ def extractArchive(archive_name, dst_dir_path):
     os.renames(dst_dir_path_tmp, dst_dir_path)
 
 
-def read_config(filepath=None):
+def read_config(file_path=None):
     """
     order of priority:
-     - option "--config" passed to script or argument filepath of api call
-     - enviroment variable "CROSSPM_CONFIG_PATH"
+     - option "--config" passed to script or argument file_path of api call
+     - environment variable "CROSSPM_CONFIG_PATH"
      - file "crosspm.config" located at working dir
     """
 
-    result = {}
-
-    if filepath is None:
+    if file_path is None:
         env_var_name = 'CROSSPM_CONFIG_PATH'
         config_path_env = os.getenv(env_var_name)
         config_path_cwd = os.path.join(os.getcwd(), CROSSPM_CONFIG_DEFAULT_FILENAME)
 
         if config_path_env:
-            log.info('Enviroment variable CROSSPM_CONFIG_PATH is set')
-            filepath = config_path_env
+            log.info('Environment variable CROSSPM_CONFIG_PATH is set')
+            file_path = config_path_env
 
         elif os.path.exists(config_path_cwd):
             log.info('Found config file at working directory [%s]', config_path_cwd)
-            filepath = config_path_cwd
+            file_path = config_path_cwd
 
         else:
             raise CrosspmException(
@@ -192,18 +190,18 @@ def read_config(filepath=None):
                 'path to config file is not set',
             )
 
-    filepath = os.path.realpath(filepath)
+    file_path = os.path.realpath(file_path)
 
-    if not os.path.exists(filepath):
+    if not os.path.exists(file_path):
         raise CrosspmException(
             CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
-            'config file not found at given path: [{}]'.format(filepath)
+            'config file not found at given path: [{}]'.format(file_path)
         )
 
-    log.info('Reading config file... [%s]', filepath)
+    log.info('Reading config file... [%s]', file_path)
 
     try:
-        with open(filepath) as f:
+        with open(file_path) as f:
             result = json.loads(f.read())
 
     except Exception as e:
@@ -211,7 +209,7 @@ def read_config(filepath=None):
 
         code = CROSSPM_ERRORCODE_CONFIG_IO_ERROR
         msg = 'catch exception while reading config file: [{}]'.format(
-            filepath,
+            file_path,
         )
 
         raise CrosspmException(code, msg) from e

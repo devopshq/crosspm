@@ -1,31 +1,33 @@
 language: python
 python: '3.5'
 before_install:
-  - export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
+- export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
 install: true
 before_script:
-  - "./scripts/tests.sh"
-  - git config --global user.email "iaroslavscript@gmail.com"
-  - git config --global user.name "iaroslavscript"
+- "./scripts/tests.sh"
+- git config --global user.email "akovalev@ptsecurity.com"
+- git config --global user.name "Alexander Kovalev"
 script:
-  - printenv
-  - TRAVIS_BRANCH="develop" ./scripts/build-on-server.sh
+- printenv
+- TRAVIS_BRANCH="develop_ak" ./scripts/build-on-server.sh
 before_deploy:
-  - ls -l build/
-  - (. scripts/common.sh; is_flag_need_push_tags && GH_TOKEN="$(cat $GH_TOKEN_FILE)" git push --quiet "https://${GH_TOKEN}@github.com/devopshq/crosspm" --tags > /dev/null 2>&1)
+- ls -l build/
+- (. scripts/common.sh; is_flag_need_push_tags && GH_TOKEN="$(cat $GH_TOKEN_FILE)"
+  git push --quiet "https://${GH_TOKEN}@github.com/devopshq/crosspm" --tags > /dev/null
+  2>&1)
 deploy:
   provider: pypi
-  user: iaroslavscript
+  user: alkov.pro
   password:
-    secure: R1HHgxpiD4B8lJbemyCb4OKuWpSxeuLGmhSNNkdmK5oMNx79fgLs0Yq3LsfFSBS4dsmm6cziUnXpLRcHbyZCHbN2YPNnqo3M4q3K459U9S1pZFqn79sKupJ6hsKki94e8nAxJtZX01YpgY8pEs97vH2xQtnEZLmiJouIA/Fok5K5ko6LmFUQz71m84gHCcSPIB3soXfQnztiqNYhb6vGBLGHiXxa+BekBDKxZLgSIu99k2vIZET2YgJ+/8GLKDP4QnsoefKRik+zZFhtzEHlDBzWzKNzmPxcTn6mwDeTaFRajvJ0NSEGUF0Ty5dhjIf/1nj7KW/mc3QXThZAnFuVDzhelbQm482fzk1MUFJIsl15UPS4TitjsZu18iSix1/gnDs3ntRiTNmlOaYfSMBbKcxNgeHm+F18DOJSUgWuK4FHiUQT66N2lHJflKRHjw9672W9ND7zTz9TSU3BszM4aF6us8x2AFihmVrjgTYDVBg2hbULSBPauCTIPpquOAfZbKA2Sneox/XgXSnZ9QemyFp02tUQT4Y0+AcFOY7uYgVajZeIo1oY89zrr80KS3hDoNcY3wUGGsEod2NUQ4ajkiXCQP0dpTkFMLkzlLVN1cXIBTG9EGJIr7br6sQSK/H5mgiaYcDtvKT3byswQumFfaJ5TBTlUr7Wt+kHSi95DSI=
+    secure: hPoe8xkHPfq5+fKgFqgoam16g2Asg7sIit8B9LCVfzLUGdPv3U3SBI1RuUMMZP3PWjW+55Y6H6V6FXfgcAqdmi+rVUPnvja67fkOp4ywgChBIc6HQwi01cCyFQ/tzK4NYsnRDpkyjdGcQ+L6Xp8fkeXbsDuXS2jQ38nqlgrWnqXBLOaZwkBAIhjdLPRuPko61aClQdO+VAtPkzlVfwYT1+dODQ91VH3jfOTa+nEPc4hcPp4QCkY8p0btMlzucB7XrFcf/rmMJT0oftKpH3bPYHkGH0B5oFLKIMcF21kNhbMtjagkf2REUvP9Za9++6PzFZQjgbeLV8OPP37PMSOls5QZUzYKe6MSFKBg8SF+2oswSEaKJkjiveanwt1/gDVusMNeACmFnzhzG05YfqEawACzsYzeo8FvmlSQ1ZMNmqh/v67sk/PKkYQjUqlggDP8tUCBHFxtwJeDmV6r7zyi/42lLHaQVa+C6EsXm2cKNJyxL3Zdrfv+IjUEZVIaq0UPw3w4vefzr5QzewYqlqjDWIsdII+KQSFDbFVN0YhSI33Vw5okuPEDzh4dZc79iqjLlz4qdQpPs6sPZzDcMha8oJt8HyaNtJjwN1lKEo9fBRfWp81KBFm59DQBlbF0mQ56dzuFh1v7pvb/eyDOjl91XacMo8FNCEFk0x2hIR7d4Pk=
   server: https://testpypi.python.org/pypi
   distributions: sdist bdist_wheel
   skip_cleanup: true
   on:
     all_branches: true
 after_script:
-  - echo "yes we run after_script"
-  - echo "" > $GH_TOKEN_FILE
+- echo "yes we run after_script"
+- echo "" > $GH_TOKEN_FILE
 env:
   global:
     secure: wcjGU0eeWMrOwA9CQvqGGqzloTU4x9vgH3K6i1VpSRHcmrZ/GbZgfl++qEudx+TwdHu+0kw8Wr6G3bVel2PD8LSmWPXRErB0rCT5sl/hSmqSGMQw1wh1YpDoJiDddbPt/1BV76Wm8mQC0zPLivxx7Egp2GvXTmakYkIybU4Fl0j2ZBogLtkvLStSKKQKlvzWGga9bp7Yl+At2H3uTi9Vrxd8JvHkmrq1D3/OEr+D8ZW41QnJz+ZQ3ocIwxgrk1B1lKTA52IENAIL58KGzVR37nAPN+MwNSo0KlfEJRy5RkykThuNQ0AQ8mmyYXkuPauwuLSywkIY3NEQ8sk0xnWs6fwBvb4HRs0+swNUkufdaSIETZv4MlBrVvRzTgEcNijco4XzgIMdzUiHg2HaP8zZLsEmUiEyZPniliVJ4fMyYAHPUUp3Q+7zsnYNhg+rbNXiCMxjCGnrD3/gcHHr2fIaKF7VC8gxfz146oTMCPF0sK0sX2Jo/B8FfR93GYpyUcGAYbY8vO29hf7nUT3YszgXhFTKd8Ka8rzz4TuSarQoRAdQ0nID5GdCttVCiRWHLokBVuo50zocDK6+u8DpAN+7A7P2Yja2987jePg7TZQMPyVNnv+0KNnpjmOcPSvt9eUYy9DMQl4wPsKPG5sMh1/6C2mXBn7qE8lPa8izl40KpVA=
