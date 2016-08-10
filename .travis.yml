@@ -19,7 +19,7 @@ deploy:
   user: alkov.pro
   password:
     secure: hPoe8xkHPfq5+fKgFqgoam16g2Asg7sIit8B9LCVfzLUGdPv3U3SBI1RuUMMZP3PWjW+55Y6H6V6FXfgcAqdmi+rVUPnvja67fkOp4ywgChBIc6HQwi01cCyFQ/tzK4NYsnRDpkyjdGcQ+L6Xp8fkeXbsDuXS2jQ38nqlgrWnqXBLOaZwkBAIhjdLPRuPko61aClQdO+VAtPkzlVfwYT1+dODQ91VH3jfOTa+nEPc4hcPp4QCkY8p0btMlzucB7XrFcf/rmMJT0oftKpH3bPYHkGH0B5oFLKIMcF21kNhbMtjagkf2REUvP9Za9++6PzFZQjgbeLV8OPP37PMSOls5QZUzYKe6MSFKBg8SF+2oswSEaKJkjiveanwt1/gDVusMNeACmFnzhzG05YfqEawACzsYzeo8FvmlSQ1ZMNmqh/v67sk/PKkYQjUqlggDP8tUCBHFxtwJeDmV6r7zyi/42lLHaQVa+C6EsXm2cKNJyxL3Zdrfv+IjUEZVIaq0UPw3w4vefzr5QzewYqlqjDWIsdII+KQSFDbFVN0YhSI33Vw5okuPEDzh4dZc79iqjLlz4qdQpPs6sPZzDcMha8oJt8HyaNtJjwN1lKEo9fBRfWp81KBFm59DQBlbF0mQ56dzuFh1v7pvb/eyDOjl91XacMo8FNCEFk0x2hIR7d4Pk=
-  server: https://testpypi.python.org/pypi
+  server: https://upload.pypi.org/legacy/
   distributions: sdist bdist_wheel
   skip_cleanup: true
   on:
