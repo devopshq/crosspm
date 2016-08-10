@@ -14,7 +14,7 @@ before_deploy:
 - ls -l build/
 - cat $GH_TOKEN_FILE
 - GH_TOKEN="$(cat $GH_TOKEN_FILE)"
-- (. ./scripts/common.sh)
+- "(. ./scripts/common.sh)"
 - git push "https://${GH_TOKEN}@github.com/devopshq/crosspm" --tags
 - (. ./scripts/common.sh; is_flag_need_push_tags && GH_TOKEN="$(cat $GH_TOKEN_FILE)"
   git push --quiet "https://${GH_TOKEN}@github.com/devopshq/crosspm" --tags > /dev/null
@@ -34,4 +34,4 @@ after_script:
 - echo "" > $GH_TOKEN_FILE
 env:
   global:
-    secure: wcjGU0eeWMrOwA9CQvqGGqzloTU4x9vgH3K6i1VpSRHcmrZ/GbZgfl++qEudx+TwdHu+0kw8Wr6G3bVel2PD8LSmWPXRErB0rCT5sl/hSmqSGMQw1wh1YpDoJiDddbPt/1BV76Wm8mQC0zPLivxx7Egp2GvXTmakYkIybU4Fl0j2ZBogLtkvLStSKKQKlvzWGga9bp7Yl+At2H3uTi9Vrxd8JvHkmrq1D3/OEr+D8ZW41QnJz+ZQ3ocIwxgrk1B1lKTA52IENAIL58KGzVR37nAPN+MwNSo0KlfEJRy5RkykThuNQ0AQ8mmyYXkuPauwuLSywkIY3NEQ8sk0xnWs6fwBvb4HRs0+swNUkufdaSIETZv4MlBrVvRzTgEcNijco4XzgIMdzUiHg2HaP8zZLsEmUiEyZPniliVJ4fMyYAHPUUp3Q+7zsnYNhg+rbNXiCMxjCGnrD3/gcHHr2fIaKF7VC8gxfz146oTMCPF0sK0sX2Jo/B8FfR93GYpyUcGAYbY8vO29hf7nUT3YszgXhFTKd8Ka8rzz4TuSarQoRAdQ0nID5GdCttVCiRWHLokBVuo50zocDK6+u8DpAN+7A7P2Yja2987jePg7TZQMPyVNnv+0KNnpjmOcPSvt9eUYy9DMQl4wPsKPG5sMh1/6C2mXBn7qE8lPa8izl40KpVA=
+    - secure: wiFL18iRrNU1t7ZBu571vWMvEdih8fX5wM1e0h0wyaa0OK2Rz2Ihsqnzv490vLvaXanRXrBMV8/QwskNwsJ0kOtaL43Xt4yaBqMkOVNprNAIFNofJrvlrAxzZ9m8TGzmSoHz3JkE0YHZSJRKYWzJW5+iI1r+rC2BRUGQG7tRmzef1tiOCoq76Ie2LD4+Pp5BkO2EdeC7O9+WRdOjizRwbBJ+1wc0mWc1Yb/5r76THNxAVDfdhW6k7AZGqaXIwSvVgmlfj3hjYKJGPP9bJOfaRpFMxBBA4cYXFLdEAaaC+8sc9E1TTvG+R3O5gGfz/RUJ5pIqBUVDMz4xAjysJHYY5W1RueEEaG9aDjtM5/oNVZGjbmQqhusi92nlEJoXmukv/YZUFARiw1cAFQFCSWMUUzoR1XfUpJewsKBCuJ8Akwf8GiK4c153tyYHAa371LDcBiEcylcLTF2M/0Vb+oIU1wX+x6rv1B7uEPZshmq5tVXYbUpezBYAFFIrZwgPxj1SITONgMdHFVCLfp+b1TIpE64A4FWrhWNJOXv5yzl8/xlyaN9hFBv1NebCBZFUEkzXvgIz/PxiEbI6jygKBdxaW9Iw9NUdByfFVAcczExRODsHP8TCWSzQTkdwDwKl2QUI0WsmeBraBovprWeye2lgfh8w6UVA5IK9Pj4kkXjOr8A=
