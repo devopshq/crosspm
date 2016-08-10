@@ -12,7 +12,7 @@ script:
 - TRAVIS_BRANCH="develop_ak" ./scripts/build-on-server.sh
 before_deploy:
 - ls -l build/
-- (. scripts/common.sh; is_flag_need_push_tags && GH_TOKEN="$(cat $GH_TOKEN_FILE)"
+- (. ./scripts/common.sh; is_flag_need_push_tags && GH_TOKEN="$(cat $GH_TOKEN_FILE)"
   git push --quiet "https://${GH_TOKEN}@github.com/devopshq/crosspm" --tags > /dev/null
   2>&1)
 deploy:
