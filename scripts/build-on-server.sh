@@ -6,7 +6,7 @@ set -e -v -x
 DEVOPS_CHECKOUT_DIR="$(dirname "$(dirname "$(readlink --canonicalize --no-newline "${BASH_SOURCE:-$0}")")")"
 cd "$DEVOPS_CHECKOUT_DIR"
 
-. "../scripts/common.sh"
+. "./scripts/common.sh"
 
 
 # TODO: check we are under travis
