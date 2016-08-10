@@ -5,9 +5,9 @@ DEVOPS_CHECKOUT_DIR="$(dirname "$(dirname "$(readlink --canonicalize --no-newlin
 cd "$DEVOPS_CHECKOUT_DIR"
 
 
-. ../scripts/assert.sh --verbose
+. ./scripts/assert.sh --verbose
 
-. ../scripts/common.sh
+. ./scripts/common.sh
 
 
 # ======== test bool

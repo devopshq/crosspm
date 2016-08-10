@@ -11,7 +11,7 @@ cd "$DEVOPS_CHECKOUT_DIR"
 
 # TODO: check we are under travis
 # TODO: check version has correct syntax
-# TODO: check release branch verssion corelate to __version__
+# TODO: check release branch version correlate to __version__
 
 
 DEVOPS_BUILD_BRANCH="$TRAVIS_BRANCH"

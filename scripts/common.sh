@@ -77,9 +77,9 @@ function version_append_build_number() {
 function get_url_travis_build_status() {
 
     local BRANCH_NAME="$1"
-    local BRANCH_URLENCODE=$(python3 -c "import urllib.parse; print(urllib.parse.quote_plus('$BRANCH_NAME'))")
+    local BRANCH_URL_ENCODE=$(python3 -c "import urllib.parse; print(urllib.parse.quote_plus('$BRANCH_NAME'))")
     
-    echo "https://travis-ci.org/devopshq/crosspm.svg?branch=${BRANCH_URLENCODE}"
+    echo "https://travis-ci.org/devopshq/crosspm.svg?branch=${BRANCH_URL_ENCODE}"
 }
 
 function git_tag_exists() {

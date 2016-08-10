@@ -51,7 +51,7 @@ def get_verbosity_level(level=None):
         ('debug', logging.DEBUG, False),
     )
     if level is None:
-        return ', '.join([x[0] for x in levels])
+        return ', '.join(x[0] for x in levels)
 
     default = None
     for x in levels:
