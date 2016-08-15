@@ -22,12 +22,12 @@ try:
 
     version = crosspm.__version__
     version_build = 0
-    if build_no > version_build:
-        version = '.'.join((version, '{}{}'.format(branch, build_no), ))
+    #if build_no > version_build:
+    #    version = '.'.join((version, '{}{}'.format(branch, build_no), ))
         # write_file('./crosspm/__init__.py', "__version__ = '{}'\n".format(version))
         # write_file('./version',  "{}\n".format(version))
-    else:
-        version = crosspm.__version__
+    #else:
+    #    version = crosspm.__version__
 except:
     version = crosspm.__version__
 
