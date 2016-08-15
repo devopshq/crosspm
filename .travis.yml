@@ -15,10 +15,6 @@ before_deploy:
 - ls -l build/
 - GH_TOKEN="$(cat $GH_TOKEN_FILE)"
 - git push --quiet "https://${GH_TOKEN}@github.com/devopshq/crosspm" --tags > /dev/null
-- git add ./crosspm/__init__.py
-- git add ./version
-- git commit -m "build"
-- git push --quiet "https://${GH_TOKEN}@github.com/devopshq/crosspm" > /dev/null
 deploy:
   provider: pypi
   user: alkov.pro
