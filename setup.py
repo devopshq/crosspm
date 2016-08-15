@@ -20,13 +20,10 @@ try:
     elif branch[:3] == 'dev':
         branch = 'dev'
 
-    version = crosspm.__version__.split('-')[0]
-    version = crosspm.__version__.split('.')
-    version_build = int(version[2])
+    version = crosspm.__version__
+    version_build = 0
     if build_no > version_build:
-        version = '.'.join((version[0], version[1], str(build_no), ))
-        if len(branch) > 0:
-            version = '-'.join((version, branch, ))
+        version = '.'.join((version, '{}{}'.format(branch, build_no), ))
         write_file('./crosspm/__init__.py', "__version__ = '{}'\n".format(version))
         write_file('./version',  "{}\n".format(version))
     else:
