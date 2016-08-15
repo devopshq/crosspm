@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+# TODO: it's better to use six module
 from __future__ import print_function  # support for print to stderr from Python 2.7
 
 import contextlib
@@ -18,22 +19,22 @@ disable_warnings()
 log = logging.getLogger(__name__)
 
 CROSSPM_DEPENDENCY_FILENAME = 'dependencies.txt'
-CROSSPM_DEPENDENCYLOCK_FILENAME = '{}.lock'.format(CROSSPM_DEPENDENCY_FILENAME)
+CROSSPM_DEPENDENCY_LOCK_FILENAME = '{}.lock'.format(CROSSPM_DEPENDENCY_FILENAME)
 CROSSPM_CONFIG_DEFAULT_FILENAME = 'crosspm.config'
 
 CROSSPM_ERRORCODES = (
     CROSSPM_ERRORCODE_SUCCESS,
     CROSSPM_ERRORCODE_UNKNOWN_ERROR,
-    CROSSPM_ERRORCODE_WRONGARGS,
-    CROSSPM_ERRORCODE_FILEDEPSNOTFOUND,
-    CROSSPM_ERRORCODE_WRONGSYNTAX,
+    CROSSPM_ERRORCODE_WRONG_ARGS,
+    CROSSPM_ERRORCODE_FILE_DEPS_NOT_FOUND,
+    CROSSPM_ERRORCODE_WRONG_SYNTAX,
     CROSSPM_ERRORCODE_MULTIPLE_DEPS,
     CROSSPM_ERRORCODE_NO_FILES_TO_PACK,
     CROSSPM_ERRORCODE_SERVER_CONNECT_ERROR,
     CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
     CROSSPM_ERRORCODE_PACKAGE_BRANCH_NOT_FOUND,
     CROSSPM_ERRORCODE_VERSION_PATTERN_NOT_MATCH,
-    CROSSPM_ERRORCODE_UNKNOWN_OUTTYPE,
+    CROSSPM_ERRORCODE_UNKNOWN_OUT_TYPE,
     CROSSPM_ERRORCODE_FILE_IO,
     CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
     CROSSPM_ERRORCODE_CONFIG_IO_ERROR,
@@ -52,7 +53,7 @@ class CrosspmException(Exception):
 
 class CrosspmExceptionWrongArgs(CrosspmException):
     def __init__(self, msg=''):
-        super().__init__(CROSSPM_ERRORCODE_WRONGARGS, msg)
+        super().__init__(CROSSPM_ERRORCODE_WRONG_ARGS, msg)
 
 
 def print_stderr(*args, **kwargs):
@@ -76,8 +77,8 @@ def get_package_params(i, line):
 
     if n not in (2, 3,):
         raise CrosspmException(
-            CROSSPM_ERRORCODE_WRONGSYNTAX,
-            'wrong syntax at line {}. File: [{}]'.format(i, file_path)
+            CROSSPM_ERRORCODE_WRONG_SYNTAX,
+            'wrong syntax at line {}. File: [{}]'.format(i, parts[0])
         )
 
     name = parts[0]
@@ -92,7 +93,7 @@ def get_dependencies(file_path):
 
     if not os.path.exists(file_path):
         raise CrosspmException(
-            CROSSPM_ERRORCODE_FILEDEPSNOTFOUND,
+            CROSSPM_ERRORCODE_FILE_DEPS_NOT_FOUND,
             'file not found: [{}]'.format(file_path),
         )
 
@@ -236,8 +237,8 @@ def parse_config(data):
     return result
 
 
-def load_config(filepath=None):
-    config_data = read_config(filepath)
+def load_config(file_path=None):
+    config_data = read_config(file_path)
     config_dict = parse_config(config_data)
 
     OPT_SOURCES.extend(config_dict['sources'])

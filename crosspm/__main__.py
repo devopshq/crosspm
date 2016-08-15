@@ -138,7 +138,7 @@ def main():
     args = docopt(__doc__.format(version=crosspm.__version__,
                                  verb_level=get_verbosity_level(),
                                  verb_default=get_verbosity_level(0),
-                                 deps_lock_default=pm_common.CROSSPM_DEPENDENCYLOCK_FILENAME,
+                                 deps_lock_default=pm_common.CROSSPM_DEPENDENCY_LOCK_FILENAME,
                                  out_format=pm_download_output.get_output_types(),
                                  out_format_default='stdout',
                                  ),

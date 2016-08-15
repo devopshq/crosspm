@@ -11,10 +11,20 @@ import requests
 from helpers import pm_common
 from helpers import pm_download_output
 
+# from helpers import dependency_parser
+
 log = logging.getLogger(__name__)
 
 
 class CrosspmDownloader:
+    _option_depslock_path = ''
+    _option_osname = ''
+    _option_arch = ''
+    _option_compiler = ''
+    _option_out_format = ''
+    _option_output = ''
+    _option_out_prefix = ''
+
     def __init__(self, options_dict):
         attribs = (
             'osname',
@@ -30,9 +40,9 @@ class CrosspmDownloader:
 
         for x in attribs:
             if 'path' in x:
-                setattr(self, '__option_{}'.format(x), os.path.realpath(options_dict[x]))
+                setattr(self, '_option_{}'.format(x), os.path.realpath(options_dict[x]))
             else:
-                setattr(self, '__option_{}'.format(x), options_dict[x])
+                setattr(self, '_option_{}'.format(x), options_dict[x])
 
     def set_config(self, data):
         self.__config = pm_common.parse_config(data)
@@ -41,7 +51,8 @@ class CrosspmDownloader:
         data = pm_common.read_config(file_path)
         self.set_config(data)
 
-    def download_package(self, auth, package_url, save_path, package_name):
+    @staticmethod
+    def download_package(auth, package_url, save_path, package_name):
         chunk_size = 1024
         try:
             r = requests.get(
@@ -78,7 +89,8 @@ class CrosspmDownloader:
 
         return result
 
-    def package_exists(self, auth, package_url):
+    @staticmethod
+    def package_exists(auth, package_url):
         result = False
 
         try:
@@ -111,7 +123,8 @@ class CrosspmDownloader:
 
         return result
 
-    def join_package_path(self, server_url, repo, path):
+    @staticmethod
+    def join_package_path(server_url, repo, path):
         server_url = server_url if not server_url.endswith('/') else server_url[: -1]
         repo = repo if not repo.startswith('/') else repo[1:]
         repo = repo if not repo.endswith('/') else repo[: -1]
@@ -119,7 +132,8 @@ class CrosspmDownloader:
 
         return '{}/{}/{}'.format(server_url, repo, path)
 
-    def print_deps_tree(self, deps_tree):
+    @staticmethod
+    def print_deps_tree(deps_tree):
         def print_deps_tree_inner(deps_tree, nodes=None):
             nodes = [] if nodes is None else nodes
 
@@ -144,7 +158,8 @@ class CrosspmDownloader:
         print_deps_tree_inner(deps_tree)
         pm_common.print_stderr('\n' + '=' * 80)
 
-    def make_deps_tree(self, package_list):
+    @staticmethod
+    def make_deps_tree(package_list):
         package_list = sorted(package_list, key=lambda x: x[2])
 
         result = collections.OrderedDict()
@@ -158,7 +173,8 @@ class CrosspmDownloader:
 
         return result
 
-    def check_dependencies(self, package_list, unique_package_list=None):
+    @staticmethod
+    def check_dependencies(package_list, unique_package_list=None):
         unique_package_list = [] if unique_package_list is None else unique_package_list
         unique_package_dict = {}
         errors = {}
@@ -188,18 +204,18 @@ class CrosspmDownloader:
 
         return not len(errors)
 
-    def get_packages(self, depslock_filepath=None):
-        if depslock_filepath is None:
-            depslock_filepath = self.__option_depslock_path
+    def get_packages(self, depslock_file_path=None):
+        if depslock_file_path is None:
+            depslock_file_path = self._option_depslock_path
 
-        log.info('Reading dependencies ... [%s]', depslock_filepath)
+        log.info('Reading dependencies ... [%s]', depslock_file_path)
 
         package_list = []
         self.get_packages_inner(
-            depslock_filepath,
-            self.__option_osname,
-            self.__option_arch,
-            self.__option_compiler,
+            depslock_file_path,
+            self._option_osname,
+            self._option_arch,
+            self._option_compiler,
             [],
             package_list,
         )
@@ -220,16 +236,16 @@ class CrosspmDownloader:
         unique_package_list = sorted(unique_package_list, key=lambda x: x[2])
 
         pm_download_output.make_output(
-            self.__option_out_format,
-            self.__option_output,
-            self.__option_out_prefix,
-            unique_package_list
+            self._option_out_format,
+            self._option_output,
+            self._option_out_prefix,
+            unique_package_list,
         )
 
         log.info('Done!')
 
-    def get_packages_inner(self, depslock_filepath, osname, arch, compiler, root_package, result):
-        packages = pm_common.get_dependencies(depslock_filepath)
+    def get_packages_inner(self, depslock_file_path, osname, arch, compiler, root_package, result):
+        packages = pm_common.get_dependencies(depslock_file_path)
         root = pm_common.get_crosspm_cache_root()
 
         root_packages = os.path.join(root, 'cache')
@@ -275,16 +291,20 @@ class CrosspmDownloader:
 
             log.info('Search package [{package}] ...'.format(**locals()))
 
-            version = '.'.join(map(str, version_tuple))
+            version = '.'.join(map(str, version_tuple))  # TODO: Only dots???
             package_name = '{} {} {}'.format(package, version, branch)
 
             for (current_source, current_repo, curr_osname, curr_arch, curr_compiler) in package_params_list:
-                lib_rel_path = '{package}/{branch}/{version}/{curr_compiler}/{curr_arch}/{curr_osname}'.format(**locals())
-                archived_package = '{root_archives}/{package}-{branch}.{version}-{curr_compiler}{curr_arch}-{curr_osname}.tar.gz'.format(**locals())
+                lib_rel_path = \
+                    '{package}/{branch}/{version}/{curr_compiler}/{curr_arch}/{curr_osname}' \
+                    .format(**locals())
+                archived_package = \
+                    '{root_archives}/{package}-{branch}.{version}-{curr_compiler}{curr_arch}-{curr_osname}.tar.gz' \
+                    .format(**locals())
                 archived_package_tmp = '{archived_package}_tmp'.format(**locals())
                 extracted_package = '{root_packages}/{lib_rel_path}'.format(**locals())
                 extracted_package = extracted_package.replace('\\', '/')
-                package_depslock_filepath = os.path.join(extracted_package, pm_common.CROSSPM_DEPENDENCYLOCK_FILENAME)
+                package_depslock_file_path = os.path.join(extracted_package, pm_common.CROSSPM_DEPENDENCY_LOCK_FILENAME)
                 package_short_url = '{lib_rel_path}/{package}.{version}.tar.gz'.format(**locals())
                 package_full_url = self.join_package_path(current_source['server_url'], current_repo, package_short_url)
 
@@ -327,11 +347,11 @@ class CrosspmDownloader:
                 ])
 
                 # recursive download dependencies
-                if os.path.exists(package_depslock_filepath):
+                if os.path.exists(package_depslock_file_path):
                     log.info('Search dependencies for package [%s] ...', package)
 
                     root_package.append(package_name)
-                    self.get_packages_inner(package_depslock_filepath, osname, arch, compiler, root_package, result)
+                    self.get_packages_inner(package_depslock_file_path, osname, arch, compiler, root_package, result)
                     root_package.pop()
 
                     log.info('Dependencies for package [%s] done!', package)
@@ -357,24 +377,25 @@ class CrosspmPromoter:
     def set_config(self, data):
         self.__config = pm_common.parse_config(data)
 
-    def set_config_from_file(self, filepath=None):
-        data = pm_common.read_config(filepath)
+    def set_config_from_file(self, file_path=None):
+        data = pm_common.read_config(file_path)
         self.set_config(data)
 
-    def get_version_int(self, version_str):
+    @staticmethod
+    def get_version_int(version_str):
         parts = version_str.split('.')
         try:
             if len(parts) < 4:
-                return (int(parts[0]), int(parts[1]), 0, int(parts[2]))
+                return int(parts[0]), int(parts[1]), 0, int(parts[2])
 
-            return (int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3]))
+            return int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3])
         except ValueError:
-            return (0, 0, 0, 0)
+            return 0, 0, 0, 0
         except IndexError:
-            return (0, 0, 0, 0)
+            return 0, 0, 0, 0
 
-    def parse_dirlist(self, data_dict, dirlist_data):
-        for item in dirlist_data["files"]:
+    def parse_dir_list(self, data_dict, dir_list_data):
+        for item in dir_list_data["files"]:
             if item["folder"]:
                 continue
 
@@ -389,8 +410,9 @@ class CrosspmPromoter:
             data_dict[name].setdefault(branch, [])
             data_dict[name][branch].append((version, version_int))
 
-    def join_package_path(self, server_url, part_a, repo, path):
-        server_url = server_url if not server_url.endswith('/')  else server_url[: -1]
+    @staticmethod
+    def join_package_path(server_url, part_a, repo, path):
+        server_url = server_url if not server_url.endswith('/') else server_url[: -1]
         part_a = part_a if not part_a.startswith('/') else part_a[1:]
         part_a = part_a if not part_a.endswith('/') else part_a[: -1]
         repo = repo if not repo.startswith('/') else repo[1:]
@@ -404,7 +426,7 @@ class CrosspmPromoter:
         deps_list = pm_common.get_dependencies(os.path.join(os.getcwd(), pm_common.CROSSPM_DEPENDENCY_FILENAME))
         out_file_data_str = ''
         out_file_format = '{:20s} {:20s} {}\n'
-        out_file_path = os.path.join(os.getcwd(), pm_common.CROSSPM_DEPENDENCYLOCK_FILENAME)
+        out_file_path = os.path.join(os.getcwd(), pm_common.CROSSPM_DEPENDENCY_LOCK_FILENAME)
 
         # clean file
         with open(out_file_path, 'w') as out_f:
@@ -431,7 +453,7 @@ class CrosspmPromoter:
 
                 data_response = r.json()
 
-                self.parse_dirlist(data_tree, data_response)
+                self.parse_dir_list(data_tree, data_response)
 
         for (d_name, d_version, d_branch,) in deps_list:
             if d_name not in data_tree:

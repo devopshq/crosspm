@@ -7,7 +7,7 @@ set(Python_ADDITIONAL_VERSIONS 3.0 3.1 3.2 3.3 3.4 3.5)
 find_package(PythonInterp)
 
 
-set(CMAKEPM_DIR ${CMAKE_CURRENT_LIST_DIR})
+set(CPM_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 
 function(pm_download_dependencies)
@@ -26,27 +26,27 @@ endfunction()
 
 function(_pm_download_dependencies SOURCE_DIR BINARY_DIR)
 
-    if(NOT DEFINED CMAKEPM_TARGET_OS)
+    if(NOT DEFINED CPM_TARGET_OS)
         if("x$ENV{TargetOS}" STREQUAL "x")
             message(FATAL_ERROR "Env var TargetOS not set!")
         else()
-            set(CMAKEPM_TARGET_OS $ENV{TargetOS} CACHE STRING "CMAKE Package Manager variable" FORCE)
+            set(CPM_TARGET_OS $ENV{TargetOS} CACHE STRING "CMAKE Package Manager variable" FORCE)
         endif()
     endif()
 
-    if(NOT DEFINED CMAKEPM_TARGET_ARCH)
+    if(NOT DEFINED CPM_TARGET_ARCH)
         if("x$ENV{TargetArchitecture}" STREQUAL "x")
             message(FATAL_ERROR "Env var TargetArchitecture not set!")
         else()
-            set(CMAKEPM_TARGET_ARCH $ENV{TargetArchitecture} CACHE STRING "CMAKE Package Manager variable" FORCE)
+            set(CPM_TARGET_ARCH $ENV{TargetArchitecture} CACHE STRING "CMAKE Package Manager variable" FORCE)
         endif()
     endif()
 
-    if(NOT DEFINED CMAKEPM_PLATFORM_TOOLSET)
+    if(NOT DEFINED CPM_PLATFORM_TOOLSET)
         if("x$ENV{PlatformToolset}" STREQUAL "x")
             message(FATAL_ERROR "Env var PlatformToolset not set!")
         else()
-            set(CMAKEPM_PLATFORM_TOOLSET $ENV{PlatformToolset} CACHE STRING "CMAKE Package Manager variable" FORCE)
+            set(CPM_PLATFORM_TOOLSET $ENV{PlatformToolset} CACHE STRING "CMAKE Package Manager variable" FORCE)
         endif()
     endif()
 
@@ -56,9 +56,9 @@ function(_pm_download_dependencies SOURCE_DIR BINARY_DIR)
             "-u"
             "-m" "crosspm.cpm"
             "download"
-            "${CMAKEPM_TARGET_OS}"
-            "${CMAKEPM_TARGET_ARCH}"
-            "${CMAKEPM_PLATFORM_TOOLSET}"
+            "${CPM_TARGET_OS}"
+            "${CPM_TARGET_ARCH}"
+            "${CPM_PLATFORM_TOOLSET}"
         WORKING_DIRECTORY
             "${SOURCE_DIR}"
         OUTPUT_FILE
@@ -113,10 +113,10 @@ function(_pm_add_package PACKAGE_NAME PACKAGE_PATH)
 
     message(STATUS "Load package '${PACKAGE_NAME}' from '${PACKAGE_PATH}'")
 
-    if(CMAKEPM_PACKAGE_${PACKAGE_NAME} AND NOT CMAKEPM_PACKAGE_${PACKAGE_NAME} STREQUAL ${PACKAGE_PATH})
-        message(FATAL_ERROR "CMAKEPM package '${PACKAGE_NAME}' already loaded from ${CMAKEPM_PACKAGE_${PACKAGE_NAME}}")
+    if(CPM_PACKAGE_${PACKAGE_NAME} AND NOT CPM_PACKAGE_${PACKAGE_NAME} STREQUAL ${PACKAGE_PATH})
+        message(FATAL_ERROR "CPM package '${PACKAGE_NAME}' already loaded from ${CPM_PACKAGE_${PACKAGE_NAME}}")
     else()
-        set(CMAKEPM_PACKAGE_${PACKAGE_NAME} ${PACKAGE_PATH} CACHE STRING "CMAKE Package Manager guard" FORCE)
+        set(CPM_PACKAGE_${PACKAGE_NAME} ${PACKAGE_PATH} CACHE STRING "CMAKE Package Manager guard" FORCE)
     endif()
 
     if (EXISTS "${PACKAGE_PATH}/_pm_package.cmake")
