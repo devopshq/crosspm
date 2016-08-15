@@ -2,7 +2,8 @@ language: python
 python: '3.5'
 before_install:
 - export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
-install: true
+install:
+- pip install dohq-art
 before_script:
 - "./scripts/tests.sh"
 - git config --global user.email "akovalev@ptsecurity.com"

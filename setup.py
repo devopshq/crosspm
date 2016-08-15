@@ -74,7 +74,7 @@ setup(
     install_requires=[
         'requests',
         'docopt',
-        'dohq-art',
+        # 'dohq-art',
     ],
     package_data={
         '': [
