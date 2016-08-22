@@ -10,6 +10,7 @@ from crosspm.helpers.dependency_parser import (
     DependencyParser,
 )
 
+# TODO: REWORK TEST COMPLETELY !!!
 
 def test_issubclass():
     assert issubclass(DependencyParserException, Exception)

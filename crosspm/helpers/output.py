@@ -3,12 +3,13 @@
 import logging
 import os
 import re
-
-from helpers import pm_common
+from crosspm.helpers.exceptions import *
 
 log = logging.getLogger(__name__)
 _output_format_map = {}
 
+
+# TODO: REWORK OUTPUT COMPLETELY to match new architecture !!!
 
 def register_output_format(name):
     def inner(fn):
@@ -125,8 +126,8 @@ def _write_to_file(text, out_file_path):
         os.makedirs(out_dir_path)
 
     elif not os.path.isdir(out_dir_path):
-        raise pm_common.CrosspmException(
-            pm_common.CROSSPM_ERRORCODE_FILE_IO,
+        raise CrosspmException(
+            CROSSPM_ERRORCODE_FILE_IO,
             'Unable to make directory [{}]. File with the same name exists'.format(
                 out_dir_path
             ))
@@ -141,8 +142,8 @@ def get_output_types():
 
 def make_output(out_format, out_file_path, out_prefix, packages):
     if out_format not in _output_format_map:
-        raise pm_common.CrosspmException(
-            pm_common.CROSSPM_ERRORCODE_UNKNOWN_OUT_TYPE,
+        raise CrosspmException(
+            CROSSPM_ERRORCODE_UNKNOWN_OUT_TYPE,
             'unknown output type: [{}]'.format(out_format),
         )
 

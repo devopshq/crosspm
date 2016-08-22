@@ -37,7 +37,7 @@ setup(
     description='Cross Package Manager',
     license='MIT',
     author='Alexander Kovalev',
-    author_email='akovalev@ptsecurity.com',
+    author_email='ak@alkov.pro',
     url='https://github.com/devopshq/crosspm.git',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -59,6 +59,7 @@ setup(
     packages=[
         'crosspm',
         'crosspm.helpers',
+        'crosspm.adapters',
     ],
     setup_requires=[
         'pytest-runner',

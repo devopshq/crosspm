@@ -5,7 +5,7 @@ import os
 import pytest
 import flask
 
-
+# TODO: REWORK TEST COMPLETELY !!!
 @pytest.fixture
 def app():
     app = flask.Flask(__name__)

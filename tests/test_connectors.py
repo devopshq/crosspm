@@ -12,6 +12,7 @@ from crosspm.helpers.connectors import (
     ConnectorJfrogArtifactory,
 )
 
+# TODO: REWORK TEST COMPLETELY !!!
 
 def test_connectors_dict():
     assert _connectors_dict == {

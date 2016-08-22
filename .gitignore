@@ -3,3 +3,4 @@
 build/
 crosspm.egg-info/
 dist/
+tests/pt/

@@ -81,7 +81,7 @@ assert_raises "[ -f '$AA/DEVOPS_FLAG_NEED_PUSH_TAGS' ]"
 assert_raises "(cd $AA; is_flag_need_push_tags)"
 
 
-# TODO: test functions receive enoung args
+# TODO: test functions receive enough args
 # TODO: test TRAVIS vars set and check values
 
 # end of test suite

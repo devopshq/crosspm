@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-import json
-import flask
 import io
+import json
+
+import flask
 import pytest
 
-import crosspm.api as api
+import helpers.promoter as api
 from crosspm.helpers import dependency_parser
 
 config_a = """
@@ -32,6 +33,7 @@ AAA * devops.release.r12 stable
 #BBB * devops.release.r12 integration
 """
 
+# TODO: REWORK TEST COMPLETELY !!!
 
 @pytest.mark.usefixtures('live_server')
 class TestApiPromote():

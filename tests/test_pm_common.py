@@ -3,6 +3,7 @@ import pytest
 
 from crosspm.helpers import pm_common
 
+# TODO: REWORK TEST COMPLETELY !!!
 
 def test_peek_empty():
     it = (i for i in range(0))

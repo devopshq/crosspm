@@ -6,7 +6,7 @@ install:
 - pip install dohq-art
 before_script:
 - "./scripts/tests.sh"
-- git config --global user.email "akovalev@ptsecurity.com"
+- git config --global user.email "ak@alkov.pro"
 - git config --global user.name "Alexander Kovalev"
 script:
 - printenv
