@@ -25,7 +25,7 @@ DEFAULT_CONFIG_PATH = [
 ]
 ENVIRONMENT_CONFIG_PATH = 'CROSSPM_CONFIG_PATH'
 ENVIRONMENT_CACHE_ROOT = 'CROSSPM_CACHE_ROOT'
-CROSSPM_DEPENDENCY_LOCK_FILENAME = 'dependencies.txt.lock'  # should be cpm.manifest ?
+CROSSPM_DEPENDENCY_LOCK_FILENAME = 'cpm.manifest'  # former 'dependencies.txt.lock'
 CROSSPM_ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 CROSSPM_ADAPTERS_NAME = 'adapters'
 CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
