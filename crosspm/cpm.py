@@ -28,12 +28,11 @@ Options:
 """
 
 import logging
-import sys
+# import sys
 
 from docopt import docopt
 
 import __init__ as crosspm
-from helpers import output
 from helpers.archive import Archive
 from helpers.config import (
     CROSSPM_DEPENDENCY_LOCK_FILENAME,
@@ -42,6 +41,7 @@ from helpers.config import (
 )
 from helpers.downloader import Downloader
 from helpers.promoter import Promoter
+from helpers.output import Output
 from helpers.exceptions import *
 
 
@@ -49,6 +49,7 @@ from helpers.exceptions import *
 class App(object):
     _config = None
     _args = None
+    _output = Output()
 
     def __init__(self):
         self._log = logging.getLogger(__name__)
@@ -56,7 +57,7 @@ class App(object):
                                            verb_level=get_verbosity_level(),
                                            verb_default=get_verbosity_level(0),
                                            deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
-                                           out_format=output.get_output_types(),
+                                           out_format=self._output.get_output_types(),
                                            out_format_default='stdout',
                                            ),
                             version=crosspm.__version__)
@@ -151,8 +152,17 @@ class App(object):
         for k, v in params.items():
             params[k] = self._args[v[0]] if v[0] in self._args else v[1]
 
-        cpm_downloader = Downloader(self._config, params)
-        cpm_downloader.download_packages()
+        cpm_downloader = Downloader(self._config, params.pop('depslock_path'))
+        packages = cpm_downloader.download_packages()
+
+        _not_found = sum(1 if _pkg is None else 0 for _pkg in packages.values())
+        if _not_found:
+            raise CrosspmException(
+                CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
+                'Some package(s) not found.'
+                )
+
+        self._output.write(params, packages)
 
     def promote(self):
         cpm_promoter = Promoter(self._config)

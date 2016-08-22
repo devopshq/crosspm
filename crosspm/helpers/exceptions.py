@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+
 CROSSPM_ERRORCODES = (
     CROSSPM_ERRORCODE_SUCCESS,
     CROSSPM_ERRORCODE_UNKNOWN_ERROR,
@@ -19,6 +21,12 @@ CROSSPM_ERRORCODES = (
     CROSSPM_ERRORCODE_ADAPTER_ERROR,
     CROSSPM_ERRORCODE_UNKNOWN_ARCHIVE,
 ) = range(18)
+
+
+# Workaround for async stuff (something weird happens with plain print)
+def print_stderr(*args, **kwargs):
+    kwargs.update({'file': sys.stderr})
+    print(*args, **kwargs)
 
 
 class CrosspmException(Exception):

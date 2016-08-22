@@ -2,7 +2,7 @@
 import os
 
 from crosspm.helpers.archive import Archive
-# from crosspm.helpers.exceptions import *
+from crosspm.helpers.exceptions import *
 
 
 class Package(object):
@@ -10,11 +10,12 @@ class Package(object):
     _unpacked_path = ''
     _packages = {}
     _raw = []
+    _root = False
 
     def __init__(self, name, pkg, params, downloader, adapter, parser):
         if type(pkg) is int:
             if pkg == 0:
-                self._unpacked_path = 0
+                self._root = True
         self._name = name
         self._pkg = pkg
         self._params = params
@@ -49,13 +50,18 @@ class Package(object):
 
     def print(self, level=0):
         _sign = ' '
-        if type(self._unpacked_path) is str:
+        if not self._root:
             _sign = '+' if self._unpacked_path else '-'
         _left = '{}{}'.format(' ' * 4 * level, _sign)
-        print('{}{}'.format(_left, self._name))
+        print_stderr('{}{}'.format(_left, self._name))
         for _pkg_name, _pkg in self._packages.items():
             if not _pkg:
                 _left = '{}-'.format(' ' * 4 * (level + 1))
-                print('{}{}'.format(_left, _pkg_name))
+                print_stderr('{}{}'.format(_left, _pkg_name))
             else:
                 _pkg.print(level + 1)
+        if self._root:
+            print_stderr('')
+
+    def get_name_and_path(self):
+        return self._name, self._unpacked_path

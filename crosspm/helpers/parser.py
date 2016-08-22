@@ -77,8 +77,8 @@ class Parser(object):
                 _params['server'] = source.args['server']
                 _params['repo'] = _repo
                 _dirty = self._rules['path'].format(**_params)
-                _tmp = _params.pop('server')
-                _tmp = _params.pop('repo')
+                _params.pop('server')
+                _params.pop('repo')
                 _dirty = [x.split(']') for x in _dirty.split('[')]
                 _dirty = self.list_flatter(_dirty)
                 _paths += [{'paths': self.get_variants(_dirty, []),
@@ -98,7 +98,7 @@ class Parser(object):
                         _res = [_res]
                         if len(dirty) > i + 1:
                             _res += dirty[i + 2:]
-                        print(_res)
+                        # print(_res)
                         paths = self.get_variants(_res, paths)
                     break
         return paths
