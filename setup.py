@@ -72,6 +72,7 @@ setup(
     install_requires=[
         'requests',
         'docopt',
+        'pyyaml',
         # 'dohq-art',
     ],
     package_data={

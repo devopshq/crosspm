@@ -4,13 +4,14 @@ import sys
 import logging
 import json
 import platform
+import yaml
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
 from crosspm.helpers.source import Source
 from requests.packages.urllib3 import disable_warnings
 
 WINDOWS = (platform.system().lower() == 'windows') or (os.name == 'nt')
-DEFAULT_CONFIG_FILE = 'crosspm.json'  # should be yaml
+DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.json', )
 USER_HOME_DIR = os.path.expanduser('~')
 DEFAULT_CONFIG_PATH = [
     './',
@@ -69,12 +70,16 @@ class Config(object):
                     DEFAULT_CONFIG_PATH.remove(config_path_env)
                 DEFAULT_CONFIG_PATH.insert(0, config_path_env)
 
+            _def_conf_file = [DEFAULT_CONFIG_FILE] if type(DEFAULT_CONFIG_FILE) is str else DEFAULT_CONFIG_FILE
             for config_path in DEFAULT_CONFIG_PATH:
-                config_file_name = os.path.join(config_path, DEFAULT_CONFIG_FILE)
-                if os.path.isfile(config_file_name):
+                for _conf_file in _def_conf_file:
+                    config_file_name = os.path.join(config_path, _conf_file)
+                    if os.path.isfile(config_file_name):
+                        break
+                    else:
+                        config_file_name = ''
+                if config_file_name:
                     break
-                else:
-                    config_file_name = ''
         else:
             if not os.path.isfile(config_file_name):
                 config_file_name = ''
@@ -89,20 +94,35 @@ class Config(object):
         return os.path.realpath(config_file_name)
 
     def read_config_file(self):
-        # TODO: Change config format from JSON to YAML
         self._log.info('Reading config file... [%s]', self._config_file_name)
+        _ext = os.path.splitext(self._config_file_name)[1].lower()
+        _is_yaml = True
+        if _ext == '.yaml':
+            _is_yaml = True
+        elif _ext == '.json':
+            _is_yaml = False
+        else:
+            with open(self._config_file_name) as f:
+                for i, line in enumerate(f):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    if line.startswith('{'):
+                        _is_yaml = False  # Assuming JSON format
+                        break
 
-        with open(self._config_file_name) as f:
-            result = json.loads(f.read())
-        # try:
-        #     with open(self._config_file_name) as f:
-        #         result = json.loads(f.read())
-        #
-        # except Exception as e:
-        #     self._log.exception(e)
-        #     code = CROSSPM_ERRORCODE_CONFIG_IO_ERROR
-        #     msg = 'Error reading config file: [{}]'.format(self._config_file_name)
-        #     raise CrosspmException(code, msg) from e
+        try:
+            with open(self._config_file_name) as f:
+                if _is_yaml:
+                    result = yaml.safe_load(f)
+                else:
+                    result = json.loads(f.read())
+
+        except Exception as e:
+            self._log.exception(e)
+            code = CROSSPM_ERRORCODE_CONFIG_IO_ERROR
+            msg = 'Error reading config file: [{}]'.format(self._config_file_name)
+            raise CrosspmException(code, msg) from e
 
         return result
 

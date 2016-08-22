@@ -50,7 +50,7 @@
     {
       "type": "jfrog-artifactory",
       "parser": "artifactory",
-      "server": "https://repo.someorg.com/artifactory/",
+      "server": "https://repo1.someorg.com/artifactory/",
       "repo": "libs-other.snapshot",
       "auth_type": "simple",
       "auth": [

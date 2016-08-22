@@ -9,7 +9,7 @@ cd "$DEVOPS_CHECKOUT_DIR"
 . "./scripts/common.sh"
 
 
-# TODO: check we are under travis
+# TODO: check we are under travis - why?
 # TODO: check version has correct syntax
 # TODO: check release branch version correlate to __version__
 
