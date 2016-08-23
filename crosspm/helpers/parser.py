@@ -141,8 +141,7 @@ class Parser(object):
                     _params[_col] = params[_col][1:]
                 pass
 
-        _params_inner = fill_rule_inner(_columns, [])
-        for _par in _params_inner:
+        for _par in fill_rule_inner(_columns, []):
             _params.update(_par)
             _res += [self._rules['path'].format(**_params)]
 
@@ -158,7 +157,7 @@ class Parser(object):
             for _repo in source.args['repo']:
                 _params['server'] = source.args['server']
                 _params['repo'] = _repo
-                #_dirty = self._rules['path'].format(**_params)
+                # _dirty = self._rules['path'].format(**_params)
                 _dirties = self.fill_rule('path', _params)
                 _params.pop('server')
                 _params.pop('repo')
