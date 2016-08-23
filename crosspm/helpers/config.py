@@ -11,7 +11,7 @@ from crosspm.helpers.source import Source
 from requests.packages.urllib3 import disable_warnings
 
 WINDOWS = (platform.system().lower() == 'windows') or (os.name == 'nt')
-DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.json', )
+DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.yml', 'crosspm.json', )
 USER_HOME_DIR = os.path.expanduser('~')
 DEFAULT_CONFIG_PATH = [
     './',
@@ -41,6 +41,7 @@ class Config(object):
     _columns = []
     _not_columns = {}
     _options = {}
+    _values = {}
     name_column = ''
     deps_lock_file_name = ''
     windows = WINDOWS
@@ -98,7 +99,7 @@ class Config(object):
         self._log.info('Reading config file... [%s]', self._config_file_name)
         _ext = os.path.splitext(self._config_file_name)[1].lower()
         _is_yaml = True
-        if _ext == '.yaml':
+        if _ext in ['.yaml', '.yml']:
             _is_yaml = True
         elif _ext == '.json':
             _is_yaml = False
@@ -148,6 +149,10 @@ class Config(object):
                     _col = _col[1:]
                 self._columns += _col
             self.name_column = self._columns[_name_index]
+
+        # init available values for columns
+        if 'values' in config_data:
+            self._values = config_data['values']
 
         # init default values for columns
         if 'defaults' in config_data:
@@ -322,6 +327,17 @@ class Config(object):
     def complete_params(self, _vars):
         _vars.update({k: v for k, v in self._not_columns.items() if k not in _vars})
         return _vars
+
+    def get_values(self, column_name):
+        _res = None
+        if column_name in self._values:
+            _res = self._values[column_name]
+        return _res
+
+    def iter_valued_columns(self, column_names):
+        for column_name in column_names:
+            if column_name in self._values:
+                yield column_name
 
 
 def get_verbosity_level(level=None):
