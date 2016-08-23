@@ -37,7 +37,7 @@ class Parser(object):
         if self._rules[rule_name] is None:
             return True
         _res = False
-        #_dirty = self._rules[rule_name].format(**params)
+        # _dirty = self._rules[rule_name].format(**params)
         _dirties = self.fill_rule(rule_name, params)
         for _dirty in _dirties:
             _dirty = [x.split(']') for x in _dirty.split('[')]
@@ -80,43 +80,72 @@ class Parser(object):
     def iter_matched_values(self, column_name, value):
         _values = self._config.get_values(column_name)
         for _value in _values:
-            _sign = ''
-            if value.startswith(('>=', '<=', '==', )):
-                _sign = value[:2]
-                value = value[2:]
-            elif value.startswith(('>', '<', '=', )):
-                _sign = value[:1]
-                value = value[1:]
-                if _sign == '=':
-                    _sign = '=='
-
-            var1, var2 = _value, value
-            if type(_values) is dict:
-                var2 = 0 if type(var1) is int else ''
-                for k, v in _values.items():
-                    if value == v:
-                        var2 = k
-                        break
-
-            if _sign:
-                _match = eval('{} {} {}'.format(var1, _sign, var2))
-            else:
-                # TODO: implement * (any) sign check
-                _match = var1 == var2
-
-            if _match:
+            if self.values_match(_value, value, _values):
                 if type(_values) is dict:
-                    var1 = _values[var1]
-                yield var1
+                    _value = _values[_value]
+                yield _value
+
+    @staticmethod
+    def values_match(_value, value, _values=None):
+        _sign = ''
+        if value.startswith(('>=', '<=', '==', )):
+            _sign = value[:2]
+            value = value[2:]
+        elif value.startswith(('>', '<', '=', )):
+            _sign = value[:1]
+            value = value[1:]
+            if _sign == '=':
+                _sign = '=='
+
+        var1, var2 = _value, value
+        if type(_values) is dict:
+            var2 = 0 if type(var1) is int else ''
+            for k, v in _values.items():
+                if value == v:
+                    var2 = k
+                    break
+
+        if _sign:
+            _match = eval('{} {} {}'.format(var1, _sign, var2))
+        else:
+            # TODO: implement * (any) sign check
+            _match = var1 == var2
+
+        return _match
 
     def fill_rule(self, rule_name, params):
+        def fill_rule_inner(_cols, _params_inner, _pars=None):
+            if _pars is None:
+                _pars = {}
+            for _cl in _cols:
+                for _val in _cl[1]:
+                    _pars[_cl[0]] = _val
+                    if len(_cols) > 1:
+                        _params_inner = fill_rule_inner(_cols[1:], _pars)
+                    else:
+                        _params_inner += [{k: v for k, v in _pars.items()}]
+                break
+            return _params_inner
+
         _params = {k: v for k, v in params.items()}
         _res = []
-        for _col in self._config.iter_valued_columns(self._rules_vars[rule_name]):
-            for _value in self.iter_matched_values(_col, params[_col]):
-                _params[_col] = _value
-                _res += [self._rules['path'].format(**_params)]
-            _params[_col] = ''
+        _columns = []
+        for _col, _valued in self._config.iter_valued_columns2(self._rules_vars[rule_name]):
+            if _valued:
+                _columns += [[_col, [x for x in self.iter_matched_values(_col, params[_col])]]]
+            else:
+                # TODO: Find a way to process parameters with operation sign.
+                if params[_col].startswith(('>=', '<=', '==', )):
+                    _params[_col] = params[_col][2:]
+                elif params[_col].startswith(('>', '<', '=', )):
+                    _params[_col] = params[_col][1:]
+                pass
+
+        _params_inner = fill_rule_inner(_columns, [])
+        for _par in _params_inner:
+            _params.update(_par)
+            _res += [self._rules['path'].format(**_params)]
+
         if len(_res) == 0:
             _res = [self._rules['path'].format(**_params)]
         return _res

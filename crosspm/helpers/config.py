@@ -144,9 +144,9 @@ class Config(object):
             self._columns = []
             _name_index = 0
             for i, _col in enumerate([x for x in [x.strip().split(' ') for x in config_data['columns'].split(',')]]):
-                if _col[0] == '*':
+                if _col[0][0] == '*':
                     _name_index = i
-                    _col = _col[1:]
+                    _col = [_col[0][1:]]
                 self._columns += _col
             self.name_column = self._columns[_name_index]
 
@@ -338,6 +338,10 @@ class Config(object):
         for column_name in column_names:
             if column_name in self._values:
                 yield column_name
+
+    def iter_valued_columns2(self, column_names):
+        for column_name in column_names:
+            yield column_name, column_name in self._values
 
 
 def get_verbosity_level(level=None):
