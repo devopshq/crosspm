@@ -25,7 +25,7 @@ class Package(object):
 
     def download(self, dest_path, force=False):
         if force or not self._unpacked_path:
-            dest_path = os.path.realpath(os.path.join(dest_path, self._params[0]))
+            dest_path = os.path.realpath(os.path.join(dest_path, self._name))
             self._packed_path = self._adapter.download_package(self._pkg, dest_path)
         return self._packed_path
 

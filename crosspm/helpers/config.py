@@ -41,6 +41,7 @@ class Config(object):
     _columns = []
     _not_columns = {}
     _options = {}
+    name_column = ''
     deps_lock_file_name = ''
     windows = WINDOWS
 
@@ -140,8 +141,13 @@ class Config(object):
         # init columns
         if 'columns' in config_data:
             self._columns = []
-            for _col in [x for x in [x.strip().split(' ') for x in config_data['columns'].split(',')]]:
+            _name_index = 0
+            for i, _col in enumerate([x for x in [x.strip().split(' ') for x in config_data['columns'].split(',')]]):
+                if _col[0] == '*':
+                    _name_index = i
+                    _col = _col[1:]
                 self._columns += _col
+            self.name_column = self._columns[_name_index]
 
         # init default values for columns
         if 'defaults' in config_data:

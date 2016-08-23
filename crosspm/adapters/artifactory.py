@@ -27,7 +27,7 @@ class Adapter(BaseAdapter):
         if 'verify' in source.args:
             _art_auth['verify'] = source.args['verify'].lower in ['true', 'yes', '1']
 
-        _pkg_name_col = self._config.get_column_name(0)
+        _pkg_name_col = self._config.name_column
         _packages_found = {}
         for _paths in parser.get_paths(list_or_file_path, source):
             _packages = []
