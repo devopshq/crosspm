@@ -65,7 +65,7 @@ class Output(object):
             )
 
         f = _output_format_map[params['out_format']]
-        result = f(packages)
+        result = f(self, packages)
 
         if result:
             self.write_to_file(result, params['out_file_path'])

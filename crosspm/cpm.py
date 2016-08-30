@@ -75,7 +75,8 @@ class App(object):
 
     def run(self):
         if self._args['download']:
-            self.do_run(self.download)
+            # self.do_run(self.download)
+            self.download()
 
         elif self._args['promote']:
             self.do_run(self.promote)

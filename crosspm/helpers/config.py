@@ -11,7 +11,7 @@ from crosspm.helpers.source import Source
 from requests.packages.urllib3 import disable_warnings
 
 WINDOWS = (platform.system().lower() == 'windows') or (os.name == 'nt')
-DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.yml', 'crosspm.json', )
+DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.yml', 'crosspm.json',)
 USER_HOME_DIR = os.path.expanduser('~')
 DEFAULT_CONFIG_PATH = [
     './',
@@ -228,8 +228,11 @@ class Config(object):
         self.deps_lock_file_name = param('dependencies', CROSSPM_DEPENDENCY_LOCK_FILENAME)
 
     def init_parsers(self, parsers):
+        if 'common' not in parsers:
+            parsers['common'] = {}
         for k, v in parsers.items():
             if k not in self._parsers:
+                v.update({_k: _v for _k, _v in parsers['common'].items() if _k not in v})
                 self._parsers[k] = Parser(k, v, self)
             else:
                 code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
@@ -241,6 +244,9 @@ class Config(object):
             msg = 'Config file does not contain parsers! Unable to process any further.'
             self._log.exception(msg)
             raise CrosspmException(code, msg)
+
+    def get_parser(self, parser_name):
+        return self._parsers[parser_name] if parser_name in self._parsers else None
 
     def init_adapters(self, types):
         if not os.path.isdir(CROSSPM_ADAPTERS_DIR):
@@ -312,14 +318,14 @@ class Config(object):
         for _src in self._sources:
             yield _src
 
-    def check_column_value(self, i, v):
+    def check_column_value(self, i, v, get_list=False):
         k = self._columns[i]
         if k in self._options:
             v = self._options[k]
         if v is None:
             if k in self._defaults:
                 v = self._defaults[k]
-        return {k: v}
+        return [k, v] if get_list else {k: v}
 
     def get_column_name(self, i):
         return self._columns[i] if len(self._columns) - 1 >= i else None

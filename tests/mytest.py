@@ -1,32 +1,24 @@
-def fill_rule_inner(_cols, _pars=None):
-    global _params
-    if _pars is None:
-        _pars = {}
-    for _col in _cols:
-        for _val in _col[1]:
-            _pars[_col[0]] = _val
-            if len(_cols) > 1:
-                fill_rule_inner(_cols[1:], _pars)
-            else:
-                print(_pars)
-                _params += [str(_pars)]
-        break
+import re
 
-a=[['cl',['1','2','3']],
-   ['qt',['11','22','33','44']],
-   ['os',['111','222']]]
-_params = []
-fill_rule_inner(a)
+def split_with_regexp(regexp, text):
+    prev_pos = 0
+    _res = []
+    for x in [[x.group()[1:-1].strip(), x.span()] for x in re.finditer(regexp, text)]:
+        if x[1][0] > prev_pos:
+            _res += [[text[prev_pos:x[1][0]], False]]
+        _res += [[x[0], True]]
+        prev_pos = x[1][1]
+    if prev_pos < len(text) - 1:
+        _res += [[text[prev_pos:], False]]
+    return _res
 
-a=[['cl',['1','2','3']],
-   ['qt',['11','22','33','44']]]
-_params = []
-fill_rule_inner(a)
-# for x in _params:
-#     print(x)
 
-a=[['cl',['1','2','3']]]
-_params = []
-fill_rule_inner(a)
-# for x in _params:
-#     print(x)
+val = "{int}.{int}.{int}[-{str}]"
+
+must_not = split_with_regexp('\[.*?\]', val)
+
+for i, x in enumerate(must_not):
+    must_not[i] = [split_with_regexp('{.*?}', x[0]), x[1]]
+
+for x in must_not:
+    print(x)

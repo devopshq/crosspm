@@ -3,7 +3,6 @@ import os
 import logging
 
 from crosspm.helpers.package import Package
-from crosspm.helpers.parser import Parser
 from crosspm.helpers.exceptions import *
 
 
@@ -17,7 +16,7 @@ class Downloader(object):
     def __init__(self, config, depslock_path=''):
         self._log = logging.getLogger(__name__)
         self._config = config
-        self._root_package = Package('<root>', 0, {}, self, None, Parser('<root>', {}, config))
+        self._root_package = Package('<root>', 0, {}, self, None, config.get_parser('common'))
 
         self._cache_path = config.get_crosspm_cache_root()
         if not os.path.exists(self._cache_path):
@@ -39,7 +38,10 @@ class Downloader(object):
         _packages = {}
         if type(list_or_file_path) is str:
             self._log.info('Reading dependencies ... [%s]', list_or_file_path)
-        for _src in self._config.sources():
+        for i, _src in enumerate(self._config.sources()):
+            if i > 0:
+                print_stderr('')
+                print_stderr('Next source ...')
             _found_packages = _src.get_packages(self, list_or_file_path)
             _packages.update({k: v for k, v in _found_packages.items() if (v is not None) or (k not in _packages)})
 
@@ -56,6 +58,8 @@ class Downloader(object):
         self._packages = {}
         self._root_package.find_dependencies(depslock_file_path)
 
+        print_stderr('')
+        print_stderr('Dependency tree:')
         self._root_package.print()
 
         # TODO: Implement real dependencies checker

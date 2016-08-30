@@ -4,6 +4,7 @@ from artifactory import ArtifactoryPath
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.package import Package
 import os
+import requests
 
 CHUNK_SIZE = 1024
 
@@ -29,16 +30,25 @@ class Adapter(BaseAdapter):
 
         _pkg_name_col = self._config.name_column
         _packages_found = {}
+        _pkg_name_old = ""
         for _paths in parser.get_paths(list_or_file_path, source):
             _packages = []
+            _pkg_name = _paths['params'][_pkg_name_col]
+            if _pkg_name != _pkg_name_old:
+                _pkg_name_old = _pkg_name
+                print_stderr('{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
             for _path in _paths['paths']:
                 _path_fixed, _path_pattern = self.split_fixed_pattern(_path)
                 _repo_paths = ArtifactoryPath(_path_fixed, **_art_auth)
                 for _repo_path in _repo_paths.glob(_path_pattern):
-                    if parser.validate(_repo_path.properties, 'properties', _paths['params']):
-                        _packages += [_repo_path]
+                    _mark = 'found'
+                    if parser.validate_path(str(_repo_path), _paths['params']):
+                        _mark = 'match'
+                        if parser.validate(_repo_path.properties, 'properties', _paths['params']):
+                            _mark = 'valid'
+                            _packages += [_repo_path]
+                    print_stderr('  {}: {}'.format(_mark, str(_repo_path)))
             _package = None
-            _pkg_name = _paths['params'][_pkg_name_col]
             if len(_packages) == 1:
                 # one package found: ok!
                 _package = Package(_pkg_name, _packages[0], _paths['params'], downloader, self, parser)
@@ -65,7 +75,8 @@ class Adapter(BaseAdapter):
 
                 _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.temp_path)
 
-                _package.find_dependencies(_deps_file)
+                if _deps_file:
+                    _package.find_dependencies(_deps_file)
 
         return _packages_found
 
@@ -87,14 +98,17 @@ class Adapter(BaseAdapter):
             os.remove(_dest_file)
 
         try:
-            with package.open() as _src:
-                _src.raise_for_status()
+            #with package.open() as _src:
+            _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
+            _src.raise_for_status()
 
-                with open(_dest_file, 'wb+') as _dest:
-                    for chunk in _src.iter_content(CHUNK_SIZE):
-                        if chunk:  # filter out keep-alive new chunks
-                            _dest.write(chunk)
-                            _dest.flush()
+            with open(_dest_file, 'wb+') as _dest:
+                for chunk in _src.iter_content(CHUNK_SIZE):
+                    if chunk:  # filter out keep-alive new chunks
+                        _dest.write(chunk)
+                        _dest.flush()
+
+            _src.close()
 
         except Exception as e:
             code = CROSSPM_ERRORCODE_SERVER_CONNECT_ERROR

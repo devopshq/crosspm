@@ -10,6 +10,7 @@ from crosspm.helpers.exceptions import *
 
 log = logging.getLogger(__name__)
 
+
 # TODO: REWORK PROMOTER COMPLETELY to match new architecture!!!
 class Promoter:
     def __init__(self, config):

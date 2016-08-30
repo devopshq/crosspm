@@ -3,6 +3,14 @@ cpm:
 
 columns: "package, version, branch, contract, quality"
 
+values:
+  quality:
+    1: banned
+    2: snapshot
+    3: integration
+    4: stable
+    5: release
+
 options:
   compiler:
     cmdline: cl
@@ -20,6 +28,8 @@ parsers:
   artifactory:
     path: "{server}/{repo}/{package}/{branch}/{version}/{compiler}/{arch}/{osname}/{package}.{version}.[tar.gz|nupkg]"
     properties: "build.contract.{contract} = {quality}"
+    columns:
+      version: "{int}.{int}.{int}[-{str}]"
 
 defaults:
   compiler: gcc

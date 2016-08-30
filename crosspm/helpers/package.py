@@ -34,7 +34,7 @@ class Package(object):
             temp_path = self._downloader.temp_path
         temp_path = os.path.realpath(os.path.join(temp_path, self._name))
 
-        _dest_file = Archive.extract_file(self._packed_path, file_name, temp_path)
+        _dest_file = Archive.extract_file(self._packed_path, temp_path, file_name)
 
         return _dest_file
 
@@ -43,7 +43,14 @@ class Package(object):
         self._packages = self._downloader.get_packages(self._raw)
 
     def unpack(self, dest_path=''):
-        Archive.extract(self._packed_path, dest_path)
+        if not dest_path:
+            dest_path = self._downloader.unpacked_path
+        temp_path = os.path.realpath(os.path.join(dest_path, self._name))
+        try:
+            Archive.extract(self._packed_path, temp_path)
+            self._unpacked_path = temp_path
+        except:
+            pass
 
     def pack(self, src_path):
         Archive.create(self._packed_path, src_path)
@@ -51,7 +58,12 @@ class Package(object):
     def print(self, level=0):
         _sign = ' '
         if not self._root:
-            _sign = '+' if self._unpacked_path else '-'
+            if self._unpacked_path:
+                _sign = '+'
+            elif self._packed_path:
+                _sign = '>'
+            else:
+                _sign = '-'
         _left = '{}{}'.format(' ' * 4 * level, _sign)
         print_stderr('{}{}'.format(_left, self._name))
         for _pkg_name, _pkg in self._packages.items():

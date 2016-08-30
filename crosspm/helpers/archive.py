@@ -41,7 +41,7 @@ class Archive(object):
         os.renames(archive_name_tmp, archive_name)
 
     @staticmethod
-    def extract(archive_name, dst_dir_path):
+    def extract(archive_name, dst_dir_path, file_name=None):
         dst_dir_path_tmp = '{}_tmp'.format(dst_dir_path)
 
         # remove temp dir
@@ -50,11 +50,17 @@ class Archive(object):
 
         if tarfile.is_tarfile(archive_name):
             with contextlib.closing(tarfile.TarFile.open(archive_name, 'r:*')) as tf:
-                tf.extractall(path=dst_dir_path_tmp)
+                if file_name:
+                    tf.extract(file_name, path=dst_dir_path_tmp)
+                else:
+                    tf.extractall(path=dst_dir_path_tmp)
 
         elif zipfile.is_zipfile(archive_name):
             with contextlib.closing(zipfile.ZipFile(archive_name, mode='r')) as zf:
-                zf.extractall(path=dst_dir_path_tmp)
+                if file_name:
+                    zf.extract(file_name, path=dst_dir_path_tmp)
+                else:
+                    zf.extractall(path=dst_dir_path_tmp)
 
         else:
             raise CrosspmException(
@@ -68,5 +74,10 @@ class Archive(object):
         os.renames(dst_dir_path_tmp, dst_dir_path)
 
     @staticmethod
-    def extract_file(archive_name, file_name, dst_dir_path):
-        return ''
+    def extract_file(archive_name, dst_dir_path, file_name):
+        try:
+            Archive.extract(archive_name, dst_dir_path, file_name)
+            _dest_file = os.path.join(dst_dir_path, file_name)
+        except:
+            _dest_file = None
+        return _dest_file
