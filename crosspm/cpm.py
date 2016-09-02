@@ -32,17 +32,17 @@ import logging
 
 from docopt import docopt
 
-import __init__ as crosspm
-from helpers.archive import Archive
-from helpers.config import (
+import crosspm
+from crosspm.helpers.archive import Archive
+from crosspm.helpers.config import (
     CROSSPM_DEPENDENCY_LOCK_FILENAME,
     Config,
     get_verbosity_level,
 )
-from helpers.downloader import Downloader
-from helpers.promoter import Promoter
-from helpers.output import Output
-from helpers.exceptions import *
+from crosspm.helpers.downloader import Downloader
+from crosspm.helpers.promoter import Promoter
+from crosspm.helpers.output import Output
+from crosspm.helpers.exceptions import *
 
 
 # TODO: Upgrade exceptions handling

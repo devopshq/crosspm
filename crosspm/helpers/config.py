@@ -19,6 +19,7 @@ DEFAULT_CONFIG_PATH = [
     '~/.crosspm',
     '/etc/crosspm',
 ] if not WINDOWS else [
+    './',
     os.path.realpath(os.path.join(os.path.splitdrive(USER_HOME_DIR)[0], '/')),
     os.path.realpath(os.path.join(USER_HOME_DIR, '.crosspm')),
     os.path.realpath(os.path.join(os.getenv('APPDATA'), 'crosspm')),
