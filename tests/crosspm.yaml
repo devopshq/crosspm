@@ -25,11 +25,13 @@ options:
     env: CROSSPM_OS
 
 parsers:
-  artifactory:
-    path: "{server}/{repo}/{package}/{branch}/{version}/{compiler}/{arch}/{osname}/{package}.{version}.[tar.gz|nupkg]"
-    properties: "build.contract.{contract} = {quality}"
+  common:
     columns:
       version: "{int}.{int}.{int}[-{str}]"
+
+  artifactory:
+    path: "{server}/{repo}/{package}/{branch}/{version}/{compiler}/{arch}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
+    properties: "build.contract.{contract} = {quality}"
 
 defaults:
   compiler: gcc
