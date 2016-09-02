@@ -1,7 +1,7 @@
 cpm:
   dependencies: dependencies.txt.lock
 
-columns: "package, version, branch, contract, quality"
+columns: "*package, version, branch, contract, quality"
 
 values:
   quality:
@@ -45,8 +45,8 @@ common:
   type: jfrog-artifactory
   auth_type: simple
   auth:
-    - reader_cpp_libs"
-    - *****
+    - "reader_cpp_libs"
+    - "*****"
 
 sources:
   - repo:
@@ -55,7 +55,7 @@ sources:
       auth_type: simple
       auth:
         - reader_cpp_libs
-        - **********
+        - "**********"
 
   - type: jfrog-artifactory
       parser: artifactory
@@ -63,5 +63,5 @@ sources:
       repo: libs-other.snapshot
       auth_type: simple
       auth:
-        - reader_libs
-        - **********
+        - "reader_libs"
+        - "**********"
