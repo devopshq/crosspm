@@ -155,13 +155,14 @@ class Config(object):
         if 'values' in config_data:
             self._values = config_data['values']
 
-        # init default values for columns
-        if 'defaults' in config_data:
-            self._defaults = config_data['defaults']
-
         # init options
         if 'options' in config_data:
             self._options = config_data['options']
+
+        # init default values for columns
+        if 'defaults' in config_data:
+            self._defaults = config_data['defaults']
+            self._defaults.update({k: v['default'] for k, v in self._options.items() if k not in self._defaults})
 
         # init common parameters
         _common = {}
