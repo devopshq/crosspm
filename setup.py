@@ -73,7 +73,7 @@ setup(
         'requests',
         'docopt',
         'pyyaml',
-        # 'dohq-art',
+        'dohq-art',
     ],
     package_data={
         '': [
