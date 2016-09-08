@@ -13,21 +13,23 @@ from requests.packages.urllib3 import disable_warnings
 WINDOWS = (platform.system().lower() == 'windows') or (os.name == 'nt')
 DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.yml', 'crosspm.json',)
 USER_HOME_DIR = os.path.expanduser('~')
+CROSSPM_ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 DEFAULT_CONFIG_PATH = [
     './',
     '~/',
     '~/.crosspm',
     '/etc/crosspm',
+    CROSSPM_ROOT_DIR,
 ] if not WINDOWS else [
     './',
     os.path.realpath(os.path.join(os.path.splitdrive(USER_HOME_DIR)[0], '/')),
     os.path.realpath(os.path.join(USER_HOME_DIR, '.crosspm')),
     os.path.realpath(os.path.join(os.getenv('APPDATA'), 'crosspm')),
+    CROSSPM_ROOT_DIR,
 ]
 ENVIRONMENT_CONFIG_PATH = 'CROSSPM_CONFIG_PATH'
 ENVIRONMENT_CACHE_ROOT = 'CROSSPM_CACHE_ROOT'
 CROSSPM_DEPENDENCY_LOCK_FILENAME = 'cpm.manifest'  # former 'dependencies.txt.lock'
-CROSSPM_ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 CROSSPM_ADAPTERS_NAME = 'adapters'
 CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
 
@@ -284,7 +286,7 @@ class Config(object):
 
             except Exception as e:
                 msg = 'Error initializing adapter {}: [{}]'.format(_file_name, e)
-                self._log.warning()
+                self._log.warning(msg)
 
         if _remove:
             sys.path.remove(_base_dir)

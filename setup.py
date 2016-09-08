@@ -32,7 +32,7 @@ except:
     version = crosspm.__version__
 
 setup(
-    name='cpm',
+    name='crosspm',
     version=version,
     description='Cross Package Manager',
     license='MIT',
