@@ -1,5 +1,6 @@
 cpm:
-  dependencies: dependencies.txt.lock
+  dependencies: dependencies.txt
+  dependencies-lock: dependencies.txt.lock
 
 columns: "*package, version, branch, contract, quality"
 
@@ -65,3 +66,8 @@ sources:
       auth:
         - "reader_libs"
         - "**********"
+
+output:
+  tree:
+    package: 25
+    version: 0

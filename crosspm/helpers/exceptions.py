@@ -24,8 +24,8 @@ CROSSPM_ERRORCODES = (
 
 
 # Workaround for async stuff (something weird happens with plain print)
-def print_stderr(*args, **kwargs):
-    kwargs.update({'file': sys.stderr})
+def print_stdout(*args, **kwargs):
+    kwargs.update({'file': sys.stdout})
     print(*args, **kwargs)
 
 

@@ -29,7 +29,8 @@ DEFAULT_CONFIG_PATH = [
 ]
 ENVIRONMENT_CONFIG_PATH = 'CROSSPM_CONFIG_PATH'
 ENVIRONMENT_CACHE_ROOT = 'CROSSPM_CACHE_ROOT'
-CROSSPM_DEPENDENCY_LOCK_FILENAME = 'cpm.manifest'  # former 'dependencies.txt.lock'
+CROSSPM_DEPENDENCY_FILENAME = 'dependencies.txt'  # maybe 'cpm.manifest'
+CROSSPM_DEPENDENCY_LOCK_FILENAME = 'dependencies.txt.lock'
 CROSSPM_ADAPTERS_NAME = 'adapters'
 CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
 
@@ -45,7 +46,9 @@ class Config(object):
     _not_columns = {}
     _options = {}
     _values = {}
+    _output = {}
     name_column = ''
+    deps_file_name = ''
     deps_lock_file_name = ''
     windows = WINDOWS
 
@@ -157,6 +160,10 @@ class Config(object):
         if 'values' in config_data:
             self._values = config_data['values']
 
+        # init output
+        if 'output' in config_data:
+            self._output = config_data['output']
+
         # init options
         if 'options' in config_data:
             self._options = config_data['options']
@@ -229,7 +236,8 @@ class Config(object):
         def param(param_name, param_default):
             return crosspm[param_name] if param_name in crosspm else param_default
 
-        self.deps_lock_file_name = param('dependencies', CROSSPM_DEPENDENCY_LOCK_FILENAME)
+        self.deps_file_name = param('dependencies', CROSSPM_DEPENDENCY_FILENAME)
+        self.deps_lock_file_name = param('dependencies-lock', CROSSPM_DEPENDENCY_LOCK_FILENAME)
 
     def init_parsers(self, parsers):
         if 'common' not in parsers:
@@ -355,6 +363,13 @@ class Config(object):
     def iter_valued_columns2(self, column_names):
         for column_name in column_names:
             yield column_name, column_name in self._values
+
+    def output(self, out_type, default):
+        if out_type in self._output:
+            result = self._output[out_type]
+        else:
+            result = default
+        return result
 
 
 def get_verbosity_level(level=None):
