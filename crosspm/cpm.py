@@ -20,7 +20,7 @@ Options:
     --verbosity=LEVEL              Set output verbosity level: ({verb_level}) [default: {verb_default}].
     -c=FILE, --config=FILE         Path to configuration file.
     -o OPTIONS, --options OPTIONS  Extra options.
-    --depslock-path=FILE           Path to file with locked dependencies [default: ./{deps_lock_default}]
+    --depslock-path=FILE           Path to file with locked dependencies [./{deps_lock_default}]
     --out-format=TYPE              Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                  Output file name (required if --out_format is not stdout)
     --out-prefix=PREFIX            Prefix for output variable name [default: ] (no prefix at all)

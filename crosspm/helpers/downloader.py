@@ -26,8 +26,9 @@ class Downloader(object):
         self.unpacked_path = os.path.realpath(os.path.join(self._cache_path, 'cache'))
         self.temp_path = os.path.realpath(os.path.join(self._cache_path, 'tmp'))
 
-        if depslock_path:
-            self._depslock_path = os.path.realpath(depslock_path)
+        if not depslock_path:
+            depslock_path = config.deps_lock_file_name if config.deps_lock_file_name else CROSSPM_DEPENDENCY_LOCK_FILENAME
+        self._depslock_path = os.path.realpath(depslock_path)
 
     # Get list of all packages needed to resolve all the dependencies.
     # List of Package class instances.
