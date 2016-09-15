@@ -67,7 +67,7 @@ class Downloader(object):
 
         print_stdout('')
         print_stdout('Dependency tree:')
-        self._root_package.print(0, self._config.output('tree', {self._config.name_column: 0}))
+        self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
 
         # TODO: Implement real dependencies checker
         _not_found = sum(1 if _pkg is None else 0 for _pkg in self._packages.values())

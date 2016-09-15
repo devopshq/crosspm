@@ -69,5 +69,5 @@ sources:
 
 output:
   tree:
-    package: 25
-    version: 0
+    - package: 25
+    - version: 0

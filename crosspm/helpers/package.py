@@ -58,14 +58,16 @@ class Package(object):
     def print(self, level=0, output=None):
         def do_print(left):
             res_str = ''
-            for k, v in output.items():
-                cur_str = self._params.get(k, '')
-                if not res_str:
-                    cur_str = '{}{} '.format(left, cur_str)
-                cur_format = '{}'
-                if v > 0:
-                    cur_format = '{:%s}' % (v if len(cur_str) <= v else v + len(left))
-                res_str += cur_format.format(cur_str)
+            for out_item in output:
+                for k, v in out_item.items():
+                    cur_str = self._params.get(k, '')
+                    if not res_str:
+                        cur_str = '{}{} '.format(left, cur_str)
+                    cur_format = '{}'
+                    if v > 0:
+                        cur_format = '{:%s}' % (v if len(cur_str) <= v else v + len(left))
+                    res_str += cur_format.format(cur_str)
+                    break
             print_stdout(res_str)
 
         _sign = ' '
