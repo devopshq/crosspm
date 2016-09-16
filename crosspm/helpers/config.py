@@ -194,17 +194,24 @@ class Config(object):
             for _src in config_data['sources']:
                 _src.update({k: v for k, v in _common.items() if k not in _src})
 
-                if _src['type'] not in self._adapters.keys():
+                if 'type' in _src:
+                    if _src['type'] not in self._adapters.keys():
+                        code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
+                        msg = 'Adapter [{}] does not found!'.format(_src['type'])
+                        self._log.exception(msg)
+                        raise CrosspmException(code, msg)
+                else:
                     code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
-                    msg = 'Adapter [{}] does not found!'.format(_src['type'])
+                    msg = 'Source must have type property!'
                     self._log.exception(msg)
                     raise CrosspmException(code, msg)
 
-                if _src['parser'] not in self._parsers.keys():
-                    code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
-                    msg = 'Parser [{}] does not found!'.format(_src['parser'])
-                    self._log.exception(msg)
-                    raise CrosspmException(code, msg)
+                if 'parser' in _src:
+                    if _src['parser'] not in self._parsers.keys():
+                        code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
+                        msg = 'Parser [{}] does not found!'.format(_src['parser'])
+                        self._log.exception(msg)
+                        raise CrosspmException(code, msg)
 
                 self._sources.append(
                     Source(
