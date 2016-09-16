@@ -89,7 +89,7 @@ class Downloader(object):
                 if _pkg.download(self.packed_path):
                     _pkg.unpack(self.unpacked_path)
 
-            update_progress('Downloading:', 100)
+            update_progress('Download/Unpack:', 100)
             self._log.info('Done!')
             sys.stdout.write('\n')
             sys.stdout.write('\n')
