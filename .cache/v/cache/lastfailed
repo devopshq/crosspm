@@ -1,0 +1,3 @@
+{
+  "tests/test_cpm.py::TestCpm::()::test_check_common_args": true
+}
