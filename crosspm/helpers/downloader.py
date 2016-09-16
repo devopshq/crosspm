@@ -8,7 +8,7 @@ from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
 
 
 def update_progress(msg, progress):
-    sys.stdout.write('\r{0}[{1:10}] {2}%'.format(msg, '#'*int(progress/10.0), int(progress)))
+    sys.stdout.write('\r{0} [{1:10}] {2}%'.format(msg, '#'*int(progress/10.0), int(progress)))
     sys.stdout.flush()
 
 
@@ -18,8 +18,9 @@ class Downloader(object):
     _depslock_path = ''
     # _package = None
     _packages = {}
+    do_load = True
 
-    def __init__(self, config, depslock_path=''):
+    def __init__(self, config, depslock_path='', do_load=True):
         self._log = logging.getLogger(__name__)
         self._config = config
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None, config.get_parser('common'))
@@ -35,6 +36,7 @@ class Downloader(object):
         if not depslock_path:
             depslock_path = config.deps_lock_file_name if config.deps_lock_file_name else CROSSPM_DEPENDENCY_LOCK_FILENAME
         self._depslock_path = os.path.realpath(depslock_path)
+        self.do_load = do_load
 
     # Get list of all packages needed to resolve all the dependencies.
     # List of Package class instances.
@@ -78,12 +80,12 @@ class Downloader(object):
         #         'Some package(s) not found.'
         #         )
 
-        if not _not_found:
+        if not _not_found and self.do_load:
             self._log.info('Downloading ...')
 
             total = len(self._packages)
             for i, _pkg in enumerate(self._packages.values()):
-                update_progress('Downloading: ', float(i) / float(total) * 100.0)
+                update_progress('Download/Unpack:', float(i) / float(total) * 100.0)
                 if _pkg.download(self.packed_path):
                     _pkg.unpack(self.unpacked_path)
 

@@ -71,12 +71,13 @@ class Adapter(BaseAdapter):
                 _packages_found[_pkg_name] = _package
 
             if _added and _package is not None:
-                _package.download(downloader.packed_path)
+                if downloader.do_load:
+                    _package.download(downloader.packed_path)
 
-                _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.temp_path)
+                    _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.temp_path)
 
-                if _deps_file:
-                    _package.find_dependencies(_deps_file)
+                    if _deps_file:
+                        _package.find_dependencies(_deps_file)
 
         return _packages_found
 

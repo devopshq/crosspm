@@ -16,6 +16,7 @@ Options:
     <SOURCE>                       Source directory path.
     -h, --help                     Show this screen.
     --version                      Show version.
+    -l, --list                     Do not load packages and its dependencies. Just show what's found.
     -v, --verbose                  Increase output verbosity.
     --verbosity=LEVEL              Set output verbosity level: ({verb_level}) [default: {verb_default}].
     -c=FILE, --config=FILE         Path to configuration file.
@@ -153,7 +154,8 @@ class App(object):
         for k, v in params.items():
             params[k] = self._args[v[0]] if v[0] in self._args else v[1]
 
-        cpm_downloader = Downloader(self._config, params.pop('depslock_path'))
+        do_load = not self._args['--list']
+        cpm_downloader = Downloader(self._config, params.pop('depslock_path'), do_load)
         packages = cpm_downloader.download_packages()
 
         _not_found = sum(1 if _pkg is None else 0 for _pkg in packages.values())
@@ -162,8 +164,8 @@ class App(object):
                 CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
                 'Some package(s) not found.'
                 )
-
-        self._output.write(params, packages)
+        if do_load:
+            self._output.write(params, packages)
 
     def promote(self):
         cpm_promoter = Promoter(self._config)
