@@ -81,7 +81,7 @@ class Config(object):
             _def_conf_file = [DEFAULT_CONFIG_FILE] if type(DEFAULT_CONFIG_FILE) is str else DEFAULT_CONFIG_FILE
             for config_path in DEFAULT_CONFIG_PATH:
                 for _conf_file in _def_conf_file:
-                    config_file_name = os.path.join(config_path, _conf_file)
+                    config_file_name = os.path.join(config_path, _conf_file) if os.path.isdir(config_path) else config_path
                     if os.path.isfile(config_file_name):
                         break
                     else:
