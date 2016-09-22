@@ -67,7 +67,6 @@ class App(object):
             print(self._args)
             exit()
 
-
     def read_config(self):
         self._config = Config(self._args['--config'], self._args['--options'])
 
