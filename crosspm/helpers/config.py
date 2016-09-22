@@ -293,7 +293,10 @@ class Config(object):
         os.chdir(_cwd)
 
     def parse_options(self, cmdline):
-        _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
+        try:
+            _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
+        except:
+            _cmdline = {}
         _remove = []
         for k, v in self._options.items():
 

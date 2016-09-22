@@ -1,5 +1,5 @@
 cpm:
-  dependencies: dependencies.txt.lock
+  dependencies: cpm.manifest
 
 columns: "*package, version, branch, contract, quality"
 
@@ -10,6 +10,12 @@ values:
     3: integration
     4: stable
     5: release
+
+  contract:
+    - R10.0
+    - R11.0
+    - R12.0
+    - R13.0
 
 options:
   compiler:
@@ -23,45 +29,44 @@ options:
   osname:
     cmdline: os
     env: CROSSPM_OS
+    default: linux
 
 parsers:
   common:
     columns:
       version: "{int}.{int}.{int}[-{str}]"
-
   artifactory:
     path: "{server}/{repo}/{package}/{branch}/{version}/{compiler}/{arch}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
-    properties: "build.contract.{contract} = {quality}"
+    properties: ""
 
 defaults:
   compiler: gcc
   arch: x86_64
-  osname: linux
   branch: master
 
 common:
-  server: https://repo.someorg.com/artifactory/
+  server: https://repo.ptsecurity.ru/artifactory
   parser: artifactory
   type: jfrog-artifactory
   auth_type: simple
   auth:
-    - "reader_cpp_libs"
-    - "*****"
+    - reader_libs-cpp-release
+    - "**********"
 
 sources:
   - repo:
       - libs-cpp-release.snapshot
-      - libs.snapshot
-      auth_type: simple
-      auth:
-        - reader_cpp_libs
-        - "**********"
+      - libs-cpp-release/extlibs
+    auth_type: simple
+    auth:
+      - reader_libs-cpp-release
+      - "**********"
 
   - type: jfrog-artifactory
-      parser: artifactory
-      server: https://repo1.someorg.com/artifactory/
-      repo: libs-other.snapshot
-      auth_type: simple
-      auth:
-        - "reader_libs"
-        - "**********"
+    parser: artifactory
+    server: https://repo.ptsecurity.ru/artifactory
+    repo: scm.snapshot/temp-packages
+    auth_type: simple
+    auth:
+      - reader_libs-cpp-release
+      - "**********"

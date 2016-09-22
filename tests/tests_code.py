@@ -1,21 +1,33 @@
 #!/usr/bin/env python3
 import argparse
+import os
 import pathlib
 
+import shutil
 
-def valid_dir(path):
-    path = pathlib.Path(path)
-    try:
-        if path.is_dir():
-            return path
-    except OSError:
-        pass
-    raise argparse.ArgumentTypeError('%s is not a valid directory' % (path,))
+def win32_fix_long_path(path):
+    return os.path.realpath(path)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('adapter-name')
-parser.add_argument('targetnets', nargs='+')
-parser.add_argument('--name', choices={"Tom", "Dick", "Jane"})
-parser.add_argument('--age', type=int, choices=range(21, 65))
-parser.add_argument('--path', type=valid_dir)
-print(parser.parse_args())
+def move_to_origin( path_a, path_b_prefix ):
+    str = "r\\?\\"
+    path_b = os.path.join( path_a, path_b_prefix )
+    path_a = win32_fix_long_path(path_a)
+    if os.path.exists( path_b ):
+        shutil.rmtree( path_b )
+
+    def _ignore_path_b(path, names):
+        if ( path == path_a )  and  ( path_b_prefix in names ):
+            return [ path_b_prefix ]
+
+        # nothing will be ignored
+        return []
+
+    shutil.copytree(
+        path_a,
+        path_b,
+        symlinks=True,
+        ignore=_ignore_path_b
+    )
+
+if __name__ == '__main__':
+    move_to_origin('D:\\test','D:\\Documents')
