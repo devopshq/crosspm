@@ -66,9 +66,9 @@ class App(object):
             print(self._args)
             exit()
 
-        self.do_run(self.check_common_args)
+        # self.do_run(self.check_common_args)
 
-        self.do_run(self.read_config)
+        # self.do_run(self.read_config)
 
     def read_config(self):
         self._config = Config(self._args['--config'], self._args['--options'])
