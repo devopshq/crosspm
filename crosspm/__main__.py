@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 from crosspm.cpm import App
 
-if __name__ == '__main__':
+
+def main():
     app = App()
     app.run()
+
+
+if __name__ == '__main__':
+    main()
