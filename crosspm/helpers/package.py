@@ -11,8 +11,9 @@ class Package(object):
     _packages = {}
     _raw = []
     _root = False
+    _params_found = {}
 
-    def __init__(self, name, pkg, params, downloader, adapter, parser):
+    def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None):
         if type(pkg) is int:
             if pkg == 0:
                 self._root = True
@@ -22,6 +23,8 @@ class Package(object):
         self._adapter = adapter
         self._parser = parser
         self._downloader = downloader
+        if params_found:
+            self._params_found = params_found
 
     def download(self, dest_path, force=False):
         if force or not self._unpacked_path:
@@ -60,9 +63,11 @@ class Package(object):
             res_str = ''
             for out_item in output:
                 for k, v in out_item.items():
-                    cur_str = self._params.get(k, '')
+                    cur_str = self._params_found.get(k, '')
                     if not res_str:
-                        cur_str = '{}{} '.format(left, cur_str)
+                        cur_str = self._params.get(k, '')
+                    if not res_str:
+                            cur_str = '{}{} '.format(left, cur_str)
                     cur_format = '{}'
                     if v > 0:
                         cur_format = '{:%s}' % (v if len(cur_str) <= v else v + len(left))
