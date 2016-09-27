@@ -40,8 +40,17 @@ class Parser(object):
         if column not in self._columns:
             return value  # nothing to parse
         _res = []
-        extMask = extMask and value == '*'
+        # extMask = extMask and value == '*'
+        orig_value = value
         rule_parsed = self._columns[column]
+        prev_om_sep = False
+        om_sep = ''
+        for _part in rule_parsed:
+            if _part[1]:
+                for _subpart in _part[0]:
+                    if not _subpart[1]:
+                        om_sep = _subpart[0]
+                        break
         # TODO: make parsing smarter
         for x, _part in enumerate(rule_parsed):
             for y, _subpart in enumerate(_part[0]):
@@ -51,7 +60,9 @@ class Parser(object):
                     if y < len(_part[0]) - 1:
                         _sym = _part[0][y + 1][0]
                         _pos = value.find(_sym)
+                        cur_om_sep = _pos >= 0 and _part[1]
                     else:
+                        cur_om_sep = False
                         z = x
                         while True:
                             if z < len(rule_parsed) - 1:
@@ -59,6 +70,7 @@ class Parser(object):
                                 _sym = rule_parsed[z][0][0][0]
                                 _pos = value.find(_sym)
                                 if _pos >= 0:
+                                    cur_om_sep = rule_parsed[z][1]
                                     break
                                 elif not rule_parsed[z][1]:
                                     break
@@ -70,15 +82,38 @@ class Parser(object):
                         value = value[_pos + len(_sym):]
                     else:
                         if extMask:
-                            _atom = '*'
+                            if orig_value == '*':
+                                _atom = '*' if not _part[1] else None
+                            elif _part[1]:
+                                if prev_om_sep:
+                                    _atom = value  # '2.3.*-*' - Do not include versions without last part
+                                    # _atom = ''   # '2.3.*-'  - Do not include versions with last part
+                                else:
+                                    _atom = None  # '2.3.*'   - Include versions both with or without last part
+                            else:
+                                if om_sep:
+                                    _pos = value.find(om_sep)
+                                    if _pos >= 0:
+                                        _atom = value[:_pos]
+                                        if _atom != '*':
+                                            value = value[_pos:]
+                                    else:
+                                        _atom = value
+                                        if _atom != '*':
+                                            value = ''
+                                else:
+                                    _atom = value
+                                    if _atom != '*':
+                                        value = ''
                         else:
                             _atom = value
-                        value = ''
+                            value = ''
 
                     if types:
                         _res += [(_atom, _subpart[0])]
                     else:
                         _res += [_atom]
+                    prev_om_sep = cur_om_sep
 
         return _res
 
@@ -105,7 +140,7 @@ class Parser(object):
                     if _exist:
                         _res_atom = str(_value[0])
                         if _part[1]:
-                            if _res_atom == '*':
+                            if _res_atom in [None, '*', '']:
                                 _res_tmp = ''
                                 if _res and _res[-1] == '*':
                                     _res_atom = ''
@@ -152,16 +187,18 @@ class Parser(object):
     @staticmethod
     def validate_atom(value, text):
         _sign = ''
-        if text.startswith(('>=', '<=', '==',)):
-            _sign = text[:2]
-            text = text[2:]
-        elif text.startswith(('>', '<', '=',)):
-            _sign = text[:1]
-            text = text[1:]
-            if _sign == '=':
-                _sign = '=='
+        if text:
+            if text.startswith(('>=', '<=', '==',)):
+                _sign = text[:2]
+                text = text[2:]
+            elif text.startswith(('>', '<', '=',)):
+                _sign = text[:1]
+                text = text[1:]
+                if _sign == '=':
+                    _sign = '=='
 
-        var1, var2 = value, text
+        var1 = value
+        var2 = text if text else '*'
         if type(var1) is int:
             try:
                 var2 = int(var2)
@@ -386,7 +423,7 @@ class Parser(object):
                 else:
                     _tmp = [x for x in params[_col]]
                 for i, _tmp_item in enumerate(_tmp):
-                    if _tmp_item.startswith(('>=', '<=', '==', '>', '<', '=',)):
+                    if _tmp_item and _tmp_item.startswith(('>=', '<=', '==', '>', '<', '=',)):
                         _tmp[i] = '*'
 
                 _params[_col] = self.merge_with_mask(_col, _tmp)
@@ -509,7 +546,7 @@ class Parser(object):
         _path_pattern = path[_path_separator_pos:]
         return _path_fixed, _path_pattern
 
-    # def validate_path(self, path, params):
+    # TODO: optimize code merging duplicated parts
     def filter_one(self, packages, params):
 
         def get_all_masked_atoms(path):
@@ -575,6 +612,41 @@ class Parser(object):
 
             return _atoms_found
 
+        def filter_fn(item):
+            result = True
+            _atoms_found = item['params']
+            for _atom_name in item['columns']:
+                if _atom_name in _atoms_found:
+                    _rules = params[_atom_name]
+                    if type(_rules) not in [list, tuple]:
+                        _rules = [_rules]
+                    _vars = _atoms_found[_atom_name]
+                    if type(_vars) not in [list, tuple]:
+                        _vars = [_vars]
+                    i = -1
+                    for _column in item['columns'][_atom_name]:
+                        for _sub_col in _column[0]:
+                            if _sub_col[1]:
+                                i += 1
+                                if _column[1]:
+                                    _var = _vars[i] if len(_vars) > i else ''
+                                    _rule = _rules[i] if len(_rules) > i else ''
+                                    if _rule is None:  # '2.3.*'   - Include versions both with or without last part
+                                        pass
+                                    elif _rule == '' and _var and len(
+                                            str(_var)) > 0:  # '2.3.*-'  - Do not include versions with last part
+                                        result = False
+                                        break
+                                    elif _rule and not _var:  # '2.3.*-*' - Do not include versions without last part
+                                        result = False
+                                        break
+                        if not result:
+                            break
+                if not result:
+                    break
+
+            return result
+
         def sorted_fn(item):
             result = []
             _atoms_found = item['params']
@@ -588,11 +660,21 @@ class Parser(object):
 
             return result
 
-        ext_packages = [{'params': get_all_masked_atoms(x), 'path': x} for x in packages]
+        ext_packages = [{'params': get_all_masked_atoms(x), 'columns': self._columns, 'path': x} for x in packages]
+
+        # TODO: Filter by columns with parsing template (i.e. version)
+        filtered_packages = list(filter(
+            filter_fn,
+            ext_packages,
+        ))
 
         sorted_packages = sorted(
-            ext_packages,
+            filtered_packages,
             key=sorted_fn,
         )
 
-        return sorted_packages[self._index]
+        try:
+            result = sorted_packages[self._index]
+        except:
+            result = []
+        return result
