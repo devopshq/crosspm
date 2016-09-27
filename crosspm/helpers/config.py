@@ -51,24 +51,13 @@ class Config(object):
     deps_file_name = ''
     deps_lock_file_name = ''
     windows = WINDOWS
+    crosspm_cache_root = ''
 
     def __init__(self, config_file_name='', cmdline=''):
         self._log = logging.getLogger(__name__)
         self._config_file_name = self.find_config_file(config_file_name)
         config_data = self.read_config_file()
-        self.parse_config(config_data)
-        self.parse_options(cmdline)
-
-        # init not columns:
-        self.init_not_columns()
-
-    @staticmethod
-    def get_crosspm_cache_root():
-        root = os.getenv(ENVIRONMENT_CACHE_ROOT)
-        if not root:
-            home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
-            root = os.path.join(home_dir, '.crosspm')
-        return root
+        self.parse_config(config_data, cmdline)
 
     def find_config_file(self, config_file_name=''):
         if not config_file_name:
@@ -134,13 +123,7 @@ class Config(object):
 
         return result
 
-    def parse_config(self, config_data):
-        # init cpm parameters
-        for x in ['cpm', 'crosspm']:
-            if x in config_data:
-                self.init_cpm_config(config_data[x])
-                break
-
+    def parse_config(self, config_data, cmdline):
         # init parsers
         if 'parsers' in config_data:
             self.init_parsers(config_data['parsers'])
@@ -227,6 +210,35 @@ class Config(object):
             self._log.exception(msg)
             raise CrosspmException(code, msg)
 
+        try:
+            _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
+        except:
+            _cmdline = {}
+
+        # init cpm parameters
+        for x in ['cpm', 'crosspm']:
+            if x in config_data:
+                self.init_cpm_config(config_data[x], _cmdline)
+                break
+
+        self._options = self.parse_options(self._options, _cmdline)
+
+        # init not columns:
+        self.init_not_columns()
+
+    def init_cpm_config(self, crosspm, cmdline):
+        crosspm = self.parse_options(crosspm, cmdline)
+
+        self.deps_file_name = crosspm.get('dependencies', CROSSPM_DEPENDENCY_FILENAME)
+        self.deps_lock_file_name = crosspm.get('dependencies-lock', CROSSPM_DEPENDENCY_LOCK_FILENAME)
+
+        self.crosspm_cache_root = crosspm.get('cache', '')
+        if not self.crosspm_cache_root:
+            self.crosspm_cache_root = os.getenv(ENVIRONMENT_CACHE_ROOT)
+            if not self.crosspm_cache_root:
+                home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
+                self.crosspm_cache_root = os.path.join(home_dir, '.crosspm')
+
     def init_not_columns(self):
         # gather items from options
         # include options here even if they are columns also
@@ -238,13 +250,6 @@ class Config(object):
         # gather items from parsers
         for _parser in self._parsers.values():
             self._not_columns.update({k: None for k in _parser.get_vars() if k not in self._not_columns})
-
-    def init_cpm_config(self, crosspm):
-        def param(param_name, param_default):
-            return crosspm[param_name] if param_name in crosspm else param_default
-
-        self.deps_file_name = param('dependencies', CROSSPM_DEPENDENCY_FILENAME)
-        self.deps_lock_file_name = param('dependencies-lock', CROSSPM_DEPENDENCY_LOCK_FILENAME)
 
     def init_parsers(self, parsers):
         if 'common' not in parsers:
@@ -307,34 +312,37 @@ class Config(object):
             sys.path.remove(_base_dir)
         os.chdir(_cwd)
 
-    def parse_options(self, cmdline):
-        try:
-            _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
-        except:
-            _cmdline = {}
+    @staticmethod
+    def parse_options(options, cmdline):
+        # try:
+        #     _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
+        # except:
+        #     _cmdline = {}
         _remove = []
-        for k, v in self._options.items():
+        for k, v in options.items():
+            # if option type is str, leave the value intact
+            if type(options[k]) is not str:
+                # if option has cmdline name, try to fetch a value from command line by cmdline name
+                if 'cmdline' in v:
+                    if v['cmdline'] in cmdline:
+                        options[k] = cmdline[v['cmdline']]
 
-            # if option has cmdline name, try to fetch a value from command line by cmdline name
-            if 'cmdline' in v:
-                if v['cmdline'] in _cmdline:
-                    self._options[k] = _cmdline[v['cmdline']]
+                # if option hasn't cmdline name, try to fetch a value from command line by option's name
+                elif k in cmdline:
+                    options[k] = cmdline[k]
 
-            # if option hasn't cmdline name, try to fetch a value from command line by option's name
-            elif k in _cmdline:
-                self._options[k] = _cmdline[k]
+                # if option is still not filled, try to get a value from environment by env name
+                if type(options[k]) is not str:
+                    _env = os.getenv(v['env'])
+                    if _env:
+                        options[k] = _env
 
-            # if option is still not filled, try to get a value from environment by env name
-            if type(self._options[k]) is not str:
-                _env = os.getenv(v['env'])
-                if _env:
-                    self._options[k] = _env
-
-                # if option is still not filled, just remove it from dict
-                else:
-                    _remove.append(k)
+                    # if option is still not filled, just remove it from dict
+                    else:
+                        _remove.append(k)
         for k in _remove:
-            self._options.pop(k, None)
+            options.pop(k)
+        return options
 
     def sources(self):
         for _src in self._sources:

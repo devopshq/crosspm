@@ -25,7 +25,7 @@ class Downloader(object):
         self._config = config
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None, config.get_parser('common'))
 
-        self._cache_path = config.get_crosspm_cache_root()
+        self._cache_path = config.crosspm_cache_root
         if not os.path.exists(self._cache_path):
             os.makedirs(self._cache_path)
 
