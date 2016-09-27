@@ -28,7 +28,6 @@ DEFAULT_CONFIG_PATH = [
     CROSSPM_ROOT_DIR,
 ]
 ENVIRONMENT_CONFIG_PATH = 'CROSSPM_CONFIG_PATH'
-ENVIRONMENT_CACHE_ROOT = 'CROSSPM_CACHE_ROOT'
 CROSSPM_DEPENDENCY_FILENAME = 'dependencies.txt'  # maybe 'cpm.manifest'
 CROSSPM_DEPENDENCY_LOCK_FILENAME = 'dependencies.txt.lock'
 CROSSPM_ADAPTERS_NAME = 'adapters'
@@ -234,10 +233,8 @@ class Config(object):
 
         self.crosspm_cache_root = crosspm.get('cache', '')
         if not self.crosspm_cache_root:
-            self.crosspm_cache_root = os.getenv(ENVIRONMENT_CACHE_ROOT)
-            if not self.crosspm_cache_root:
-                home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
-                self.crosspm_cache_root = os.path.join(home_dir, '.crosspm')
+            home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
+            self.crosspm_cache_root = os.path.join(home_dir, '.crosspm')
 
     def init_not_columns(self):
         # gather items from options
