@@ -12,9 +12,13 @@ class Parser(object):
     _rules_vars = {}
     _columns = {}
     _col_types = []
+    _sort = []
+    _index = -1
 
     def __init__(self, name, data, config):
         self._name = name
+        self._sort = data.pop('sort', self._sort)
+        self._index = data.pop('index', self._index)
         self._rules = {k: v for k, v in data.items() if k not in ['columns']}
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
@@ -32,11 +36,21 @@ class Parser(object):
         for _name, _rule in self._rules.items():
             self._rules_vars[_name] = list({x[1:-1].strip(): 0 for x in re.findall('{.*?}', _rule)}.keys())
 
-    def parse_by_mask(self, column, value, types=False):
+    def parse_by_mask(self, column, value, types=False, extMask=False):
         if column not in self._columns:
             return value  # nothing to parse
         _res = []
+        # extMask = extMask and value == '*'
+        orig_value = value
         rule_parsed = self._columns[column]
+        prev_om_sep = False
+        om_sep = ''
+        for _part in rule_parsed:
+            if _part[1]:
+                for _subpart in _part[0]:
+                    if not _subpart[1]:
+                        om_sep = _subpart[0]
+                        break
         # TODO: make parsing smarter
         for x, _part in enumerate(rule_parsed):
             for y, _subpart in enumerate(_part[0]):
@@ -46,7 +60,9 @@ class Parser(object):
                     if y < len(_part[0]) - 1:
                         _sym = _part[0][y + 1][0]
                         _pos = value.find(_sym)
+                        cur_om_sep = _pos >= 0 and _part[1]
                     else:
+                        cur_om_sep = False
                         z = x
                         while True:
                             if z < len(rule_parsed) - 1:
@@ -54,6 +70,7 @@ class Parser(object):
                                 _sym = rule_parsed[z][0][0][0]
                                 _pos = value.find(_sym)
                                 if _pos >= 0:
+                                    cur_om_sep = rule_parsed[z][1]
                                     break
                                 elif not rule_parsed[z][1]:
                                     break
@@ -64,13 +81,39 @@ class Parser(object):
                         _atom = value[:_pos]
                         value = value[_pos + len(_sym):]
                     else:
-                        _atom = value
-                        value = ''
+                        if extMask:
+                            if orig_value == '*':
+                                _atom = '*' if not _part[1] else None
+                            elif _part[1]:
+                                if prev_om_sep:
+                                    _atom = value  # '2.3.*-*' - Do not include versions without last part
+                                    # _atom = ''   # '2.3.*-'  - Do not include versions with last part
+                                else:
+                                    _atom = None  # '2.3.*'   - Include versions both with or without last part
+                            else:
+                                if om_sep:
+                                    _pos = value.find(om_sep)
+                                    if _pos >= 0:
+                                        _atom = value[:_pos]
+                                        if _atom != '*':
+                                            value = value[_pos:]
+                                    else:
+                                        _atom = value
+                                        if _atom != '*':
+                                            value = ''
+                                else:
+                                    _atom = value
+                                    if _atom != '*':
+                                        value = ''
+                        else:
+                            _atom = value
+                            value = ''
 
                     if types:
                         _res += [(_atom, _subpart[0])]
                     else:
                         _res += [_atom]
+                    prev_om_sep = cur_om_sep
 
         return _res
 
@@ -95,10 +138,15 @@ class Parser(object):
                         elif _value[0] not in ('', None):
                             _exist = True
                     if _exist:
+                        _res_atom = str(_value[0])
                         if _part[1]:
+                            if _res_atom in [None, '*', '']:
+                                _res_tmp = ''
+                                if _res and _res[-1] == '*':
+                                    _res_atom = ''
                             _res += _res_tmp
                             _res_tmp = ''
-                        _res += str(_value[0])
+                        _res += _res_atom
                         _value = _value[1:]
                     else:
                         _res_tmp = ''
@@ -139,16 +187,18 @@ class Parser(object):
     @staticmethod
     def validate_atom(value, text):
         _sign = ''
-        if text.startswith(('>=', '<=', '==',)):
-            _sign = text[:2]
-            text = text[2:]
-        elif text.startswith(('>', '<', '=',)):
-            _sign = text[:1]
-            text = text[1:]
-            if _sign == '=':
-                _sign = '=='
+        if text:
+            if text.startswith(('>=', '<=', '==',)):
+                _sign = text[:2]
+                text = text[2:]
+            elif text.startswith(('>', '<', '=',)):
+                _sign = text[:1]
+                text = text[1:]
+                if _sign == '=':
+                    _sign = '=='
 
-        var1, var2 = value, text
+        var1 = value
+        var2 = text if text else '*'
         if type(var1) is int:
             try:
                 var2 = int(var2)
@@ -373,7 +423,7 @@ class Parser(object):
                 else:
                     _tmp = [x for x in params[_col]]
                 for i, _tmp_item in enumerate(_tmp):
-                    if _tmp_item.startswith(('>=', '<=', '==', '>', '<', '=',)):
+                    if _tmp_item and _tmp_item.startswith(('>=', '<=', '==', '>', '<', '=',)):
                         _tmp[i] = '*'
 
                 _params[_col] = self.merge_with_mask(_col, _tmp)
@@ -451,7 +501,7 @@ class Parser(object):
             if v == '-':
                 v = None  # get default value on next line
             k, v = self._config.check_column_value(i, v, True)
-            _vars[k] = self.parse_by_mask(k, v)
+            _vars[k] = self.parse_by_mask(k, v, False, True)
 
         if len(_vars) == 0:
             raise CrosspmException(
@@ -487,3 +537,144 @@ class Parser(object):
         for i, x in enumerate(must_not):
             must_not[i] = [self.split_with_regexp('{.*?}', x[0]), x[1]]
         return must_not
+
+    @staticmethod
+    def split_fixed_pattern(path):
+        _first_pattern_pos = path.find('*')
+        _path_separator_pos = path.rfind('/', 0, _first_pattern_pos) + 1
+        _path_fixed = path[:_path_separator_pos]
+        _path_pattern = path[_path_separator_pos:]
+        return _path_fixed, _path_pattern
+
+    # TODO: optimize code merging duplicated parts
+    def filter_one(self, packages, params):
+
+        def get_all_masked_atoms(path):
+            def get_atom(_x, _y, _path0):
+                _pos = -1
+                if _y < len(_part[0]) - 1:
+                    _sym0 = _part[0][_y + 1][0]
+                    _pos = _path0.find(_sym0)
+                elif _x < len(rule_parsed) - 1:
+                    if rule_parsed[_x + 1][1]:
+                        _tmp0 = [xx.strip() for xx in rule_parsed[_x + 1][0][0][0].split('|')]
+                    else:
+                        _tmp0 = [rule_parsed[_x + 1][0][0][0]]
+                    for _sym0 in _tmp0:
+                        _pos = _path0.find(_sym0)
+                        if _pos >= 0:
+                            break
+
+                if _pos >= 0:
+                    _atom0 = _path0[:_pos]
+                    _path0 = _path0[_pos:]
+                else:
+                    _atom0 = _path0
+                    _path0 = ''
+                return _atom0, _path0
+
+            _path = str(path)
+            _atom_list = []
+            _atoms_found = {}
+            rule = self._rules['path']
+            rule_parsed = self.parse_value_template(rule)
+            for x, _part in enumerate(rule_parsed):
+                for y, _subpart in enumerate(_part[0]):
+                    if _subpart[1]:
+                        _value = params[_subpart[0]]
+                        if _subpart[0] in self._columns:
+                            # we have a mask to process
+                            if _subpart[0] not in _atoms_found:
+                                _atom, _path = get_atom(x, y, _path)
+                                _atom = self.parse_by_mask(_subpart[0], _atom, True)
+                                _atoms_found[_subpart[0]] = [int(x[0]) if x[1] == 'int' else x[0] for x in _atom]
+                        else:
+                            # it's a plain value
+                            _plain = sum(1 if x in _value else 0 for x in ('>=', '<=', '==', '>', '<', '=', '*')) == 0
+                            if _plain:
+                                _path = _path[len(_value):]
+                            else:
+                                _atom, _path = get_atom(x, y, _path)
+                                if _subpart[0] not in _atoms_found:
+                                    _atoms_found[_subpart[0]] = [_atom]
+                    else:
+                        # just part of template
+                        if _part[1]:
+                            # square brackets means this part can be one of values
+                            _tmp = [xx.strip() for xx in _subpart[0].split('|')]
+                        else:
+                            _tmp = [_subpart[0]]
+                        for _sym in _tmp:
+                            _atom = _path[:len(_sym)]
+                            if fnmatch.fnmatch(_atom, _sym):  # may be just comparing would be better
+                                _path = _path[len(_sym):]
+                                break
+
+            return _atoms_found
+
+        def filter_fn(item):
+            result = True
+            _atoms_found = item['params']
+            for _atom_name in item['columns']:
+                if _atom_name in _atoms_found:
+                    _rules = params[_atom_name]
+                    if type(_rules) not in [list, tuple]:
+                        _rules = [_rules]
+                    _vars = _atoms_found[_atom_name]
+                    if type(_vars) not in [list, tuple]:
+                        _vars = [_vars]
+                    i = -1
+                    for _column in item['columns'][_atom_name]:
+                        for _sub_col in _column[0]:
+                            if _sub_col[1]:
+                                i += 1
+                                if _column[1]:
+                                    _var = _vars[i] if len(_vars) > i else ''
+                                    _rule = _rules[i] if len(_rules) > i else ''
+                                    if _rule is None:  # '2.3.*'   - Include versions both with or without last part
+                                        pass
+                                    elif _rule == '' and _var and len(
+                                            str(_var)) > 0:  # '2.3.*-'  - Do not include versions with last part
+                                        result = False
+                                        break
+                                    elif _rule and not _var:  # '2.3.*-*' - Do not include versions without last part
+                                        result = False
+                                        break
+                        if not result:
+                            break
+                if not result:
+                    break
+
+            return result
+
+        def sorted_fn(item):
+            result = []
+            _atoms_found = item['params']
+            for _atom_name in self._sort:
+                if _atom_name == '*':
+                    result += [_atoms_found[x] for x in _atoms_found if x not in self._sort]
+                else:
+                    result += [_atoms_found.get(_atom_name, [])]
+
+            result = [item for sublist in result for item in sublist]
+
+            return result
+
+        ext_packages = [{'params': get_all_masked_atoms(x), 'columns': self._columns, 'path': x} for x in packages]
+
+        # TODO: Filter by columns with parsing template (i.e. version)
+        filtered_packages = list(filter(
+            filter_fn,
+            ext_packages,
+        ))
+
+        sorted_packages = sorted(
+            filtered_packages,
+            key=sorted_fn,
+        )
+
+        try:
+            result = sorted_packages[self._index]
+        except:
+            result = []
+        return result

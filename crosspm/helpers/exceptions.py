@@ -28,8 +28,8 @@ def print_stdout(*args, **kwargs):
     # kwargs.update({'file': sys.stdout})
     # print(*args, **kwargs)
     prn_str = ''.join(*args)
-    sys.stdout.write('{}\n'.format(prn_str))
-    sys.stdout.flush()
+    sys.stderr.write('{}\n'.format(prn_str))
+    sys.stderr.flush()
 
 
 class CrosspmException(Exception):

@@ -38,7 +38,7 @@ class Adapter(BaseAdapter):
                 _pkg_name_old = _pkg_name
                 print_stdout('{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
             for _path in _paths['paths']:
-                _path_fixed, _path_pattern = self.split_fixed_pattern(_path)
+                _path_fixed, _path_pattern = parser.split_fixed_pattern(_path)
                 _repo_paths = ArtifactoryPath(_path_fixed, **_art_auth)
                 for _repo_path in _repo_paths.glob(_path_pattern):
                     _mark = 'found'
@@ -49,15 +49,26 @@ class Adapter(BaseAdapter):
                             _packages += [_repo_path]
                     print_stdout('  {}: {}'.format(_mark, str(_repo_path)))
             _package = None
-            if len(_packages) == 1:
-                # one package found: ok!
-                _package = Package(_pkg_name, _packages[0], _paths['params'], downloader, self, parser)
-            elif len(_packages) > 1:
-                # TODO: multiple packages found: wtf?!
-                raise CrosspmException(
-                    CROSSPM_ERRORCODE_MULTIPLE_DEPS,
-                    'Multiple instances found for package [{}] not found.'.format(_pkg_name)
-                )
+            if _packages:
+                _packages = parser.filter_one(_packages, _paths['params'])
+                if type(_packages) is dict:
+                    _packages = [_packages]
+
+                if len(_packages) == 1:
+                    # one package found: ok!
+                    _package = Package(_pkg_name, _packages[0]['path'], _paths['params'], downloader, self, parser, _packages[0]['params'])
+                    _mark = 'chosen'
+                    print_stdout('  {}: {}'.format(_mark, str(_packages[0]['path'])))
+
+                elif len(_packages) > 1:
+                    # TODO: multiple packages found: wtf?!
+                    raise CrosspmException(
+                        CROSSPM_ERRORCODE_MULTIPLE_DEPS,
+                        'Multiple instances found for package [{}] not found.'.format(_pkg_name)
+                    )
+                else:
+                    # Package not found: may be error, but it could be in other source.
+                    pass
             else:
                 # Package not found: may be error, but it could be in other source.
                 pass
@@ -80,14 +91,6 @@ class Adapter(BaseAdapter):
                         _package.find_dependencies(_deps_file)
 
         return _packages_found
-
-    @staticmethod
-    def split_fixed_pattern(path):
-        _first_pattern_pos = path.find('*')
-        _path_separator_pos = path.rfind('/', 0, _first_pattern_pos) + 1
-        _path_fixed = path[:_path_separator_pos]
-        _path_pattern = path[_path_separator_pos:]
-        return _path_fixed, _path_pattern
 
     def download_package(self, package, dest_path):
         _dest_file = os.path.join(dest_path, package.name)

@@ -39,6 +39,7 @@ setup(
     author='Alexander Kovalev',
     author_email='ak@alkov.pro',
     url='https://github.com/devopshq/crosspm.git',
+    entry_points={'console_scripts': ['crosspm=crosspm.__main__:main']},
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
