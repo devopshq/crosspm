@@ -36,7 +36,7 @@ class Adapter(BaseAdapter):
             _pkg_name = _paths['params'][_pkg_name_col]
             if _pkg_name != _pkg_name_old:
                 _pkg_name_old = _pkg_name
-                print_stderr('{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
+                print_stdout('{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
             for _path in _paths['paths']:
                 _path_fixed, _path_pattern = self.split_fixed_pattern(_path)
                 _repo_paths = ArtifactoryPath(_path_fixed, **_art_auth)
@@ -47,7 +47,7 @@ class Adapter(BaseAdapter):
                         if parser.validate(_repo_path.properties, 'properties', _paths['params']):
                             _mark = 'valid'
                             _packages += [_repo_path]
-                    print_stderr('  {}: {}'.format(_mark, str(_repo_path)))
+                    print_stdout('  {}: {}'.format(_mark, str(_repo_path)))
             _package = None
             if len(_packages) == 1:
                 # one package found: ok!
@@ -71,12 +71,13 @@ class Adapter(BaseAdapter):
                 _packages_found[_pkg_name] = _package
 
             if _added and _package is not None:
-                _package.download(downloader.packed_path)
+                if downloader.do_load:
+                    _package.download(downloader.packed_path)
 
-                _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.temp_path)
+                    _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.temp_path)
 
-                if _deps_file:
-                    _package.find_dependencies(_deps_file)
+                    if _deps_file:
+                        _package.find_dependencies(_deps_file)
 
         return _packages_found
 

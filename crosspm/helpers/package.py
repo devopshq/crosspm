@@ -55,7 +55,21 @@ class Package(object):
     def pack(self, src_path):
         Archive.create(self._packed_path, src_path)
 
-    def print(self, level=0):
+    def print(self, level=0, output=None):
+        def do_print(left):
+            res_str = ''
+            for out_item in output:
+                for k, v in out_item.items():
+                    cur_str = self._params.get(k, '')
+                    if not res_str:
+                        cur_str = '{}{} '.format(left, cur_str)
+                    cur_format = '{}'
+                    if v > 0:
+                        cur_format = '{:%s}' % (v if len(cur_str) <= v else v + len(left))
+                    res_str += cur_format.format(cur_str)
+                    break
+            print_stdout(res_str)
+
         _sign = ' '
         if not self._root:
             if self._unpacked_path:
@@ -65,15 +79,16 @@ class Package(object):
             else:
                 _sign = '-'
         _left = '{}{}'.format(' ' * 4 * level, _sign)
-        print_stderr('{}{}'.format(_left, self._name))
+        # print_stderr('{}{}'.format(_left, self._name))
+        do_print(_left)
         for _pkg_name, _pkg in self._packages.items():
             if not _pkg:
                 _left = '{}-'.format(' ' * 4 * (level + 1))
-                print_stderr('{}{}'.format(_left, _pkg_name))
+                print_stdout('{}{}'.format(_left, _pkg_name))
             else:
-                _pkg.print(level + 1)
+                _pkg.print(level + 1, output)
         if self._root:
-            print_stderr('')
+            print_stdout('')
 
     def get_name_and_path(self):
         return self._name, self._unpacked_path

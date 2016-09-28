@@ -253,7 +253,7 @@ class Parser(object):
             #     'Parser rule for [{}] not found in config.'.format(rule_name)
             # )
         if len(self._rules[rule_name]) == 0:
-            return len(value) == 0
+            return True  # len(value) == 0
         if self._rules[rule_name] is None:
             return True
         _res = False

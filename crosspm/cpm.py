@@ -16,11 +16,12 @@ Options:
     <SOURCE>                       Source directory path.
     -h, --help                     Show this screen.
     --version                      Show version.
+    -l, --list                     Do not load packages and its dependencies. Just show what's found.
     -v, --verbose                  Increase output verbosity.
     --verbosity=LEVEL              Set output verbosity level: ({verb_level}) [default: {verb_default}].
     -c=FILE, --config=FILE         Path to configuration file.
     -o OPTIONS, --options OPTIONS  Extra options.
-    --depslock-path=FILE           Path to file with locked dependencies [default: ./{deps_lock_default}]
+    --depslock-path=FILE           Path to file with locked dependencies [./{deps_lock_default}]
     --out-format=TYPE              Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                  Output file name (required if --out_format is not stdout)
     --out-prefix=PREFIX            Prefix for output variable name [default: ] (no prefix at all)
@@ -66,14 +67,13 @@ class App(object):
             print(self._args)
             exit()
 
-        # self.do_run(self.check_common_args)
-
-        # self.do_run(self.read_config)
-
     def read_config(self):
         self._config = Config(self._args['--config'], self._args['--options'])
 
     def run(self):
+        self.do_run(self.check_common_args)
+        self.do_run(self.read_config)
+
         if self._args['download']:
             # self.do_run(self.download)
             self.download()
@@ -153,7 +153,8 @@ class App(object):
         for k, v in params.items():
             params[k] = self._args[v[0]] if v[0] in self._args else v[1]
 
-        cpm_downloader = Downloader(self._config, params.pop('depslock_path'))
+        do_load = not self._args['--list']
+        cpm_downloader = Downloader(self._config, params.pop('depslock_path'), do_load)
         packages = cpm_downloader.download_packages()
 
         _not_found = sum(1 if _pkg is None else 0 for _pkg in packages.values())
@@ -162,8 +163,8 @@ class App(object):
                 CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
                 'Some package(s) not found.'
                 )
-
-        self._output.write(params, packages)
+        if do_load:
+            self._output.write(params, packages)
 
     def promote(self):
         cpm_promoter = Promoter(self._config)
