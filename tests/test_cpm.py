@@ -20,6 +20,49 @@ class TestCpm:
     def teardown(self):
         print("TestCpm - teardown method")
 
+    def test_run_with_list_without_configfile(self):
+        print("\ttest_run_with_list_without_configfile")
+        sys.argv.clear()
+        sys.argv.append(1)
+        sys.argv.insert(1, 'download')
+        sys.argv.insert(2, '--list')
+        app = App()
+        app.run()
+
+    def test_run_with_list_and_with_configfile(self):
+        print("\ttest_run_with_list_and_with_configfile")
+        sys.argv.clear()
+        sys.argv.append(1)
+        sys.argv.insert(1, 'download')
+        sys.argv.insert(2, '--list')
+        sys.argv.insert(3, '--depslock-path=D:/crosspm-1/tests/cpm.manifest')
+        sys.argv.insert(4, '--config=D:/crosspm-1/tests/crosspm.yaml')
+        app = App()
+        app.run()
+
+    def test_run_2(self):
+        print("\ttest_run_2")
+        sys.argv.clear()
+        sys.argv.append(1)
+        sys.argv.insert(1, 'download')
+        sys.argv.insert(2, '--out-format=stdout')
+        sys.argv.insert(3, '--depslock-path=D:/crosspm-1/tests/pt/cpm.manifest')
+        sys.argv.insert(4, '--config=D:/crosspm-1/tests/pt/crosspm.yaml')
+        app = App()
+        app.run()
+
+    def test_run(self):
+        print("\ttest_run")
+        sys.argv.clear()
+        sys.argv.append(1)
+        sys.argv.insert(1, 'download')
+        sys.argv.insert(2, '--out-format=stdout')
+        sys.argv.insert(3, '--depslock-path=D:/crosspm-1/tests/cpm_3.manifest')
+        sys.argv.insert(4, '--config=D:/crosspm-1/tests/crosspm_3.yaml')
+        sys.argv.insert(5, '-o contract=R11.0,quality=stable,os=linux')
+        app = App()
+        app.run()
+
     def test_read_config_without_configfile(self):
         print("\ttest_read_config_without_configfile")
         sys.argv.clear()
