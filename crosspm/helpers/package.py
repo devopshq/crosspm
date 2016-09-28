@@ -97,3 +97,8 @@ class Package(object):
 
     def get_name_and_path(self):
         return self._name, self._unpacked_path
+
+    def get_params(self, param_list):
+        result = {k: v for k, v in self._params_found.items() if k in param_list}
+        result.update({k: v for k, v in self._params.items() if (k in param_list and k not in result)})
+        return result

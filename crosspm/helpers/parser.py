@@ -587,7 +587,17 @@ class Parser(object):
                             if _subpart[0] not in _atoms_found:
                                 _atom, _path = get_atom(x, y, _path)
                                 _atom = self.parse_by_mask(_subpart[0], _atom, True)
-                                _atoms_found[_subpart[0]] = [int(x[0]) if x[1] == 'int' else x[0] for x in _atom]
+                                _tmp_atom = []
+                                for x in _atom:
+                                    if x[1] == 'int':
+                                        try:
+                                            _tmp_atom += [int(x[0])]
+                                        except:
+                                            _tmp_atom += [x[0]]
+                                    else:
+                                        _tmp_atom += [x[0]]
+
+                                _atoms_found[_subpart[0]] = _tmp_atom
                         else:
                             # it's a plain value
                             _plain = sum(1 if x in _value else 0 for x in ('>=', '<=', '==', '>', '<', '=', '*')) == 0

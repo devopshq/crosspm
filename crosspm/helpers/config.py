@@ -46,6 +46,7 @@ class Config(object):
     _options = {}
     _values = {}
     _output = {}
+    _fails = {}
     name_column = ''
     deps_file_name = ''
     deps_lock_file_name = ''
@@ -154,6 +155,10 @@ class Config(object):
         if 'defaults' in config_data:
             self._defaults = config_data['defaults']
         self._defaults.update({k: v['default'] for k, v in self._options.items() if k not in self._defaults})
+
+        # init fails
+        if 'fails' in config_data:
+            self._fails = config_data['fails']
 
         # init common parameters
         _common = {}
@@ -382,6 +387,10 @@ class Config(object):
         else:
             result = default
         return result
+
+    def get_fails(self, fail_type):
+        if fail_type in self._fails:
+            return self._fails[fail_type]
 
 
 def get_verbosity_level(level=None):

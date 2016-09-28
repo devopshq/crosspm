@@ -101,9 +101,20 @@ class Downloader(object):
         _added = False
         if pkg_name in self._packages:
             if self._packages[pkg_name] is None:
-                self._packages[pkg_name] = package
                 _added = True
+            elif package is not None:
+                param_list = self._config.get_fails('unique')
+                params1 = self._packages[pkg_name].get_params(param_list)
+                params2 = package.get_params(param_list)
+                for x in param_list:
+                    if str(params1[x]) != str(params2[x]):
+                        raise CrosspmException(
+                            CROSSPM_ERRORCODE_MULTIPLE_DEPS,
+                            'Multiple versions of package "{}" found in dependencies.'.format(pkg_name),
+                            )
         else:
-            self._packages[pkg_name] = package
             _added = True
+        if _added:
+            self._packages[pkg_name] = package
+
         return _added
