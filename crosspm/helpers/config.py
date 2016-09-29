@@ -388,9 +388,8 @@ class Config(object):
             result = default
         return result
 
-    def get_fails(self, fail_type):
-        if fail_type in self._fails:
-            return self._fails[fail_type]
+    def get_fails(self, fail_type, default):
+        return self._fails.get(fail_type, default)
 
 
 def get_verbosity_level(level=None):

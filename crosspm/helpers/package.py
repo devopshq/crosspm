@@ -84,7 +84,6 @@ class Package(object):
             else:
                 _sign = '-'
         _left = '{}{}'.format(' ' * 4 * level, _sign)
-        # print_stderr('{}{}'.format(_left, self._name))
         do_print(_left)
         for _pkg_name, _pkg in self._packages.items():
             if not _pkg:
