@@ -75,8 +75,8 @@ class App(object):
         self.do_run(self.read_config)
 
         if self._args['download']:
-            # self.do_run(self.download)
-            self.download()
+            self.do_run(self.download)
+            # self.download()
 
         elif self._args['promote']:
             self.do_run(self.promote)
@@ -93,10 +93,12 @@ class App(object):
             sys.exit(e.error_code)
 
         except CrosspmException as e:
+            print_stdout('')
             self._log.critical(e.msg)
             sys.exit(e.error_code)
 
         except Exception as e:
+            print_stdout('')
             self._log.exception(e)
             self._log.critical('Unknown error occurred!')
             sys.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR)
