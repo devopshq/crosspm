@@ -8,8 +8,8 @@ from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
 
 
 def update_progress(msg, progress):
-    sys.stdout.write('\r{0} [{1:10}] {2}%'.format(msg, '#'*int(progress/10.0), int(progress)))
-    sys.stdout.flush()
+    sys.stderr.write('\r{0} [{1:10}] {2}%'.format(msg, '#'*int(progress/10.0), int(progress)))
+    sys.stderr.flush()
 
 
 class Downloader(object):
