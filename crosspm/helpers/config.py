@@ -53,11 +53,13 @@ class Config(object):
     windows = WINDOWS
     crosspm_cache_root = ''
 
-    def __init__(self, config_file_name='', cmdline=''):
+    def __init__(self, config_file_name='', cmdline='', no_fails=False):
         self._log = logging.getLogger(__name__)
         self._config_file_name = self.find_config_file(config_file_name)
         config_data = self.read_config_file()
         self.parse_config(config_data, cmdline)
+        if no_fails:
+            self._fails = {}
 
     def find_config_file(self, config_file_name=''):
         if not config_file_name:

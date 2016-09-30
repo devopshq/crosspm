@@ -25,6 +25,7 @@ Options:
     --out-format=TYPE              Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                  Output file name (required if --out_format is not stdout)
     --out-prefix=PREFIX            Prefix for output variable name [default: ] (no prefix at all)
+    --no-fails                     Ignore fails config if possible.
 
 """
 
@@ -68,7 +69,7 @@ class App(object):
             exit()
 
     def read_config(self):
-        self._config = Config(self._args['--config'], self._args['--options'])
+        self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'])
 
     def run(self):
         self.do_run(self.check_common_args)
