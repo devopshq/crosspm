@@ -77,7 +77,7 @@ class Adapter(BaseAdapter):
                 #     CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
                 #     'Package [{}] not found.'.format(_pkg_name)
                 # )
-            _added = downloader.add_package(_pkg_name, _package)
+            _added, _package = downloader.add_package(_pkg_name, _package)
             if _added or _package is not None:
                 _packages_found[_pkg_name] = _package
 

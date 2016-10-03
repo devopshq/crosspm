@@ -117,4 +117,4 @@ class Downloader(object):
         if _added:
             self._packages[pkg_name] = package
 
-        return _added
+        return _added, self._packages[pkg_name]

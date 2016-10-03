@@ -10,10 +10,12 @@ class Parser(object):
     # _rules = {}
     # _config = None
     _rules_vars = {}
+    _rules_vars_extra = {}
     _columns = {}
     _col_types = []
     _sort = []
     _index = -1
+
 
     def __init__(self, name, data, config):
         self._name = name
@@ -35,6 +37,13 @@ class Parser(object):
         self._rules_vars = {}
         for _name, _rule in self._rules.items():
             self._rules_vars[_name] = list({x[1:-1].strip(): 0 for x in re.findall('{.*?}', _rule)}.keys())
+            self._rules_vars_extra[_name] = {}
+            for i, _item in enumerate(self._rules_vars[_name]):
+                _tmp = [x for x in _item.split('|') if x]
+                if len(_tmp) > 1:
+                    self._rules[_name] = self._rules[_name].replace(('{%s}' % _item), ('{%s}' % _tmp[0]))
+                    self._rules_vars[_name][i] = _tmp[0]
+                    self._rules_vars_extra[_name][_tmp[0]] = _tmp[1:]
 
     def parse_by_mask(self, column, value, types=False, extMask=False):
         if column not in self._columns:
@@ -215,6 +224,7 @@ class Parser(object):
         return _match
 
     def validate_path(self, path, params):
+        _rule_name = 'path'
         _path = str(path)
         _new_path = ''
 
@@ -241,8 +251,15 @@ class Parser(object):
                 _path0 = ''
             return _atom0, _path0
 
+        def iter_with_extras(_col_name, _value0):
+            _res0 = [_value0]
+            if _col_name in self._rules_vars_extra[_rule_name]:
+                _res0 += self._rules_vars_extra[_rule_name][_col_name]
+            for _res1 in _res0:
+                yield _res1
+
         _res = True
-        rule = self._rules['path']
+        rule = self._rules[_rule_name]
         rule_parsed = self.parse_value_template(rule)
         for x, _part in enumerate(rule_parsed):
             for y, _subpart in enumerate(_part[0]):
@@ -251,27 +268,39 @@ class Parser(object):
                     if _subpart[0] in self._columns:
                         # we have a mask to process
                         _atom, _path = get_atom(x, y, _path)
-                        if self.validate_by_mask(_subpart[0], _atom, _value):
-                            _new_path += _atom
-                        else:
+                        _match = False
+                        for _value_item in iter_with_extras(_subpart[0], _value):
+                            if self.validate_by_mask(_subpart[0], _atom, _value_item):
+                                _new_path += _atom
+                                _match = True
+                                break
+                        if not _match:
                             return False
                     else:
                         # it's a plain value
                         _plain = sum(1 if x in _value else 0 for x in ('>=', '<=', '==', '>', '<', '=', '*')) == 0
                         if _plain:
-                            _atom = _path[:len(_value)]
+                            # _atom = _path[:len(_value)]
                             # _rule = _part.format(**params)
-                            _path = _path[len(_value):]
-                            if fnmatch.fnmatch(_atom, _value):  # may be just comparing would be better
-                                _new_path += _atom
-                            else:
+                            _match = False
+                            for _value_item in iter_with_extras(_subpart[0], _value):
+                                _atom = _path[:len(_value_item)]
+                                if fnmatch.fnmatch(_atom, _value_item):  # may be just comparing would be better
+                                    _new_path += _atom
+                                    _path = _path[len(_value_item):]
+                                    _match = True
+                                    break
+                            if not _match:
                                 return False
                         else:
                             _atom, _path = get_atom(x, y, _path)
-
-                            if self.validate_atom(_value, _atom):
-                                _new_path += _atom
-                            else:
+                            _match = False
+                            for _value_item in iter_with_extras(_subpart[0], _value):
+                                if self.validate_atom(_value_item, _atom):
+                                    _new_path += _atom
+                                    _match = True
+                                    break
+                            if not _match:
                                 return False
 
                 else:
@@ -427,6 +456,9 @@ class Parser(object):
                         _tmp[i] = '*'
 
                 _params[_col] = self.merge_with_mask(_col, _tmp)
+            if _col in self._rules_vars_extra[rule_name]:
+                if len(self._rules_vars_extra[rule_name][_col]) > 0:
+                    _params[_col] = '[%s%s]' % (_params[_col], ''.join('|{}'.format(x) for x in self._rules_vars_extra[rule_name][_col]))
 
         for _par in fill_rule_inner(_columns, []):
             _params.update(_par)
@@ -533,9 +565,11 @@ class Parser(object):
         return _res
 
     def parse_value_template(self, value):
+        # _regexp = ''
         must_not = self.split_with_regexp('\[.*?\]', value)
         for i, x in enumerate(must_not):
             must_not[i] = [self.split_with_regexp('{.*?}', x[0]), x[1]]
+            # _atom = '(?P<_1_int>[\\w*><=]+)'
         return must_not
 
     @staticmethod
