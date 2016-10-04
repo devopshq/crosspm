@@ -1,2 +1,0 @@
-# crosspm
-Cross Package Manager

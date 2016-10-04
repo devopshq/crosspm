@@ -1,0 +1,7 @@
+boost                1.55.8               1.55-pm
+poco                 1.46.9               1.46-pm
+openssl              1.0.20               1.0.1i-pm
+log4cplus            1.1.6                1.1-pm
+protobuf             0.1.6                default
+gtest                0.0.6                default
+gmock                0.0.5                default
