@@ -41,7 +41,7 @@ setup(
     url='https://github.com/devopshq/crosspm.git',
     entry_points={'console_scripts': ['crosspm=crosspm.__main__:main']},
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: MIT License',

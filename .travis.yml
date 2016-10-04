@@ -10,7 +10,7 @@ before_script:
 - git config --global user.name "Alexander Kovalev"
 script:
 - printenv
-- TRAVIS_BRANCH="develop" ./scripts/build-on-server.sh
+- TRAVIS_BRANCH="master" ./scripts/build-on-server.sh
 before_deploy:
 - ls -l build/
 - GH_TOKEN="$(cat $GH_TOKEN_FILE)"
