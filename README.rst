@@ -302,17 +302,14 @@ We'll add some more examples soon. Here is one of configuration file examples fo
 Let's keep in mind that any value we use in path, properties and columns description, called column in CrossPM.
 
 .. list-table::
-   :widths: 20 10 250
+   :widths: 20 250
    :header-rows: 1
 
    * -
      -
-     -
    * - *cpm*
-     -
      - Main configuration such as manifest filenames and cache path.
    * - *columns*
-     -
      - Manifest file columns definition.
 
        .. list-table::
@@ -328,28 +325,20 @@ Let's keep in mind that any value we use in path, properties and columns descrip
           * - *cache*
             - Path for CrossPM temporary files, downloaded package archives and unpacked packages.
    * - *values*
-     -
      - Lists or dicts of available values for some columns (if we need it).
    * - *options*
-     -
      - Here we can define commandline options and environmrnt variable names from wich we will get some of columns values.
        We can define default values for those columns here also.
    * - *parsers*
-     -
      - Rules for parsing columns, paths, properties, etc.
    * - *defaults*
-     -
      - Default values for columns not defined in *options*.
    * - *fails*
-     -
      - Here we can define some rules for failing CrossPM jobs.
    * - *common*
-     -
      - Common parameters for all or several of sources.
    * - *sources*
-     -
      - Sources definition. Here we define parameters for repositories access.
    * - *output*
-     -
      - Report output format definition.
 
