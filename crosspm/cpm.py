@@ -29,8 +29,9 @@ Options:
 
 """
 
+# TODO: Remove 'logging' module usage
+# TODO: Implement 'verbose' and 'verbosity=LEVEL' usage
 import logging
-# import sys
 
 from docopt import docopt
 
