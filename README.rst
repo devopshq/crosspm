@@ -117,12 +117,12 @@ Examples
 
 We'll add some more examples soon. Here is one of configuration file examples for now:
 
+**crosspm.yaml**
+
 .. list-table::
    :widths: 10 110
-   :header-rows: 1
+   :header-rows: 0
 
-   * -
-     - crosspm.yaml
    * - ::
 
            1
@@ -303,10 +303,8 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 
 .. list-table::
    :widths: 20 250
-   :header-rows: 1
+   :header-rows: 0
 
-   * -
-     -
    * - *cpm*
      - Main configuration such as manifest filenames and cache path.
    * - *columns*
