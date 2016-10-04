@@ -115,89 +115,241 @@ You'll see something like this::
 Examples
 --------
 
-We'll add some more examples soon. Here is one of configuration file examples for now::
+We'll add some more examples soon. Here is one of configuration file examples for now:
 
-  cpm:
-    dependencies: dependencies.txt
-    dependencies-lock: dependencies.txt.lock
-    cache:
-      cmdline: cache
-      env: CROSSPM_CACHE_ROOT
-      default:
+.. list-table::
+   :widths: 10 110
+   :header-rows: 1
 
-  columns: "*package, version, branch"
+   * -
+     - crosspm.yaml
+   * - ::
 
-  values:
-    quality:
-      1: banned
-      2: snapshot
-      3: integration
-      4: stable
-      5: release
+           1
+           2
+           3
+           4
+           5
+           6
+           7
+           8
+           9
+          10
+          11
+          12
+          13
+          14
+          15
+          16
+          17
+          18
+          19
+          20
+          21
+          22
+          23
+          24
+          25
+          26
+          27
+          28
+          29
+          30
+          31
+          32
+          33
+          34
+          35
+          36
+          37
+          38
+          39
+          40
+          41
+          42
+          43
+          44
+          45
+          46
+          47
+          48
+          49
+          50
+          51
+          52
+          53
+          54
+          55
+          56
+          57
+          58
+          59
+          60
+          61
+          62
+          63
+          64
+          65
+          66
+          67
+          68
+          69
+          70
+          71
+          72
+          73
+          74
+          75
+          76
+          77
+          78
+          79
+          80
+          81
+          82
+          83
 
-  options:
-    compiler:
-      cmdline: cl
-      env: CROSSPM_COMPILER
-      default: vc110
+     - ::
 
-    arch:
-      cmdline: arch
-      env: CROSSPM_ARCH
-      default: x86
+          cpm:
+            dependencies: dependencies.txt
+            dependencies-lock: dependencies.txt.lock
+            cache:
+              cmdline: cache
+              env: CROSSPM_CACHE_ROOT
+              default:
 
-    osname:
-      cmdline: os
-      env: CROSSPM_OS
-      default: win
+          columns: "*package, version, branch"
 
-  parsers:
-    common:
-      columns:
-        version: "{int}.{int}.{int}[.{int}][-{str}]"
-      sort:
-        - version
-        - '*'
-      index: -1
+          values:
+            quality:
+              1: banned
+              2: snapshot
+              3: integration
+              4: stable
+              5: release
 
-    artifactory:
-      path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
-      properties: "some.org.quality = {quality}"
+          options:
+            compiler:
+              cmdline: cl
+              env: CROSSPM_COMPILER
+              default: vc110
 
-  defaults:
-    branch: master
-    quality: stable
+            arch:
+              cmdline: arch
+              env: CROSSPM_ARCH
+              default: x86
 
-  fails:
-    unique:
-      - package
-      - version
+            osname:
+              cmdline: os
+              env: CROSSPM_OS
+              default: win
 
-  common:
-    server: https://repo.some.org/artifactory
-    parser: artifactory
-    type: jfrog-artifactory
-    auth_type: simple
-    auth:
-      - username
-      - password
+          parsers:
+            common:
+              columns:
+                version: "{int}.{int}.{int}[.{int}][-{str}]"
+              sort:
+                - version
+                - '*'
+              index: -1
 
-  sources:
-    - repo:
-        - libs-release.snapshot
-        - libs-release/extlibs
+            artifactory:
+              path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
+              properties: "some.org.quality = {quality}"
 
-    - type: jfrog-artifactory
-      parser: artifactory
-      server: https://repo.some.org/artifactory
-      repo: project.snapshot/temp-packages
-      auth_type: simple
-      auth:
-        - username2
-        - password2
+          defaults:
+            branch: master
+            quality: stable
 
-  output:
-    tree:
-      - package: 25
-      - version: 0
+          fails:
+            unique:
+              - package
+              - version
+
+          common:
+            server: https://repo.some.org/artifactory
+            parser: artifactory
+            type: jfrog-artifactory
+            auth_type: simple
+            auth:
+              - username
+              - password
+
+          sources:
+            - repo:
+                - libs-release.snapshot
+                - libs-release/extlibs
+
+            - type: jfrog-artifactory
+              parser: artifactory
+              server: https://repo.some.org/artifactory
+              repo: project.snapshot/temp-packages
+              auth_type: simple
+              auth:
+                - username2
+                - password2
+
+          output:
+            tree:
+              - package: 25
+              - version: 0
+
+..
+
+**Config file description:**
+
+Let's keep in mind that any value we use in path, properties and columns description, called column in CrossPM.
+
+.. list-table::
+   :widths: 20 10 250
+   :header-rows: 1
+
+   * -
+     -
+     -
+   * - *cpm*
+     -
+     - Main configuration such as manifest filenames and cache path.
+   * - *columns*
+     -
+     - Manifest file columns definition.
+
+       .. list-table::
+          :widths: 30 130
+          :header-rows: 1
+
+          * -
+            -
+          * - *dependencies*
+            - ...
+          * - *dependencies-lock*
+            - ...
+          * - *cache*
+            - Path for CrossPM temporary files, downloaded package archives and unpacked packages.
+   * - *values*
+     -
+     - Lists or dicts of available values for some columns (if we need it).
+   * - *options*
+     -
+     - Here we can define commandline options and environmrnt variable names from wich we will get some of columns values.
+       We can define default values for those columns here also.
+   * - *parsers*
+     -
+     - Rules for parsing columns, paths, properties, etc.
+   * - *defaults*
+     -
+     - Default values for columns not defined in *options*.
+   * - *fails*
+     -
+     - Here we can define some rules for failing CrossPM jobs.
+   * - *common*
+     -
+     - Common parameters for all or several of sources.
+   * - *sources*
+     -
+     - Sources definition. Here we define parameters for repositories access.
+   * - *output*
+     -
+     - Report output format definition.
 
