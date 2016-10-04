@@ -312,10 +312,8 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 
        .. list-table::
           :widths: 30 130
-          :header-rows: 1
+          :header-rows: 0
 
-          * -
-            -
           * - *dependencies*
             - ...
           * - *dependencies-lock*
