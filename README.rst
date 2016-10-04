@@ -306,7 +306,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
    :header-rows: 0
 
    * - *cpm*
-     - Main configuration such as manifest filenames and cache path.
+     - Main configuration such as manifest file name and cache path.
    * - *columns*
      - Manifest file columns definition.
 
@@ -323,7 +323,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
    * - *values*
      - Lists or dicts of available values for some columns (if we need it).
    * - *options*
-     - Here we can define commandline options and environmrnt variable names from wich we will get some of columns values.
+     - Here we can define commandline options and environment variable names from which we will get some of columns values.
        We can define default values for those columns here also.
    * - *parsers*
      - Rules for parsing columns, paths, properties, etc.
