@@ -1,0 +1,62 @@
+{
+  "columns": "package, version, branch, contract, quality",
+  "options": {
+    "compiler": {
+      "cmdline": "cl",
+      "env": "CROSSPM_COMPILER"
+    },
+    "arch": {
+      "cmdline": "arch",
+      "env": "CROSSPM_ARCH"
+    },
+    "osname": {
+      "cmdline": "os",
+      "env": "CROSSPM_OS"
+    }
+  },
+  "parsers": {
+    "artifactory": {
+      "path": "{server}/{repo}/{package}/{branch}/{version}/{compiler}/{arch}/{osname}/{package}.{version}.[tar.gz|nupkg]",
+      "properties": "build.contract.{contract} = {quality}"
+    }
+  },
+  "defaults": {
+    "server": "https://repo.someorg.com/artifactory/",
+    "compiler": "gcc-4.9",
+    "arch": "x86_64",
+    "osname": "debian-7.6"
+  },
+  "common": {
+    "parser": "artifactory",
+    "type": "jfrog-artifactory",
+    "auth_type": "simple",
+    "auth": [
+      "reader_cpp_libs",
+      "*****"
+    ]
+  },
+  "sources": [
+    {
+      "repo": [
+        "libs-cpp-release.snapshot",
+        "libs.snapshot"
+      ],
+      "auth_type": "simple",
+      "auth": [
+        "reader_cpp_libs",
+        "**********"
+      ]
+    },
+    {
+      "type": "jfrog-artifactory",
+      "parser": "artifactory",
+      "server": "https://repo1.someorg.com/artifactory/",
+      "repo": "libs-other.snapshot",
+      "auth_type": "simple",
+      "auth": [
+        "reader_libs",
+        "**********"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+*.pyc
+.idea
+build/
+crosspm.egg-info/
+dist/
+tests/pt/

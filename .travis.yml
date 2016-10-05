@@ -1,0 +1,31 @@
+language: python
+python: '3.5'
+before_install:
+- export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
+install:
+- pip install dohq-art
+before_script:
+- "./scripts/tests.sh"
+- git config --global user.email "ak@alkov.pro"
+- git config --global user.name "Alexander Kovalev"
+script:
+- printenv
+- TRAVIS_BRANCH="develop" ./scripts/build-on-server.sh
+before_deploy:
+- ls -l build/
+- GH_TOKEN="$(cat $GH_TOKEN_FILE)"
+deploy:
+  provider: pypi
+  user: alkov.pro
+  password:
+    secure: Ly2yScgzWgmWTm8grm3f/KI++cUeoVtsUiBZXj0rQuB9l9drBJKWtepyxMs/jLdhuLg9gqNw8gx81lTTv7y/FhgqTqwmh5qSagExyPp4Pq0UyvmulI0oi39AIoElErzRFwhXjLHUPoNVbBk7KP6P/8GIg9tsIWjcUvl0lmnDqd5H4y27zLfNYgam+NUuCHw918xki6ePd+eJeZocRnzl226VKX5RVi691rc1JJUXWnFsklSHIhuDRMssnUUW/y2qsLvNtIe+OZTCGI9WNn8H8Y45xKb3lywniJWT9a1qlo/okBEEU37oO2eunycB4bBAXTpy2yhzNtq4IQ99qI3rQdwqleQE48R/nCgShcWcAI79v3fZO2tkqSDakF7IiLyli7uvUpzHy9NjLAu1BdO7EKMdaryYoNsCdRV54mQuceNOZSZ+eRxcdqR+AnIAWFntTjYYgbf/k7GUWvvXi6Q6n3zapLEbnp08d7RISwy7y2EnBtOmJozrcRL3ANj+FTcG/U3vYdgS8aqsMWHhaBUI00W/5fG5CsGGY+nD9PZKndrQnSDVa92Wom0iclDjpo/TPSlri0t61xr11cuHfUEyfnFQSluOroeeuka/lQjV8j6oW3K4n39TY3iBXsdcfBgCYqhdIxstuOCWEQpOeUpvAVAUs7CHPHrU26zIZCCIQXo=
+  distributions: sdist bdist_wheel
+  skip_cleanup: true
+  on:
+    all_branches: true
+after_script:
+- echo "yes we run after_script"
+- echo "" > $GH_TOKEN_FILE
+env:
+  global:
+    - secure: wiFL18iRrNU1t7ZBu571vWMvEdih8fX5wM1e0h0wyaa0OK2Rz2Ihsqnzv490vLvaXanRXrBMV8/QwskNwsJ0kOtaL43Xt4yaBqMkOVNprNAIFNofJrvlrAxzZ9m8TGzmSoHz3JkE0YHZSJRKYWzJW5+iI1r+rC2BRUGQG7tRmzef1tiOCoq76Ie2LD4+Pp5BkO2EdeC7O9+WRdOjizRwbBJ+1wc0mWc1Yb/5r76THNxAVDfdhW6k7AZGqaXIwSvVgmlfj3hjYKJGPP9bJOfaRpFMxBBA4cYXFLdEAaaC+8sc9E1TTvG+R3O5gGfz/RUJ5pIqBUVDMz4xAjysJHYY5W1RueEEaG9aDjtM5/oNVZGjbmQqhusi92nlEJoXmukv/YZUFARiw1cAFQFCSWMUUzoR1XfUpJewsKBCuJ8Akwf8GiK4c153tyYHAa371LDcBiEcylcLTF2M/0Vb+oIU1wX+x6rv1B7uEPZshmq5tVXYbUpezBYAFFIrZwgPxj1SITONgMdHFVCLfp+b1TIpE64A4FWrhWNJOXv5yzl8/xlyaN9hFBv1NebCBZFUEkzXvgIz/PxiEbI6jygKBdxaW9Iw9NUdByfFVAcczExRODsHP8TCWSzQTkdwDwKl2QUI0WsmeBraBovprWeye2lgfh8w6UVA5IK9Pj4kkXjOr8A=
