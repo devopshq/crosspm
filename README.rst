@@ -307,34 +307,81 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 
    * - *cpm*
      - Main configuration such as manifest file name and cache path.
-   * - *columns*
-     - Manifest file columns definition.
 
        .. list-table::
           :widths: 30 130
           :header-rows: 0
 
           * - *dependencies*
-            - ...
+            - Manifest file name (not path - just filename)
           * - *dependencies-lock*
-            - ...
+            - Manifest with locked dependencies (without masks and conditions) file name (not path - just filename)
           * - *cache*
             - Path for CrossPM temporary files, downloaded package archives and unpacked packages.
+   * - *columns*
+     - Manifest file columns definition.
+       Asterisk here points to name column (column of manifest file with package name).
+       CrossPM uses it for building list with unique packages (i.e. by package name)
    * - *values*
      - Lists or dicts of available values for some columns (if we need it).
    * - *options*
      - Here we can define commandline options and environment variable names from which we will get some of columns values.
-       We can define default values for those columns here also.
+       We can define default values for those columns here too.
    * - *parsers*
      - Rules for parsing columns, paths, properties, etc.
+
+       .. list-table::
+          :widths: 30 130
+          :header-rows: 0
+
+          * - *columns*
+            - ...
+          * - *sort*
+            - ...
+          * - *index*
+            - ...
+          * - *path*
+            - ...
+          * - *properties*
+            - ...
    * - *defaults*
      - Default values for columns not defined in *options*.
    * - *fails*
      - Here we can define some rules for failing CrossPM jobs.
+
+       .. list-table::
+          :widths: 30 130
+          :header-rows: 0
+
+          * - *unique*
+            - ...
    * - *common*
      - Common parameters for all or several of sources.
    * - *sources*
      - Sources definition. Here we define parameters for repositories access.
+
+       .. list-table::
+          :widths: 30 130
+          :header-rows: 0
+
+          * - *type*
+            - ...
+          * - *parser*
+            - ...
+          * - *server*
+            - ...
+          * - *repo*
+            - ...
+          * - *auth_type*
+            - ...
+          * - *auth*
+            - ...
    * - *output*
      - Report output format definition.
 
+       .. list-table::
+          :widths: 30 130
+          :header-rows: 0
+
+          * - *tree*
+            - ...
