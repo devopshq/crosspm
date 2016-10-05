@@ -72,7 +72,8 @@ class Config(object):
             _def_conf_file = [DEFAULT_CONFIG_FILE] if type(DEFAULT_CONFIG_FILE) is str else DEFAULT_CONFIG_FILE
             for config_path in DEFAULT_CONFIG_PATH:
                 for _conf_file in _def_conf_file:
-                    config_file_name = os.path.join(config_path, _conf_file) if os.path.isdir(config_path) else config_path
+                    config_file_name = os.path.join(config_path, _conf_file) if os.path.isdir(
+                        config_path) else config_path
                     if os.path.isfile(config_file_name):
                         break
                     else:
@@ -111,10 +112,10 @@ class Config(object):
                         break
 
         try:
-            with open(self._config_file_name) as f:
-                if _is_yaml:
-                    result = yaml.safe_load(f)
-                else:
+            if _is_yaml:
+                result = self.load_yaml()
+            else:
+                with open(self._config_file_name) as f:
                     result = json.loads(f.read())
 
         except Exception as e:
@@ -123,6 +124,65 @@ class Config(object):
             msg = 'Error reading config file: [{}]'.format(self._config_file_name)
             raise CrosspmException(code, msg) from e
 
+        return result
+
+    def find_import_file(self, import_file_name=''):
+        if import_file_name:
+            config_path_env = os.getenv(ENVIRONMENT_CONFIG_PATH)
+            if config_path_env:
+                if config_path_env in DEFAULT_CONFIG_PATH:
+                    DEFAULT_CONFIG_PATH.remove(config_path_env)
+                DEFAULT_CONFIG_PATH.insert(0, config_path_env)
+
+            for config_path in DEFAULT_CONFIG_PATH:
+                import_file_name = os.path.join(config_path, import_file_name) if os.path.isdir(
+                    config_path) else config_path
+                if os.path.isfile(import_file_name):
+                    break
+                else:
+                    import_file_name = ''
+
+            if import_file_name == '':
+                raise CrosspmException(
+                    CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
+                    'Config import file does not found',
+                )
+
+            import_file_name = os.path.realpath(import_file_name)
+        return import_file_name
+
+    def load_yaml(self):
+        result = {}
+        yaml_imports = ''
+        yaml_content = ''
+        with open(self._config_file_name) as f:
+            for line in f:
+                if (not yaml_imports) and (not yaml_content):
+                    line_one = line.strip().replace(' ', '').lower()
+                    if line_one.startswith('import:'):
+                        yaml_imports += line
+                    elif len(line_one) > 0:
+                        yaml_content += line
+                elif yaml_imports and not yaml_content:
+                    if line.startswith((' ', '\t',)):
+                        yaml_imports += line
+                    elif line.strip():
+                        yaml_content += line
+                else:
+                    yaml_content += line
+        data_imports = yaml.safe_load(yaml_imports)
+        yaml_content_pre = ''
+        if 'import' in data_imports:
+            for _import_file_name in data_imports['import']:
+                _import_file_name = self.find_import_file(_import_file_name)
+                if _import_file_name:
+                    with open(_import_file_name) as f:
+                        for line in f:
+                            yaml_content_pre += line
+                    yaml_content_pre += '\n'
+        yaml_content = yaml_content_pre + yaml_content
+        if yaml_content:
+            result = yaml.safe_load(yaml_content)
         return result
 
     def parse_config(self, config_data, cmdline):
