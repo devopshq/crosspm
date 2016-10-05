@@ -20,6 +20,7 @@ class TestCpm:
     def teardown(self):
         print("TestCpm - teardown method")
 
+
     def test_pack(self):
         print("\ttest_set_logging_level")
         sys.argv.clear()
