@@ -1,5 +1,9 @@
 language: python
 python: '3.5'
+branches:
+  only:
+  - master
+  - develop
 before_install:
 - export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
 install:
@@ -10,7 +14,7 @@ before_script:
 - git config --global user.name "Alexander Kovalev"
 script:
 - printenv
-- TRAVIS_BRANCH="master" ./scripts/build-on-server.sh
+- ./scripts/build-on-server.sh
 before_deploy:
 - ls -l build/
 - GH_TOKEN="$(cat $GH_TOKEN_FILE)"
