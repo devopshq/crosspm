@@ -22,9 +22,6 @@ DEVOPS_BUILD_DIR="$(pwd)/build"
 DEVOPS_BUILD_VERSION_FROM_FILE="$(extract_version_from_file crosspm/__init__.py)"
 DEVOPS_BUILD_VERSION="${DEVOPS_BUILD_VERSION_FROM_FILE}"
 
-echo "$TRAVIS_BRANCH"
-echo "${TRAVIS_BRANCH}"
-
 DEVOPS_BUILD_RELEASE=false
 DEVOPS_BUILD_DEVELOP=false
 DEVOPS_BUILD_CI_INFO=false
@@ -33,12 +30,12 @@ DEVOPS_BUILD_MERGE=false
 read -r DEVOPS_BUILD_RELEASE DEVOPS_BUILD_DEVELOP DEVOPS_BUILD_CI_INFO DEVOPS_BUILD_MERGE <<< $(parse_branch $DEVOPS_BUILD_BRANCH $DEVOPS_BUILD_PULL_REQUEST_NUMBER)
 
 
-if bool "$DEVOPS_BUILD_MERGE" || ! bool "$DEVOPS_BUILD_CI_INFO"; then
-
-    echo "INFO:  ======== check README.rst contain correct url to travis build status"
-
-    cat README.rst | grep -q "$(get_url_travis_build_status $DEVOPS_BUILD_BRANCH)\$" || error "ERROR: file README.rst contains incorrect url to travis build status"
-fi
+#if bool "$DEVOPS_BUILD_MERGE" || ! bool "$DEVOPS_BUILD_CI_INFO"; then
+#
+#    echo "INFO:  ======== check README.rst contain correct url to travis build status"
+#
+#    cat README.rst | grep -q "$(get_url_travis_build_status $DEVOPS_BUILD_BRANCH)\$" || error "ERROR: file README.rst contains incorrect url to travis build status"
+#fi
 
 if bool "$DEVOPS_BUILD_DEVELOP"; then
 
@@ -47,6 +44,9 @@ if bool "$DEVOPS_BUILD_DEVELOP"; then
     DEVOPS_BUILD_VERSION="$(extract_version_from_file crosspm/__init__.py)"
 
     echo "INFO:  ======== __version__ changed from '$DEVOPS_BUILD_VERSION_FROM_FILE' to '$DEVOPS_BUILD_VERSION'"
+
+    sed -i "s/Development\ Status\ ::\ 5\ -\ Production\/Stable/Development\ Status\ ::\ 4\ -\ Beta/g" ./setup.py
+
 fi
 
 echo "INFO: ======== building..."
