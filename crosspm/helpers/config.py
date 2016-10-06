@@ -170,17 +170,18 @@ class Config(object):
                         yaml_content += line
                 else:
                     yaml_content += line
-        data_imports = yaml.safe_load(yaml_imports)
-        yaml_content_pre = ''
-        if 'import' in data_imports:
-            for _import_file_name in data_imports['import']:
-                _import_file_name = self.find_import_file(_import_file_name)
-                if _import_file_name:
-                    with open(_import_file_name) as f:
-                        for line in f:
-                            yaml_content_pre += line
-                    yaml_content_pre += '\n'
-        yaml_content = yaml_content_pre + yaml_content
+        if yaml_imports:
+            data_imports = yaml.safe_load(yaml_imports)
+            yaml_content_pre = ''
+            if 'import' in data_imports and type(data_imports['import']) in (list, tuple):
+                for _import_file_name in data_imports['import']:
+                    _import_file_name = self.find_import_file(_import_file_name)
+                    if _import_file_name:
+                        with open(_import_file_name) as f:
+                            for line in f:
+                                yaml_content_pre += line
+                        yaml_content_pre += '\n'
+            yaml_content = yaml_content_pre + yaml_content
         if yaml_content:
             result = yaml.safe_load(yaml_content)
         return result

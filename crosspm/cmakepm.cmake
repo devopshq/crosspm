@@ -54,11 +54,10 @@ function(_pm_download_dependencies SOURCE_DIR BINARY_DIR)
         COMMAND
             "${PYTHON_EXECUTABLE}"
             "-u"
-            "-m" "crosspm.cpm"
+            "-m" "crosspm"
             "download"
-            "${CPM_TARGET_OS}"
-            "${CPM_TARGET_ARCH}"
-            "${CPM_PLATFORM_TOOLSET}"
+            "-o"
+            "os=${CPM_TARGET_OS},arch=${CPM_TARGET_ARCH},cl=${CPM_PLATFORM_TOOLSET}"
         WORKING_DIRECTORY
             "${SOURCE_DIR}"
         OUTPUT_FILE
