@@ -357,12 +357,12 @@ Let's keep in mind that any value we use in path, properties and columns descrip
           * - *index*
             - Used for picking one element from sorted list. It's just a list index as in python.
           * - *path*
-            - Path template for searching packages in repository. Here **{}** is columns, **[|]** is variations.
+            - Path template for searching packages in repository. Here **{}** is column, **[|]** is variation.
               Example::
 
                 path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]"
 
-              could be as follows::
+              these paths will be searched::
 
                 https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.zip
                 https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.tar.gz
