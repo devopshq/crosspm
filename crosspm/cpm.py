@@ -161,7 +161,7 @@ class App(object):
         cpm_downloader = Downloader(self._config, params.pop('depslock_path'), do_load)
         packages = cpm_downloader.download_packages()
 
-        _not_found = sum(1 if _pkg is None else 0 for _pkg in packages.values())
+        _not_found = any(_pkg is None for _pkg in packages.values())
         if _not_found:
             raise CrosspmException(
                 CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,

@@ -278,7 +278,7 @@ class Parser(object):
                             return False
                     else:
                         # it's a plain value
-                        _plain = sum(1 if x in _value else 0 for x in ('>=', '<=', '==', '>', '<', '=', '*')) == 0
+                        _plain = any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
                         if _plain:
                             # _atom = _path[:len(_value)]
                             # _rule = _part.format(**params)
@@ -634,7 +634,7 @@ class Parser(object):
                                 _atoms_found[_subpart[0]] = _tmp_atom
                         else:
                             # it's a plain value
-                            _plain = sum(1 if x in _value else 0 for x in ('>=', '<=', '==', '>', '<', '=', '*')) == 0
+                            _plain = any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
                             if _plain:
                                 _path = _path[len(_value):]
                             else:

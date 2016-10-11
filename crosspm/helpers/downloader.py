@@ -71,14 +71,7 @@ class Downloader(object):
         print_stdout('Dependency tree:')
         self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
 
-        # TODO: Implement real dependencies checker
-        _not_found = sum(1 if _pkg is None else 0 for _pkg in self._packages.values())
-
-        # if _not_found:
-        #     raise CrosspmException(
-        #         CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
-        #         'Some package(s) not found.'
-        #         )
+        _not_found = any(_pkg is None for _pkg in self._packages.values())
 
         if not _not_found and self.do_load:
             self._log.info('Downloading ...')
