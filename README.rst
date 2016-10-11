@@ -208,8 +208,14 @@ We'll add some more examples soon. Here is one of configuration file examples fo
           81
           82
           83
+          84
+          85
+          86
 
      - ::
+
+          import:
+            - cred.yaml
 
           cpm:
             dependencies: dependencies.txt
@@ -305,6 +311,9 @@ Let's keep in mind that any value we use in path, properties and columns descrip
    :widths: 20 250
    :header-rows: 0
 
+   * - *import*
+     - If defined, imports yaml config parts from other files.
+       Must be the first parameter in config file.
    * - *cpm*
      - Main configuration such as manifest file name and cache path.
 
@@ -335,15 +344,34 @@ Let's keep in mind that any value we use in path, properties and columns descrip
           :header-rows: 0
 
           * - *columns*
-            - ...
+            - Dictionary with column name as a key and template as a value.
+              Example::
+
+                version: "{int}.{int}.{int}[.{int}][-{str}]"
+
+              means that version column contains three numeric parts divided by a dot,
+              followed by numeric or string or numeric and string parts with dividers or nothing at all.
           * - *sort*
-            - ...
+            - List of column names in sorting order. Used for sorting packages if more than one version found for defined parameters.
+              Asterisk can be one of values of a list representing all columns not mentioned here.
           * - *index*
-            - ...
+            - Used for picking one element from sorted list. It's just a list index as in python.
           * - *path*
-            - ...
+            - Path template for searching packages in repository. Here **{}** is column, **[|]** is variation.
+              Example::
+
+                path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]"
+
+              these paths will be searched::
+
+                https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.zip
+                https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.tar.gz
+                https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.zip
+                https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.tar.gz
+
           * - *properties*
-            - ...
+            - Extra properties. i.e. object properties in Artifactory
+
    * - *defaults*
      - Default values for columns not defined in *options*.
    * - *fails*
