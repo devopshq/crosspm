@@ -382,7 +382,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
           :header-rows: 0
 
           * - *unique*
-            - ...
+            - List of columns for generating unique index.
    * - *common*
      - Common parameters for all or several of sources.
    * - *sources*
@@ -393,17 +393,17 @@ Let's keep in mind that any value we use in path, properties and columns descrip
           :header-rows: 0
 
           * - *type*
-            - ...
+            - Source type. Available types list depends on existing adapter modules.
           * - *parser*
-            - ...
+            - Available parsers defined in *parsers*.
           * - *server*
-            - ...
+            - Root URL of repository server.
           * - *repo*
-            - ...
+            - Subpath to specific part of repository on server.
           * - *auth_type*
-            - ...
+            - Authorization type. For example *simple*.
           * - *auth*
-            - ...
+            - Authorization data. For *simple* here we define login and password.
    * - *output*
      - Report output format definition.
 
@@ -412,4 +412,4 @@ Let's keep in mind that any value we use in path, properties and columns descrip
           :header-rows: 0
 
           * - *tree*
-            - ...
+            - columns and widths for tree output, printed in the end of CrossPM job.
