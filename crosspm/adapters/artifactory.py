@@ -36,7 +36,8 @@ class Adapter(BaseAdapter):
             _pkg_name = _paths['params'][_pkg_name_col]
             if _pkg_name != _pkg_name_old:
                 _pkg_name_old = _pkg_name
-                print_stdout('{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
+                print_stdout(
+                    '{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
             for _path in _paths['paths']:
                 _path_fixed, _path_pattern = parser.split_fixed_pattern(_path)
                 _repo_paths = ArtifactoryPath(_path_fixed, **_art_auth)
@@ -56,7 +57,8 @@ class Adapter(BaseAdapter):
 
                 if len(_packages) == 1:
                     # one package found: ok!
-                    _package = Package(_pkg_name, _packages[0]['path'], _paths['params'], downloader, self, parser, _packages[0]['params'])
+                    _package = Package(_pkg_name, _packages[0]['path'], _paths['params'], downloader, self, parser,
+                                       _packages[0]['params'])
                     _mark = 'chosen'
                     print_stdout('  {}: {}'.format(_mark, str(_packages[0]['path'])))
 
@@ -77,11 +79,18 @@ class Adapter(BaseAdapter):
                 #     CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
                 #     'Package [{}] not found.'.format(_pkg_name)
                 # )
-            _added, _package = downloader.add_package(_pkg_name, _package)
-            if _added or _package is not None:
-                _packages_found[_pkg_name] = _package
+            if (_package is not None) or (not self._config.no_fails):
+                _added, _package = downloader.add_package(_pkg_name, _package)
+            else:
+                _added = False
+            if _package is not None:
+                _pkg_name = _package.get_name_and_path(True)
+            if _added or (_package is not None):
+                if (_package is not None) or (not self._config.no_fails):
+                    if (_package is not None) or (_packages_found.get(_pkg_name, None) is None):
+                        _packages_found[_pkg_name] = _package
 
-            if _added and _package is not None:
+            if _added and (_package is not None):
                 if downloader.do_load:
                     _package.download(downloader.packed_path)
 
@@ -102,7 +111,7 @@ class Adapter(BaseAdapter):
             os.remove(_dest_file)
 
         try:
-            #with package.open() as _src:
+            # with package.open() as _src:
             _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
             _src.raise_for_status()
 

@@ -16,7 +16,6 @@ class Parser(object):
     _sort = []
     _index = -1
 
-
     def __init__(self, name, data, config):
         self._name = name
         self._sort = data.pop('sort', self._sort)
@@ -45,7 +44,7 @@ class Parser(object):
                     self._rules_vars[_name][i] = _tmp[0]
                     self._rules_vars_extra[_name][_tmp[0]] = _tmp[1:]
 
-    def parse_by_mask(self, column, value, types=False, extMask=False):
+    def parse_by_mask(self, column, value, types=False, ext_mask=False):
         if column not in self._columns:
             return value  # nothing to parse
         _res = []
@@ -90,7 +89,7 @@ class Parser(object):
                         _atom = value[:_pos]
                         value = value[_pos + len(_sym):]
                     else:
-                        if extMask:
+                        if ext_mask:
                             if orig_value == '*':
                                 _atom = '*' if not _part[1] else None
                             elif _part[1]:
@@ -160,10 +159,12 @@ class Parser(object):
                     else:
                         _res_tmp = ''
                         if _part[1]:
-                            break
+                            _value = _value[1:]
+                            # break
                         else:
                             # TODO: Error handling?
-                            break
+                            #break
+                            pass
 
                 else:
                     if _part[1]:
@@ -278,7 +279,7 @@ class Parser(object):
                             return False
                     else:
                         # it's a plain value
-                        _plain = any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
+                        _plain = not any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
                         if _plain:
                             # _atom = _path[:len(_value)]
                             # _rule = _part.format(**params)
@@ -458,7 +459,8 @@ class Parser(object):
                 _params[_col] = self.merge_with_mask(_col, _tmp)
             if _col in self._rules_vars_extra[rule_name]:
                 if len(self._rules_vars_extra[rule_name][_col]) > 0:
-                    _params[_col] = '[%s%s]' % (_params[_col], ''.join('|{}'.format(x) for x in self._rules_vars_extra[rule_name][_col]))
+                    _params[_col] = '[%s%s]' % (
+                        _params[_col], ''.join('|{}'.format(x) for x in self._rules_vars_extra[rule_name][_col]))
 
         for _par in fill_rule_inner(_columns, []):
             _params.update(_par)
@@ -622,19 +624,19 @@ class Parser(object):
                                 _atom, _path = get_atom(x, y, _path)
                                 _atom = self.parse_by_mask(_subpart[0], _atom, True)
                                 _tmp_atom = []
-                                for x in _atom:
-                                    if x[1] == 'int':
+                                for z in _atom:
+                                    if z[1] == 'int':
                                         try:
-                                            _tmp_atom += [int(x[0])]
+                                            _tmp_atom += [int(z[0])]
                                         except:
-                                            _tmp_atom += [x[0]]
+                                            _tmp_atom += [z[0]]
                                     else:
-                                        _tmp_atom += [x[0]]
+                                        _tmp_atom += [z[0]]
 
                                 _atoms_found[_subpart[0]] = _tmp_atom
                         else:
                             # it's a plain value
-                            _plain = any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
+                            _plain = not any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
                             if _plain:
                                 _path = _path[len(_value):]
                             else:
@@ -657,7 +659,7 @@ class Parser(object):
             return _atoms_found
 
         def filter_fn(item):
-            result = True
+            _result = True
             _atoms_found = item['params']
             for _atom_name in item['columns']:
                 if _atom_name in _atoms_found:
@@ -675,34 +677,34 @@ class Parser(object):
                                 if _column[1]:
                                     _var = _vars[i] if len(_vars) > i else ''
                                     _rule = _rules[i] if len(_rules) > i else ''
-                                    if _rule is None:         # '2.3.*'   - Include versions both with or without last part
+                                    if _rule is None:  # '2.3.*'   - Include versions both with or without last part
                                         pass
                                     elif _rule == '' and _var and len(
-                                            str(_var)) > 0:   # '2.3.*-'  - Do not include versions with last part
-                                        result = False
+                                            str(_var)) > 0:  # '2.3.*-'  - Do not include versions with last part
+                                        _result = False
                                         break
                                     elif _rule and not _var:  # '2.3.*-*' - Do not include versions without last part
-                                        result = False
+                                        _result = False
                                         break
-                        if not result:
+                        if not _result:
                             break
-                if not result:
+                if not _result:
                     break
 
-            return result
+            return _result
 
         def sorted_fn(item):
-            result = []
+            _result = []
             _atoms_found = item['params']
             for _atom_name in self._sort:
                 if _atom_name == '*':
-                    result += [_atoms_found[x] for x in _atoms_found if x not in self._sort]
+                    _result += [_atoms_found[x] for x in _atoms_found if x not in self._sort]
                 else:
-                    result += [_atoms_found.get(_atom_name, [])]
+                    _result += [_atoms_found.get(_atom_name, [])]
 
-            result = [item for sublist in result for item in sublist]
+            _result = [item for sublist in _result for item in sublist]
 
-            return result
+            return _result
 
         ext_packages = [{'params': get_all_masked_atoms(x), 'columns': self._columns, 'path': x} for x in packages]
 
@@ -722,3 +724,14 @@ class Parser(object):
         except:
             result = []
         return result
+
+    def get_full_package_name(self, package):
+        pkg_name = package.get_name_and_path(True)
+        if self._config.no_fails:
+            param_list = [x for x in self._config.get_fails('unique', {})]
+            if self._config.name_column not in param_list:
+                param_list.insert(0, self._config.name_column)
+            params = package.get_params(param_list)
+            pkg_name = '/'.join(self.merge_with_mask(x, params[x]) for x in param_list)
+
+        return pkg_name

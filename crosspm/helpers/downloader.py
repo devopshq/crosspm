@@ -92,10 +92,12 @@ class Downloader(object):
 
     def add_package(self, pkg_name, package):
         _added = False
+        if self._config.no_fails and package is not None:
+            pkg_name = package.set_full_unique_name()
         if pkg_name in self._packages:
             if self._packages[pkg_name] is None:
                 _added = True
-            elif package is not None:
+            elif (package is not None) and (not self._config.no_fails):
                 param_list = self._config.get_fails('unique', {})
                 params1 = self._packages[pkg_name].get_params(param_list)
                 params2 = package.get_params(param_list)

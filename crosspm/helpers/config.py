@@ -47,6 +47,7 @@ class Config(object):
     _values = {}
     _output = {}
     _fails = {}
+    no_fails = False
     name_column = ''
     deps_file_name = ''
     deps_lock_file_name = ''
@@ -58,8 +59,8 @@ class Config(object):
         self._config_file_name = self.find_config_file(config_file_name)
         config_data = self.read_config_file()
         self.parse_config(config_data, cmdline)
-        if no_fails:
-            self._fails = {}
+        self.no_fails = no_fails
+        # self._fails = {}
 
     def find_config_file(self, config_file_name=''):
         if not config_file_name:

@@ -94,10 +94,16 @@ class Package(object):
         if self._root:
             print_stdout('')
 
-    def get_name_and_path(self):
+    def get_name_and_path(self, name_only=False):
+        if name_only:
+            return self._name
         return self._name, self._unpacked_path
 
     def get_params(self, param_list):
         result = {k: v for k, v in self._params_found.items() if k in param_list}
         result.update({k: v for k, v in self._params.items() if (k in param_list and k not in result)})
         return result
+
+    def set_full_unique_name(self):
+        self._name = self._parser.get_full_package_name(self)
+        return self._name

@@ -1,5 +1,5 @@
 CrossPM
-==================
+=======
 
 .. image:: https://travis-ci.org/devopshq/crosspm.svg?branch=master
     :target: https://travis-ci.org/devopshq/crosspm

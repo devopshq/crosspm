@@ -77,8 +77,8 @@ class Output(object):
 
     @register_output_format('stdout')
     def output_type_stdout(self, packages):
-        sys.stdout.write('\n')
-        sys.stdout.flush()
+        # sys.stdout.write('\n')
+        # sys.stdout.flush()
         for _pkg in packages.values():
             if _pkg:
                 _pkg_name, _pkg_path = _pkg.get_name_and_path()
