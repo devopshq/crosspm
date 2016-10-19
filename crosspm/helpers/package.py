@@ -12,8 +12,10 @@ class Package(object):
     _raw = []
     _root = False
     _params_found = {}
+    stat = None
+    _not_cached = True
 
-    def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None):
+    def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, stat=None):
         if type(pkg) is int:
             if pkg == 0:
                 self._root = True
@@ -25,11 +27,15 @@ class Package(object):
         self._downloader = downloader
         if params_found:
             self._params_found = params_found
+        self.stat = stat
 
     def download(self, dest_path, force=False):
         if force or not self._unpacked_path:
             dest_path = os.path.realpath(os.path.join(dest_path, self._name))
-            self._packed_path = self._adapter.download_package(self._pkg, dest_path)
+            _packed_path = self._packed_path
+            self._packed_path, _not_cached = self._adapter.download_package(self._pkg, dest_path)
+            if not _packed_path:
+                self._not_cached = _not_cached
         return self._packed_path
 
     def get_file(self, file_name, temp_path=None):
@@ -45,15 +51,20 @@ class Package(object):
         self._raw = [x for x in self._parser.iter_packages_params(depslock_file_path)]
         self._packages = self._downloader.get_packages(self._raw)
 
-    def unpack(self, dest_path=''):
+    def unpack(self, dest_path='', force=False):
         if not dest_path:
             dest_path = self._downloader.unpacked_path
         temp_path = os.path.realpath(os.path.join(dest_path, self._name))
-        try:
-            Archive.extract(self._packed_path, temp_path)
-            self._unpacked_path = temp_path
-        except:
-            pass
+        _exists = os.path.exists(temp_path)
+        if not self._not_cached:
+            self._unpacked_path = temp_path if _exists else ''
+        if force or self._not_cached or (not _exists):
+            try:
+                Archive.extract(self._packed_path, temp_path)
+                self._unpacked_path = temp_path
+            except:
+                self._unpacked_path = ''
+                pass
 
     def pack(self, src_path):
         Archive.create(self._packed_path, src_path)

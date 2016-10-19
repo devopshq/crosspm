@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
 from crosspm.adapters.common import BaseAdapter
 from artifactory import ArtifactoryPath
 from crosspm.helpers.exceptions import *
@@ -57,8 +58,14 @@ class Adapter(BaseAdapter):
 
                 if len(_packages) == 1:
                     # one package found: ok!
+                    # _stat = _packages[0]['path'].stat()
+                    # _stat = {k: getattr(_stat, k, None) for k in ('ctime',
+                    #                                               'mtime',
+                    #                                               'md5',
+                    #                                               'sha1',
+                    #                                               'size')}
                     _package = Package(_pkg_name, _packages[0]['path'], _paths['params'], downloader, self, parser,
-                                       _packages[0]['params'])
+                                       _packages[0]['params'])  # , _stat)
                     _mark = 'chosen'
                     print_stdout('  {}: {}'.format(_mark, str(_packages[0]['path'])))
 
@@ -103,32 +110,43 @@ class Adapter(BaseAdapter):
 
     def download_package(self, package, dest_path):
         _dest_file = os.path.join(dest_path, package.name)
+        _stat_attr = {'ctime': 'st_atime',
+                      'mtime': 'st_mtime',
+                      'size': 'st_size'}
+        _stat_pkg = package.stat()
+        _stat_pkg = {k: getattr(_stat_pkg, k, None) for k in _stat_attr.keys()}
+        _stat_pkg = {k: v.timestamp() if type(v) is datetime else v for k, v in _stat_pkg.items()}
 
+        _do_load = True
         if not os.path.exists(dest_path):
             os.makedirs(dest_path)
         elif os.path.exists(_dest_file):
-            # TODO: Check if we can keep existing file
-            os.remove(_dest_file)
+            _stat_file = os.stat(_dest_file)
+            _do_load = any(_stat_pkg[k] != getattr(_stat_file, v, -999) for k, v in _stat_attr.items())
+            if _do_load:
+                os.remove(_dest_file)
 
-        try:
-            # with package.open() as _src:
-            _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
-            _src.raise_for_status()
+        if _do_load:
+            try:
+                # with package.open() as _src:
+                _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
+                _src.raise_for_status()
 
-            with open(_dest_file, 'wb+') as _dest:
-                for chunk in _src.iter_content(CHUNK_SIZE):
-                    if chunk:  # filter out keep-alive new chunks
-                        _dest.write(chunk)
-                        _dest.flush()
+                with open(_dest_file, 'wb+') as _dest:
+                    for chunk in _src.iter_content(CHUNK_SIZE):
+                        if chunk:  # filter out keep-alive new chunks
+                            _dest.write(chunk)
+                            _dest.flush()
 
-            _src.close()
+                _src.close()
+                os.utime(_dest_file, (_stat_pkg['ctime'], _stat_pkg['mtime']))
 
-        except Exception as e:
-            code = CROSSPM_ERRORCODE_SERVER_CONNECT_ERROR
-            msg = 'FAILED to download package {} at url: [{}]'.format(
-                package.name,
-                str(package),
-            )
-            raise CrosspmException(code, msg) from e
+            except Exception as e:
+                code = CROSSPM_ERRORCODE_SERVER_CONNECT_ERROR
+                msg = 'FAILED to download package {} at url: [{}]'.format(
+                    package.name,
+                    str(package),
+                )
+                raise CrosspmException(code, msg) from e
 
-        return _dest_file
+        return _dest_file, _do_load
