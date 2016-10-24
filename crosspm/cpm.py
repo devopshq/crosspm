@@ -34,7 +34,7 @@ Options:
 import logging
 
 from docopt import docopt
-
+import os
 import crosspm
 from crosspm.helpers.archive import Archive
 from crosspm.helpers.config import (
@@ -113,6 +113,15 @@ class App(object):
                 'implicit requirements --verbose and --verbosity'
             )
 
+        if self._args['--output']:
+            output = self._args['--output'].strip().strip("'").strip('"')
+            output_abs = os.path.abspath(self._args['--output'].strip().strip("'").strip('"'))
+            if os.path.isdir(output_abs):
+                raise CrosspmExceptionWrongArgs(
+                    '"%s" is a directory - can\'t write to it'
+                )
+            self._args['--output'] = output
+
         if self._args['--verbose']:
             log_level = 'info'
 
@@ -166,7 +175,7 @@ class App(object):
             raise CrosspmException(
                 CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
                 'Some package(s) not found.'
-                )
+            )
         if do_load:
             self._output.write(params, packages)
 

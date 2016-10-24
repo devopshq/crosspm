@@ -68,10 +68,13 @@ class Output(object):
         result = f(self, packages)
 
         if result:
-            self.write_to_file(result, params['out_file_path'])
+            out_dir = os.path.dirname(params['output'])
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
+            self.write_to_file(result, params['output'])
             log.info(
                 'Write packages info to file [%s]\n\tcontent:\n\t%s',
-                params['out_file_path'],
+                params['output'],
                 result,
             )
 

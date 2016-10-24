@@ -382,7 +382,7 @@ class Config(object):
         os.chdir(_cwd)
 
     @staticmethod
-    def parse_options(options, cmdline):
+    def parse_options(options, cmdline, check_default=False):
         # try:
         #     _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
         # except:
@@ -402,12 +402,19 @@ class Config(object):
 
                 # if option is still not filled, try to get a value from environment by env name
                 if type(options[k]) is not str:
-                    _env = os.getenv(v['env'])
-                    if _env:
-                        options[k] = _env
-
-                    # if option is still not filled, just remove it from dict
-                    else:
+                    success = False
+                    if 'env' in v:
+                        _env = os.getenv(v['env'])
+                        if _env:
+                            options[k] = _env
+                            success = True
+                    # if option is still not filled, try to fill with default value if necessary
+                    if not success:
+                        if check_default and 'default' in v:
+                            options[k] = v['default']
+                            success = True
+                    # if option is still not filled again, just remove it from dict
+                    if not success:
                         _remove.append(k)
         for k in _remove:
             options.pop(k)
