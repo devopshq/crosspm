@@ -241,14 +241,14 @@ class Parser(object):
     def validate_path(self, path, params):
         _rule_name = 'path'
 
-        def iter_with_extras(_col_name, _value0):
-            _res0 = [_value0]
-            if _col_name in self._rules_vars_extra[_rule_name]:
-                _res0 += self._rules_vars_extra[_rule_name][_col_name]
-            for _res1 in _res0:
-                yield _res1
+        def do_check(rule_number, _path):
+            def iter_with_extras(_col_name, _value0):
+                _res0 = [_value0]
+                if _col_name in self._rules_vars_extra[_rule_name][rule_number]:
+                    _res0 += self._rules_vars_extra[_rule_name][rule_number][_col_name]
+                for _res1 in _res0:
+                    yield _res1
 
-        def do_check(rule, _path):
             def get_atom(_x, _y, _path0):
                 _pos = -1
                 if _y < len(_part[0]) - 1:
@@ -274,6 +274,7 @@ class Parser(object):
 
             _res = True
             _new_path = ''
+            rule = self._rules[_rule_name][rule_number]
             rule_parsed = self.parse_value_template(rule)
             for x, _part in enumerate(rule_parsed):
                 for y, _subpart in enumerate(_part[0]):
@@ -310,7 +311,7 @@ class Parser(object):
                                 _atom, _path = get_atom(x, y, _path)
                                 _match = False
                                 for _value_item in iter_with_extras(_subpart[0], _value):
-                                    if self.validate_atom(_value_item, _atom):
+                                    if self.validate_atom(_atom, _value_item):
                                         _new_path += _atom
                                         _match = True
                                         break
@@ -339,8 +340,9 @@ class Parser(object):
 
         _result = False
         # rule = self._rules[_rule_name]
-        for _rule in self._rules[_rule_name]:
-            if do_check(_rule, str(path)):
+        # for _rule in self._rules[_rule_name]:
+        for i in range(len(self._rules[_rule_name])):
+            if do_check(i, str(path)):
                 _result = True
                 break
         return _result
