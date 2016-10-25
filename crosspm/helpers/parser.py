@@ -358,20 +358,22 @@ class Parser(object):
             return True  # len(value) == 0
         if self._rules[rule_name] is None:
             return True
-        _res = False
+        _res = True
         # _dirty = self._rules[rule_name].format(**params)
         _dirties = self.fill_rule(rule_name, params)
         for _dirty in _dirties:
+            _res_var = False
             # TODO: Use split_with_regexp() instead
             _dirty = [x.split(']') for x in _dirty.split('[')]
             _dirty = self.list_flatter(_dirty)
             _variants = self.get_variants(_dirty, [])
             if type(value) is str:
-                _res = value in _variants
+                _res_var = value in _variants
             elif type(value) in (list, tuple):
+                _res_var = False
                 for _variant in _variants:
                     if _variant in value:
-                        _res = True
+                        _res_var = True
                         break
             elif type(value) is dict:
                 for _variant in _variants:
@@ -389,16 +391,17 @@ class Parser(object):
                                                                                                       type(_tmp_val))
                                 )
                             if len(fnmatch.filter(_tmp_val, _tmp[1])) > 0:
-                                _res = True
+                                _res_var = True
                                 break
                         else:
-                            _res = True
+                            _res_var = True
                             break
             else:
                 raise CrosspmException(
                     CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
                     'Parser rule for [{}] not able to process [{}] data type.'.format(rule_name, type(value))
                 )
+            _res = _res and _res_var
         return _res
 
     def iter_matched_values(self, column_name, value):
