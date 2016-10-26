@@ -8,6 +8,8 @@ import yaml
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
 from crosspm.helpers.source import Source
+from crosspm.helpers.cache import Cache
+
 from requests.packages.urllib3 import disable_warnings
 
 WINDOWS = (platform.system().lower() == 'windows') or (os.name == 'nt')
@@ -48,6 +50,7 @@ class Config(object):
     _output = {}
     _solid = {}
     _fails = {}
+    cache = None
     no_fails = False
     name_column = ''
     deps_file_name = ''
@@ -61,6 +64,7 @@ class Config(object):
         config_data = self.read_config_file()
         self.parse_config(config_data, cmdline)
         self.no_fails = no_fails
+        self.cache = Cache(self)
         # self._fails = {}
 
     def find_config_file(self, config_file_name=''):
@@ -477,7 +481,6 @@ class Config(object):
             if package.ext(self._solid['ext']):
                 return True
         return False
-
 
 
 def get_verbosity_level(level=None):

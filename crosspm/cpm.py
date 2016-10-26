@@ -8,6 +8,7 @@ Usage:
     crosspm download [options]
     crosspm promote [options]
     crosspm pack <OUT> <SOURCE> [options]
+    crosspm cache [clear]
     crosspm -h | --help
     crosspm --version
 
@@ -85,6 +86,9 @@ class App(object):
 
         elif self._args['pack']:
             self.do_run(self.pack)
+
+        elif self._args['cache']:
+            self.do_run(self.cache)
 
     def do_run(self, func, *args, **kwargs):
         try:
@@ -185,6 +189,12 @@ class App(object):
 
     def pack(self):
         Archive.create(self._args['<OUT>'], self._args['<SOURCE>'])
+
+    def cache(self):
+        if self._args['clear']:
+            self._config.cache.clear()
+        else:
+            self._config.cache.info()
 
 
 if __name__ == '__main__':

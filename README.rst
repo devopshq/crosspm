@@ -92,6 +92,7 @@ You'll see something like this::
       crosspm download [options]
       crosspm promote [options]
       crosspm pack <OUT> <SOURCE> [options]
+      crosspm cache [clear]
       crosspm -h | --help
       crosspm --version
 
