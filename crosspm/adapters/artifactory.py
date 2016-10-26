@@ -150,3 +150,13 @@ class Adapter(BaseAdapter):
                 raise CrosspmException(code, msg) from e
 
         return _dest_file, _do_load
+
+    def get_package_filename(self, package):
+        if isinstance(package, ArtifactoryPath):
+            return package.name
+        return ''
+
+    def get_package_path(self, package):
+        if isinstance(package, ArtifactoryPath):
+            return str(package)
+        return ''

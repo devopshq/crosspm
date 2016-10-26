@@ -46,6 +46,7 @@ class Config(object):
     _options = {}
     _values = {}
     _output = {}
+    _solid = {}
     _fails = {}
     no_fails = False
     name_column = ''
@@ -222,6 +223,12 @@ class Config(object):
         if 'defaults' in config_data:
             self._defaults = config_data['defaults']
         self._defaults.update({k: v['default'] for k, v in self._options.items() if k not in self._defaults})
+
+        # init solid
+        if 'solid' in config_data:
+            self._solid = config_data['solid']
+            if 'ext' in self._solid and not isinstance(self._solid['ext'], (list, tuple)):
+                self._solid['ext'] = [self._solid['ext']]
 
         # init fails
         if 'fails' in config_data:
@@ -464,6 +471,13 @@ class Config(object):
 
     def get_fails(self, fail_type, default):
         return self._fails.get(fail_type, default)
+
+    def solid(self, package):
+        if 'ext' in self._solid:
+            if package.ext(self._solid['ext']):
+                return True
+        return False
+
 
 
 def get_verbosity_level(level=None):

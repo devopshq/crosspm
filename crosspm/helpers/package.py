@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-
+import fnmatch
 from crosspm.helpers.archive import Archive
 from crosspm.helpers.exceptions import *
 
@@ -52,19 +52,21 @@ class Package(object):
         self._packages = self._downloader.get_packages(self._raw)
 
     def unpack(self, dest_path='', force=False):
-        if not dest_path:
-            dest_path = self._downloader.unpacked_path
-        temp_path = os.path.realpath(os.path.join(dest_path, self._name))
-        _exists = os.path.exists(temp_path)
-        if not self._not_cached:
-            self._unpacked_path = temp_path if _exists else ''
-        if force or self._not_cached or (not _exists):
-            try:
-                Archive.extract(self._packed_path, temp_path)
-                self._unpacked_path = temp_path
-            except:
-                self._unpacked_path = ''
-                pass
+        if self._downloader.solid(self):
+            self._unpacked_path = self._packed_path
+        else:
+            if not dest_path:
+                dest_path = self._downloader.unpacked_path
+            temp_path = os.path.realpath(os.path.join(dest_path, self._name))
+            _exists = os.path.exists(temp_path)
+            if not self._not_cached:
+                self._unpacked_path = temp_path if _exists else ''
+            if force or self._not_cached or (not _exists):
+                try:
+                    Archive.extract(self._packed_path, temp_path)
+                    self._unpacked_path = temp_path
+                except:
+                    self._unpacked_path = ''
 
     def pack(self, src_path):
         Archive.create(self._packed_path, src_path)
@@ -118,3 +120,12 @@ class Package(object):
     def set_full_unique_name(self):
         self._name = self._parser.get_full_package_name(self)
         return self._name
+
+    def ext(self, check_ext):
+        if self._pkg:
+            if not isinstance(check_ext, (list, tuple)):
+                check_ext = [check_ext]
+            name = self._adapter.get_package_filename(self._pkg)
+            if any((fnmatch.fnmatch(name, x) or fnmatch.fnmatch(name, '*%s' % x)) for x in check_ext):
+                return True
+        return False

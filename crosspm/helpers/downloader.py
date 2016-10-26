@@ -23,6 +23,7 @@ class Downloader(object):
     def __init__(self, config, depslock_path='', do_load=True):
         self._log = logging.getLogger(__name__)
         self._config = config
+        self.solid = config.solid
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None, config.get_parser('common'))
 
         self._cache_path = config.crosspm_cache_root

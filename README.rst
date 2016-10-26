@@ -211,6 +211,9 @@ We'll add some more examples soon. Here is one of configuration file examples fo
           84
           85
           86
+          87
+          88
+          89
 
      - ::
 
@@ -267,6 +270,9 @@ We'll add some more examples soon. Here is one of configuration file examples fo
           defaults:
             branch: master
             quality: stable
+
+          solid:
+            ext: *.deb
 
           fails:
             unique:
@@ -374,6 +380,15 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 
    * - *defaults*
      - Default values for columns not defined in *options*.
+   * - *solid*
+     - Set of rules pointing to packages which doesn't need to be unpacked.
+
+       .. list-table::
+          :widths: 30 130
+          :header-rows: 0
+
+          * - *ext*
+            - File name extension (i.e. ".tgz", ".tar.gz", or more real example ".deb")
    * - *fails*
      - Here we can define some rules for failing CrossPM jobs.
 
