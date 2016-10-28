@@ -8,7 +8,7 @@ Usage:
     crosspm download [options]
     crosspm promote [options]
     crosspm pack <OUT> <SOURCE> [options]
-    crosspm cache [clear]
+    crosspm cache [size | age | clear [hard]]
     crosspm -h | --help
     crosspm --version
 
@@ -192,7 +192,11 @@ class App(object):
 
     def cache(self):
         if self._args['clear']:
-            self._config.cache.clear()
+            self._config.cache.clear(self._args['hard'])
+        elif self._args['size']:
+            self._config.cache.size()
+        elif self._args['age']:
+            self._config.cache.age()
         else:
             self._config.cache.info()
 
