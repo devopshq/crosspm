@@ -25,6 +25,7 @@ CROSSPM_ERRORCODES = (
 
 # Workaround for async stuff (something weird happens with plain print)
 def print_stdout(*args, **kwargs):
+    verbose = kwargs.get('verbose', -1)
     # kwargs.update({'file': sys.stdout})
     # print(*args, **kwargs)
     prn_str = ''.join(*args)

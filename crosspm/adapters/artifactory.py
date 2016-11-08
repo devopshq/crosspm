@@ -37,19 +37,29 @@ class Adapter(BaseAdapter):
             _pkg_name = _paths['params'][_pkg_name_col]
             if _pkg_name != _pkg_name_old:
                 _pkg_name_old = _pkg_name
-                print_stdout(
+                self._log.info(
                     '{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
             for _path in _paths['paths']:
                 _path_fixed, _path_pattern = parser.split_fixed_pattern(_path)
                 _repo_paths = ArtifactoryPath(_path_fixed, **_art_auth)
-                for _repo_path in _repo_paths.glob(_path_pattern):
-                    _mark = 'found'
-                    if parser.validate_path(str(_repo_path), _paths['params']):
-                        _mark = 'match'
-                        if parser.validate(_repo_path.properties, 'properties', _paths['params']):
-                            _mark = 'valid'
-                            _packages += [_repo_path]
-                    print_stdout('  {}: {}'.format(_mark, str(_repo_path)))
+                try:
+                    for _repo_path in _repo_paths.glob(_path_pattern):
+                        _mark = 'found'
+                        if parser.validate_path(str(_repo_path), _paths['params']):
+                            _mark = 'match'
+                            if parser.validate(_repo_path.properties, 'properties', _paths['params']):
+                                _mark = 'valid'
+                                _packages += [_repo_path]
+                        self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
+                except RuntimeError as e:
+                    pass
+                    # TODO: Check error
+                    # e.args[0] = '''{
+                    #                   "errors" : [ {
+                    #                     "status" : 404,
+                    #                     "message" : "Not Found"
+                    #                   } ]
+                    #                 }'''
             _package = None
             if _packages:
                 _packages = parser.filter_one(_packages, _paths['params'])
@@ -67,7 +77,7 @@ class Adapter(BaseAdapter):
                     _package = Package(_pkg_name, _packages[0]['path'], _paths['params'], downloader, self, parser,
                                        _packages[0]['params'])  # , _stat)
                     _mark = 'chosen'
-                    print_stdout('  {}: {}'.format(_mark, str(_packages[0]['path'])))
+                    self._log.info('  {}: {}'.format(_mark, str(_packages[0]['path'])))
 
                 elif len(_packages) > 1:
                     # TODO: multiple packages found: wtf?!

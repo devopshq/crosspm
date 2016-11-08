@@ -13,35 +13,34 @@ Usage:
     crosspm --version
 
 Options:
-    <OUT>                          Output file.
-    <SOURCE>                       Source directory path.
-    -h, --help                     Show this screen.
-    --version                      Show version.
-    -l, --list                     Do not load packages and its dependencies. Just show what's found.
-    -v, --verbose                  Increase output verbosity.
-    --verbosity=LEVEL              Set output verbosity level: ({verb_level}) [default: {verb_default}].
-    -c=FILE, --config=FILE         Path to configuration file.
-    -o OPTIONS, --options OPTIONS  Extra options.
-    --depslock-path=FILE           Path to file with locked dependencies [./{deps_lock_default}]
-    --out-format=TYPE              Output data format. Available formats:({out_format}) [default: {out_format_default}]
-    --output=FILE                  Output file name (required if --out_format is not stdout)
-    --out-prefix=PREFIX            Prefix for output variable name [default: ] (no prefix at all)
-    --no-fails                     Ignore fails config if possible.
+    <OUT>                           Output file.
+    <SOURCE>                        Source directory path.
+    -h, --help                      Show this screen.
+    --version                       Show version.
+    -L, --list                      Do not load packages and its dependencies. Just show what's found.
+    -v [LEVEL], --verbose [=LEVEL]  Set output verbosity: ({verb_level}) [default: ].
+    -l LOGFILE, --log=LOGFILE       File name for log output. Log level is '{log_default}' if set when verbose doesn't.
+    -c=FILE, --config=FILE          Path to configuration file.
+    -o OPTIONS, --options OPTIONS   Extra options.
+    --depslock-path=FILE            Path to file with locked dependencies [./{deps_lock_default}]
+    --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
+    --output=FILE                   Output file name (required if --out_format is not stdout)
+    --out-prefix=PREFIX             Prefix for output variable name [default: ] (no prefix at all)
+    --no-fails                      Ignore fails config if possible.
 
 """
 
-# TODO: Remove 'logging' module usage
+# TODO: Fix 'logging' usage
 # TODO: Implement 'verbose' and 'verbosity=LEVEL' usage
 import logging
-
 from docopt import docopt
 import os
+import sys
 import crosspm
 from crosspm.helpers.archive import Archive
 from crosspm.helpers.config import (
     CROSSPM_DEPENDENCY_LOCK_FILENAME,
     Config,
-    get_verbosity_level,
 )
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.promoter import Promoter
@@ -56,10 +55,10 @@ class App(object):
     _output = Output()
 
     def __init__(self):
-        self._log = logging.getLogger(__name__)
+        self._log = logging.getLogger('crosspm')
         self._args = docopt(__doc__.format(version=crosspm.__version__,
-                                           verb_level=get_verbosity_level(),
-                                           verb_default=get_verbosity_level(0),
+                                           verb_level=Config.get_verbosity_level(),
+                                           log_default=Config.get_verbosity_level(0, True),
                                            deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
                                            out_format=self._output.get_output_types(),
                                            out_format_default='stdout',
@@ -110,44 +109,58 @@ class App(object):
             sys.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR)
 
     def check_common_args(self):
-        log_level = ''
-
-        if self._args['--verbose'] and self._args['--verbosity']:
-            raise CrosspmExceptionWrongArgs(
-                'implicit requirements --verbose and --verbosity'
-            )
-
         if self._args['--output']:
             output = self._args['--output'].strip().strip("'").strip('"')
-            output_abs = os.path.abspath(self._args['--output'].strip().strip("'").strip('"'))
+            output_abs = os.path.abspath(output)
             if os.path.isdir(output_abs):
                 raise CrosspmExceptionWrongArgs(
                     '"%s" is a directory - can\'t write to it'
                 )
             self._args['--output'] = output
 
-        if self._args['--verbose']:
-            log_level = 'info'
+        self.set_logging_level()
 
-        elif self._args['--verbosity']:
-            log_level = self._args['--verbosity']
+    def set_logging_level(self):
+        level_str = self._args['--verbose'].strip().lower()
 
-        self.set_logging_level(log_level)
+        log = self._args['--log']
+        if log:
+            log = log.strip().strip("'").strip('"')
+            log_abs = os.path.abspath(log)
+            if os.path.isdir(log_abs):
+                raise CrosspmExceptionWrongArgs(
+                    '"%s" is a directory - can\'t write log to it'
+                )
+            else:
+                log_dir = os.path.dirname(log_abs)
+                if not os.path.exists(log_dir):
+                    os.makedirs(log_dir)
+        else:
+            log_abs = None
 
-    @staticmethod
-    def set_logging_level(value):
-        format_str = '%(levelname)s:%(message)s'
+        level = Config.get_verbosity_level(level_str or 'console')
+        if level or log_abs:
+            self._log.setLevel(level)
+            format_str = '%(asctime)-19s [%(levelname)-9s] %(message)s'
+            if level_str == 'debug':
+                format_str = '%(asctime)-19s [%(levelname)-9s] %(name)-12s: %(message)s'
+            formatter = logging.Formatter(format_str,datefmt="%Y-%m-%d %H:%M:%S")
 
-        if value.lower() == 'debug':
-            format_str = '%(levelname)s:%(name)s:%(message)s'
+            if level:
+                sh = logging.StreamHandler(stream=sys.stderr)
+                sh.setLevel(level)
+                # sh.setFormatter(formatter)
+                self._log.addHandler(sh)
 
-        logging.basicConfig(
-            format=format_str,
-            level=get_verbosity_level(value),
-        )
+            if log_abs:
+                if not level_str:
+                    level = Config.get_verbosity_level(0)
+                fh = logging.FileHandler(filename=log_abs)
+                fh.setLevel(level)
+                fh.setFormatter(formatter)
+                self._log.addHandler(fh)
 
     def download(self):
-
         if self._args['--out-format'] == 'stdout':
             if self._args['--output']:
                 raise CrosspmExceptionWrongArgs(

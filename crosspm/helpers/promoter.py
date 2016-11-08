@@ -8,13 +8,25 @@ import requests
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
 from crosspm.helpers.exceptions import *
 
-log = logging.getLogger(__name__)
+# log = logging.getLogger(__name__)
 
 
 # TODO: REWORK PROMOTER COMPLETELY to match new architecture!!!
 class Promoter:
-    def __init__(self, config):
+    def __init__(self, config, depslock_path=''):
+        self._log = logging.getLogger('crosspm')
         self._config = config
+        self._cache_path = config.crosspm_cache_root
+        if not os.path.exists(self._cache_path):
+            os.makedirs(self._cache_path)
+
+        self.packed_path = os.path.realpath(os.path.join(self._cache_path, 'archive'))
+        self.unpacked_path = os.path.realpath(os.path.join(self._cache_path, 'cache'))
+        self.temp_path = os.path.realpath(os.path.join(self._cache_path, 'tmp'))
+
+        if not depslock_path:
+            depslock_path = config.deps_lock_file_name if config.deps_lock_file_name else CROSSPM_DEPENDENCY_LOCK_FILENAME
+        self._depslock_path = os.path.realpath(depslock_path)
 
     @staticmethod
     def get_version_int(version_str):
@@ -58,7 +70,10 @@ class Promoter:
 
         return '{server_url}/{part_a}/{repo}/{path}'.format(**locals())
 
-    def promote_packages(self):
+    def promote_packages(self, list_or_file_path=None):
+        if list_or_file_path is None:
+            list_or_file_path = self._depslock_path
+
         data_tree = {}
         deps_list = []  # pm_common.get_dependencies(os.path.join(os.getcwd(), CROSSPM_DEPENDENCY_FILENAME))
         out_file_data_str = ''
@@ -69,21 +84,25 @@ class Promoter:
         with open(out_file_path, 'w') as out_f:
             out_f.write(out_file_format.format('# package', '# version', '# branch\n'))
 
-        for current_source in self._config['sources']:
-            for current_repo in current_source['repo']:
+        for i, _src in enumerate(self._config.sources()):
+            if i > 0:
+                self._log.warning('')
+                self._log.warning('Next source ...')
+
+            for current_repo in _src['repo']:
                 request_url = self.join_package_path(
-                    current_source['server'],
+                    _src['server'],
                     'api/storage',
                     current_repo,
                     '?list&deep=1&listFolders=0&mdTimestamps=1&includeRootPath=1',
                 )
 
-                log.info('GET request: %s', request_url)
+                self._log.info('GET request: %s', request_url)
 
                 r = requests.get(
                     request_url,
                     verify=False,
-                    auth=current_source['auth'],
+                    auth=tuple(_src['auth']),
                 )
 
                 r.raise_for_status()

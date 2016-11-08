@@ -5,7 +5,7 @@ import os
 import re
 from crosspm.helpers.exceptions import *
 
-log = logging.getLogger(__name__)
+# log = logging.getLogger(__name__)
 _output_format_map = {}
 
 
@@ -22,6 +22,9 @@ def register_output_format(name):
 class Output(object):
     _prefix = ''
 
+    def __init__(self):
+        self._log = logging.getLogger('crosspm')
+
     def get_var_name(self, pkg_name):
         result = '{}{}_ROOT'.format(self._prefix, pkg_name)
 
@@ -34,13 +37,12 @@ class Output(object):
 
         return result
 
-    @staticmethod
-    def write_to_file(text, out_file_path):
+    def write_to_file(self, text, out_file_path):
         out_file_path = os.path.realpath(out_file_path)
         out_dir_path = os.path.dirname(out_file_path)
 
         if not os.path.exists(out_dir_path):
-            log.info('mkdirs [%s] ...', out_dir_path)
+            self._log.info('mkdirs [%s] ...', out_dir_path)
             os.makedirs(out_dir_path)
 
         elif not os.path.isdir(out_dir_path):
@@ -72,7 +74,7 @@ class Output(object):
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
             self.write_to_file(result, params['output'])
-            log.info(
+            self._log.info(
                 'Write packages info to file [%s]\n\tcontent:\n\t%s',
                 params['output'],
                 result,

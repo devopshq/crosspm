@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import os
 import fnmatch
 from crosspm.helpers.archive import Archive
@@ -16,6 +17,7 @@ class Package(object):
     _not_cached = True
 
     def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, stat=None):
+        self._log = logging.getLogger('crosspm')
         if type(pkg) is int:
             if pkg == 0:
                 self._root = True
@@ -86,7 +88,7 @@ class Package(object):
                         cur_format = '{:%s}' % (v if len(cur_str) <= v else v + len(left))
                     res_str += cur_format.format(cur_str)
                     break
-            print_stdout(res_str)
+            self._log.info(res_str)
 
         _sign = ' '
         if not self._root:
@@ -101,11 +103,11 @@ class Package(object):
         for _pkg_name, _pkg in self._packages.items():
             if not _pkg:
                 _left = '{}-'.format(' ' * 4 * (level + 1))
-                print_stdout('{}{}'.format(_left, _pkg_name))
+                self._log.info('{}{}'.format(_left, _pkg_name))
             else:
                 _pkg.print(level + 1, output)
         if self._root:
-            print_stdout('')
+            self._log.info('')
 
     def get_name_and_path(self, name_only=False):
         if name_only:

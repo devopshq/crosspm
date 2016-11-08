@@ -8,7 +8,7 @@ from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
 
 
 def update_progress(msg, progress):
-    sys.stderr.write('\r{0} [{1:10}] {2}%'.format(msg, '#'*int(progress/10.0), int(progress)))
+    sys.stderr.write('\r{0} [{1:10}] {2}%'.format(msg, '#' * int(progress / 10.0), int(progress)))
     sys.stderr.flush()
 
 
@@ -21,10 +21,11 @@ class Downloader(object):
     do_load = True
 
     def __init__(self, config, depslock_path='', do_load=True):
-        self._log = logging.getLogger(__name__)
+        self._log = logging.getLogger('crosspm')
         self._config = config
         self.solid = config.solid
-        self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None, config.get_parser('common'))
+        self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
+                                     config.get_parser('common'))
 
         self._cache_path = config.crosspm_cache_root
         if not os.path.exists(self._cache_path):
@@ -50,10 +51,13 @@ class Downloader(object):
             self._log.info('Reading dependencies ... [%s]', list_or_file_path)
         for i, _src in enumerate(self._config.sources()):
             if i > 0:
-                print_stdout('')
-                print_stdout('Next source ...')
+                self._log.info('')
+                self._log.info('Next source ...')
             _found_packages = _src.get_packages(self, list_or_file_path)
             _packages.update({k: v for k, v in _found_packages.items() if (v is not None) or (k not in _packages)})
+            if isinstance(list_or_file_path, (list, tuple)) and not self._config.no_fails:
+                list_or_file_path = [x for x in list_or_file_path if
+                                     x[self._config.name_column] not in _packages.keys()]
 
         return _packages
 
@@ -63,13 +67,13 @@ class Downloader(object):
             depslock_file_path = self._depslock_path
 
         self._log.info('Check dependencies ...')
-        print_stdout('Check dependencies ...')
+        # print_stdout('Check dependencies ...')
 
         self._packages = {}
         self._root_package.find_dependencies(depslock_file_path)
 
-        print_stdout('')
-        print_stdout('Dependency tree:')
+        self._log.info('')
+        self._log.info('Dependency tree:')
         self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
 
         _not_found = any(_pkg is None for _pkg in self._packages.values())
@@ -84,6 +88,7 @@ class Downloader(object):
                     _pkg.unpack(self.unpacked_path)
 
             update_progress('Download/Unpack:', 100)
+            print_stdout('')
             self._log.info('Done!')
             sys.stdout.write('\n')
             sys.stdout.write('\n')
@@ -107,7 +112,7 @@ class Downloader(object):
                         raise CrosspmException(
                             CROSSPM_ERRORCODE_MULTIPLE_DEPS,
                             'Multiple versions of package "{}" found in dependencies.'.format(pkg_name),
-                            )
+                        )
         else:
             _added = True
         if _added:

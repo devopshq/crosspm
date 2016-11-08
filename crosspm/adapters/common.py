@@ -3,11 +3,13 @@ import requests
 import os
 from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
+import logging
 
 
 class BaseAdapter(object):
     def __init__(self, config):
         self._config = config
+        self._log = logging.getLogger('crosspm')
 
     def get_packages(self, source, parser, downloader, list_or_file_path):
         # Here must be function

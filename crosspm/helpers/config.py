@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import logging
 import json
 import platform
@@ -59,12 +58,12 @@ class Config(object):
     crosspm_cache_root = ''
 
     def __init__(self, config_file_name='', cmdline='', no_fails=False):
-        self._log = logging.getLogger(__name__)
+        self._log = logging.getLogger('crosspm')
         self._config_file_name = self.find_config_file(config_file_name)
         config_data = self.read_config_file()
         self.parse_config(config_data, cmdline)
         self.no_fails = no_fails
-        self.cache = Cache(self)
+        self.cache = Cache(self, self.cache)
         # self._fails = {}
 
     def find_config_file(self, config_file_name=''):
@@ -300,7 +299,10 @@ class Config(object):
         # init cpm parameters
         for x in ['cpm', 'crosspm']:
             if x in config_data:
-                self.init_cpm_config(config_data[x], _cmdline)
+                # init cache:
+                if 'cache' not in config_data:
+                    config_data['cache'] = {}
+                self.init_cpm_and_cache(config_data[x], _cmdline, config_data['cache'])
                 break
 
         self._options = self.parse_options(self._options, _cmdline)
@@ -308,16 +310,21 @@ class Config(object):
         # init not columns:
         self.init_not_columns()
 
-    def init_cpm_config(self, crosspm, cmdline):
+    def init_cpm_and_cache(self, crosspm, cmdline, cache_config):
         crosspm = self.parse_options(crosspm, cmdline)
 
         self.deps_file_name = crosspm.get('dependencies', CROSSPM_DEPENDENCY_FILENAME)
         self.deps_lock_file_name = crosspm.get('dependencies-lock', CROSSPM_DEPENDENCY_LOCK_FILENAME)
 
-        self.crosspm_cache_root = crosspm.get('cache', '')
+        # Cache init
+        self.crosspm_cache_root = cache_config.get('path', '')
+        if not self.crosspm_cache_root:
+            self.crosspm_cache_root = crosspm.get('cache', '')
         if not self.crosspm_cache_root:
             home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
             self.crosspm_cache_root = os.path.join(home_dir, '.crosspm')
+
+        self.cache = cache_config
 
     def init_not_columns(self):
         # gather items from options
@@ -386,7 +393,7 @@ class Config(object):
 
             except Exception as e:
                 msg = 'Error initializing adapter {}: [{}]'.format(_file_name, e)
-                self._log.warning(msg)
+                self._log.error(msg)
 
         if _remove:
             sys.path.remove(_base_dir)
@@ -482,24 +489,28 @@ class Config(object):
                 return True
         return False
 
+    @staticmethod
+    def get_verbosity_level(level=None, text=False):
+        levels = (
+            ('critical', logging.CRITICAL, False),
+            ('error', logging.ERROR, False),
+            ('warning', logging.WARNING, False),
+            ('info', logging.INFO, True),
+            ('debug', logging.DEBUG, False),
+        )
+        if level is None:
+            return ', '.join(x[0] for x in levels)
 
-def get_verbosity_level(level=None):
-    levels = (
-        ('critical', logging.CRITICAL, False),
-        ('error', logging.ERROR, False),
-        ('warning', logging.WARNING, True),
-        ('info', logging.INFO, False),
-        ('debug', logging.DEBUG, False),
-    )
-    if level is None:
-        return ', '.join(x[0] for x in levels)
+        if level == 'console':
+            level = 'debug'
 
-    default = None
-    for x in levels:
-        if type(level) == 'str':
-            if x[0] == level.lower():
-                return x[1]
-        if x[2]:
-            default = x[1]
+        default = None
+        for x in levels:
+            if type(level) is str:
+                if x[0] == level.lower():
+                    return x[1]
+            elif x[2]:
+                default = x[0] if text else x[1]
+                break
 
-    return default
+        return default

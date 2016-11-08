@@ -18,3 +18,9 @@ class Source(object):
 
     def get_packages(self, downloader, list_or_file_path):
         return self._adapter.get_packages(self, self._parser, downloader, list_or_file_path)
+
+    def __getattr__(self, item):
+        return self.args.get(item, None)
+
+    def __getitem__(self, item):
+        return self.args.get(item, None)
