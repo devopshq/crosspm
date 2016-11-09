@@ -90,28 +90,29 @@ You'll see something like this::
 
   Usage:
       crosspm download [options]
-      crosspm promote [options]
+      crosspm promote [options]       * Temporarily off
       crosspm pack <OUT> <SOURCE> [options]
-      crosspm cache [clear]
+      crosspm cache [size | age | clear [hard]]
       crosspm -h | --help
       crosspm --version
 
   Options:
-      <OUT>                          Output file.
-      <SOURCE>                       Source directory path.
-      -h, --help                     Show this screen.
-      --version                      Show version.
-      -l, --list                     Do not load packages and its dependencies. Just show what's found.
-      -v, --verbose                  Increase output verbosity.
-      --verbosity=LEVEL              Set output verbosity level: (critical, error, warning, info, debug) [default: 30].
-      -c=FILE, --config=FILE         Path to configuration file.
-      -o OPTIONS, --options OPTIONS  Extra options.
-      --depslock-path=FILE           Path to file with locked dependencies [./dependencies.txt.lock]
-      --out-format=TYPE              Output data format. Available formats:(['shell', 'python', 'json', 'stdout', 'cmd']) [default: stdout]
-      --output=FILE                  Output file name (required if --out_format is not stdout)
-      --out-prefix=PREFIX            Prefix for output variable name [default: ] (no prefix at all)
-      --no-fails                     Ignore fails config if possible.
+      <OUT>                           Output file.
+      <SOURCE>                        Source directory path.
+      -h, --help                      Show this screen.
+      --version                       Show version.
+      -L, --list                      Do not load packages and its dependencies. Just show what's found.
+      -v LEVEL, --verbose=LEVEL       Set output verbosity: ({verb_level}) [default: ].
+      -l LOGFILE, --log=LOGFILE       File name for log output. Log level is '{log_default}' if set when verbose doesn't.
+      -c=FILE, --config=FILE          Path to configuration file.
+      -o OPTIONS, --options OPTIONS   Extra options.
+      --depslock-path=FILE            Path to file with locked dependencies [./{deps_lock_default}]
+      --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
+      --output=FILE                   Output file name (required if --out_format is not stdout)
+      --out-prefix=PREFIX             Prefix for output variable name [default: ] (no prefix at all)
+      --no-fails                      Ignore fails config if possible.
 
+Full description for each parameter will be added here some day before NY 2017 :)
 
 Examples
 --------
@@ -215,6 +216,12 @@ We'll add some more examples soon. Here is one of configuration file examples fo
           87
           88
           89
+          90
+          91
+          92
+          93
+          94
+          95
 
      - ::
 
@@ -228,6 +235,12 @@ We'll add some more examples soon. Here is one of configuration file examples fo
               cmdline: cache
               env: CROSSPM_CACHE_ROOT
               default:
+
+          cache:
+            clear:
+              days: 10
+              size: 300 mb
+              auto: true
 
           columns: "*package, version, branch"
 
@@ -331,9 +344,42 @@ Let's keep in mind that any value we use in path, properties and columns descrip
           * - *dependencies*
             - Manifest file name (not path - just filename)
           * - *dependencies-lock*
-            - Manifest with locked dependencies (without masks and conditions) file name (not path - just filename)
+            - Manifest with locked dependencies (without masks and conditions) file name (not path - just filename).
+              Equals to *dependencies* if not set.
           * - *cache*
             - Path for CrossPM temporary files, downloaded package archives and unpacked packages.
+              Ignored if cache folder is configured in top *cache* item.
+
+   * - *cache*
+     - Parameters for cache handling.
+
+       .. list-table::
+          :widths: 30 130
+          :header-rows: 0
+
+          * - *cmdline*
+            - Command line option name with path to cache folder.
+          * - *env*
+            - Environment variable name with path to cache folder. Used if command line option is not set.
+          * - *default*
+            - Default path to cache folder. Used if command line option and environment variable are not set.
+          * - *path*
+            - Path to cache folder. *cmdline*, *env* and *default* are ignored if *path* set.
+          * - *clear*
+            - Parameters for cleaning cache.
+
+              .. list-table::
+                 :widths: 30 100
+                 :header-rows: 0
+
+                 * - *days*
+                   - Delete files or folders older than *days*.
+                 * - *size*
+                   - Delete older files and folders if cache size is bigger than *size*.
+                     Could be in *b*, *Kb*, *Mb*, *Gb*. Bytes (*b*) is a default.
+                 * - *auto*
+                   - Call cache check and clear before download.
+
    * - *columns*
      - Manifest file columns definition.
        Asterisk here points to name column (column of manifest file with package name).
@@ -342,7 +388,19 @@ Let's keep in mind that any value we use in path, properties and columns descrip
      - Lists or dicts of available values for some columns (if we need it).
    * - *options*
      - Here we can define commandline options and environment variable names from which we will get some of columns values.
-       We can define default values for those columns here too.
+       We can define default values for those columns here too. Each option must be configured with this parameters:
+
+       .. list-table::
+          :widths: 30 130
+          :header-rows: 0
+
+          * - *cmdline*
+            - Command line option name with option's value.
+          * - *env*
+            - Environment variable name with option's value. Used if command line option is not set.
+          * - *default*
+            - Default option's value. Used if command line option and environment variable are not set.
+
    * - *parsers*
      - Rules for parsing columns, paths, properties, etc.
 

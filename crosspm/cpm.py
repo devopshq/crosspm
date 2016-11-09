@@ -6,7 +6,7 @@ CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)
 
 Usage:
     crosspm download [options]
-    crosspm promote [options]
+    crosspm promote [options]       * Temporarily off
     crosspm pack <OUT> <SOURCE> [options]
     crosspm cache [size | age | clear [hard]]
     crosspm -h | --help
@@ -18,7 +18,7 @@ Options:
     -h, --help                      Show this screen.
     --version                       Show version.
     -L, --list                      Do not load packages and its dependencies. Just show what's found.
-    -v [LEVEL], --verbose [=LEVEL]  Set output verbosity: ({verb_level}) [default: ].
+    -v LEVEL, --verbose=LEVEL       Set output verbosity: ({verb_level}) [default: ].
     -l LOGFILE, --log=LOGFILE       File name for log output. Log level is '{log_default}' if set when verbose doesn't.
     -c=FILE, --config=FILE          Path to configuration file.
     -o OPTIONS, --options OPTIONS   Extra options.
@@ -184,6 +184,8 @@ class App(object):
             params[k] = self._args[v[0]] if v[0] in self._args else v[1]
 
         do_load = not self._args['--list']
+        if do_load:
+            self._config.cache.auto_clear()
         cpm_downloader = Downloader(self._config, params.pop('depslock_path'), do_load)
         packages = cpm_downloader.download_packages()
 
@@ -197,8 +199,9 @@ class App(object):
             self._output.write(params, packages)
 
     def promote(self):
-        cpm_promoter = Promoter(self._config)
-        cpm_promoter.promote_packages()
+        self._log.warning('This option is temporarily off.')
+        # cpm_promoter = Promoter(self._config)
+        # cpm_promoter.promote_packages()
 
     def pack(self):
         Archive.create(self._args['<OUT>'], self._args['<SOURCE>'])

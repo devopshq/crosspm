@@ -30,7 +30,7 @@ DEFAULT_CONFIG_PATH = [
 ]
 ENVIRONMENT_CONFIG_PATH = 'CROSSPM_CONFIG_PATH'
 CROSSPM_DEPENDENCY_FILENAME = 'dependencies.txt'  # maybe 'cpm.manifest'
-CROSSPM_DEPENDENCY_LOCK_FILENAME = 'dependencies.txt.lock'
+CROSSPM_DEPENDENCY_LOCK_FILENAME = CROSSPM_DEPENDENCY_FILENAME  # 'dependencies.txt.lock'
 CROSSPM_ADAPTERS_NAME = 'adapters'
 CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
 
@@ -311,15 +311,25 @@ class Config(object):
         self.init_not_columns()
 
     def init_cpm_and_cache(self, crosspm, cmdline, cache_config):
+        if 'cache' not in crosspm:
+            crosspm['cache'] = {}
+        if 'path' in cache_config:
+            crosspm['cache'] = cache_config.pop('path')
+        else:
+            for x in ['env', 'cmdline', 'default']:
+                if x in cache_config:
+                    crosspm['cache'][x] = cache_config.pop(x)
+
         crosspm = self.parse_options(crosspm, cmdline)
 
-        self.deps_file_name = crosspm.get('dependencies', CROSSPM_DEPENDENCY_FILENAME)
         self.deps_lock_file_name = crosspm.get('dependencies-lock', CROSSPM_DEPENDENCY_LOCK_FILENAME)
+        if 'dependencies' in crosspm:
+            self.deps_file_name = crosspm.get('dependencies', CROSSPM_DEPENDENCY_FILENAME)
+            if 'dependencies-lock' not in crosspm:
+                self.deps_lock_file_name = self.deps_file_name
 
         # Cache init
-        self.crosspm_cache_root = cache_config.get('path', '')
-        if not self.crosspm_cache_root:
-            self.crosspm_cache_root = crosspm.get('cache', '')
+        self.crosspm_cache_root = crosspm.get('cache', '')
         if not self.crosspm_cache_root:
             home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
             self.crosspm_cache_root = os.path.join(home_dir, '.crosspm')

@@ -3,7 +3,7 @@ import logging
 import os
 # from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class Cache(object):
@@ -21,7 +21,21 @@ class Cache(object):
         self.temp_path = os.path.realpath(os.path.join(self._cache_path, 'tmp'))
 
         self._clear = cache_data.get('clear', {})
+        self._clear['auto'] = self._clear.get('auto', False)
+        if isinstance(self._clear['auto'], str):
+            if self._clear['auto'].lower() in ['0', 'no', '-']:
+                self._clear['auto'] = False
+        try:
+            self._clear['auto'] = bool(self._clear['auto'])
+        except:
+            self._clear['auto'] = False
+
         self._clear['size'] = self.str_to_size(self._clear.get('size', '0'))
+
+        try:
+            self._clear['days'] = int(self._clear.get('days', '0'))
+        except:
+            self._clear['days'] = 0
 
     def str_to_size(self, size):
         _size = str(size).replace(' ', '').lower()
@@ -37,6 +51,8 @@ class Cache(object):
         elif _measure == 'gb':
             _size = _size0 * 1024 * 1024 * 1024
         else:
+            if _size[-1] == 'b':
+                _size = _size[:-1]
             try:
                 _size = float(_size)
             except:
@@ -102,55 +118,118 @@ class Cache(object):
         return total
 
     def _sort(self, item):
-        return [item['time'], 0 - len(item['path'])]
+        return item['time']
 
     def info(self):
         print_stdout('Cache info:')
 
-    def _delete_dir(self, _dir, time=None, size=None):
-        _size = 0
-        for _folder in _dir['folders']:
-            _size += self._delete_dir(_folder)
-            os.rmdir(_folder['path'])
-        for _file in _dir['files']:
-            _size += _file['size']
-            os.remove(_file['path'])
-        _dir['folders'].clear()
-        _dir['files'].clear()
-        _dir['size'] = 0
-        return _size
+    def _delete_dir(self, _dirs, max_time=None, del_size=None):
+        cleared = [0]
 
-    def clear(self, hard):
+        def do_delete_dir(_dir):
+            _size = 0
+            folders_to_delete = []
+            files_to_delete = []
+            for _folder in _dir['folders']:
+                _size += do_delete_dir(_folder)
+                if len(_folder['folders']) + len(_folder['files']) == 0:
+                    os.rmdir(_folder['path'])
+                    folders_to_delete += [_folder]
+            for _file in _dir['files']:
+                do_clear = False
+                if max_time:
+                    if max_time > _file['time']:
+                        do_clear = True
+                if del_size:
+                    if del_size > cleared[0]:
+                        do_clear = True
+                if not (max_time or del_size):
+                    do_clear = True
+                if do_clear:
+                    _size += _file['size']
+                    cleared[0] += _file['size']
+                    os.remove(_file['path'])
+                    files_to_delete += [_file]
+            _dir['size'] -= _size
+            for _folder in folders_to_delete:
+                _dir['folders'].remove(_folder)
+            for _file in files_to_delete:
+                _dir['files'].remove(_file)
+            return _size
+
+        return do_delete_dir(_dirs)
+
+    def auto_clear(self):
+        if self._clear['auto']:
+            self.clear(False, True)
+
+    def clear(self, hard=False, auto=False):
 
         # TODO: Check if given path is really crosspm cache before deleting anything!
-        self._log.info('Clear cache{}'.format(' HARD! >:-E' if hard else ':'))
+        _now = datetime.now().timestamp()
+        self._log.info('Read cache...')
+        max_size = self._clear['size']
+        if self._clear['days']:
+            max_time = _now - timedelta(days=self._clear['days']).total_seconds()
+        else:
+            max_time = 0
 
-        max_size = self._clear.get('size', '0')
         total = self.get_info()
+
+        total_size = sum(total[x]['size'] for x in total)
+        oldest = min(total[x]['time'] if total[x]['time'] else _now for x in total)
+
+        if auto and not hard:
+            do_clear = False
+            if max_size and max_size < total_size:
+                do_clear = True
+            if max_time and max_time > oldest:
+                do_clear = True
+            if not do_clear:
+                return
+
+        self._log.info('Clear cache{}'.format(' HARD! >:-E' if hard else ':'))
 
         self.size(total)
 
         # TEMP
-        total_size = sum(
-            (total['packed']['size'], total['unpacked']['size'], total['temp']['size'], total['other']['size']))
         cleared = self._delete_dir(total['temp'])
 
         # UNPACKED
         if hard:
             cleared += self._delete_dir(total['unpacked'])
         else:
-            pass
-            #
-            # for folder in sorted(total['unpacked']['folders'], key=self._sort):
-            #     if max_size:
-            #         if total_size > max_size:
-            #             total_size -= _rmdir(folder)
+            folders_to_delete = []
+            _size = 0
+            for folder in sorted(total['unpacked']['folders'], key=self._sort):
+                do_clear = False
+                if max_size:
+                    if total_size - cleared - _size> max_size:
+                        do_clear = True
+                if max_time:
+                    if folder['time'] < max_time:
+                        do_clear = True
+                if do_clear:
+                    _size += self._delete_dir(folder)
+                if len(folder['folders']) + len(folder['files']) == 0:
+                    os.rmdir(folder['path'])
+                    folders_to_delete += [folder]
+                # if (not do_clear) and (not max_time):
+                #     break
+            total['unpacked']['size'] -= _size
+            cleared += _size
+            for folder in folders_to_delete:
+                total['unpacked']['folders'].remove(folder)
 
         # PACKED
         if hard:
             cleared += self._delete_dir(total['packed'])
         else:
-            pass
+            del_size = total_size - cleared - max_size
+            if del_size < 0:
+                del_size = 0
+            if del_size or max_time:
+                cleared += self._delete_dir(total['packed'], max_time, del_size)
 
         self._log.info('')
         self._log.info('Очищено: {}'.format(self.size_to_str(cleared, 1)))
@@ -166,8 +245,7 @@ class Cache(object):
         self._log.info('      temp: {:>15}'.format(self.size_to_str(total['temp']['size'], 1)))
         self._log.info('     other: {:>15}'.format(self.size_to_str(total['other']['size'], 1)))
         self._log.info('---------------------------')
-        self._log.info('     total: {:>15}'.format(self.size_to_str(sum(
-            (total['packed']['size'], total['unpacked']['size'], total['temp']['size'], total['other']['size'])), 1)))
+        self._log.info('     total: {:>15}'.format(self.size_to_str(sum(total[x]['size'] for x in total), 1)))
 
     def age(self, total=None):
         if not total:
