@@ -30,12 +30,9 @@ Options:
 
 """
 
-# TODO: Fix 'logging' usage
-# TODO: Implement 'verbose' and 'verbosity=LEVEL' usage
 import logging
 from docopt import docopt
 import os
-import sys
 import crosspm
 from crosspm.helpers.archive import Archive
 from crosspm.helpers.config import (
@@ -43,7 +40,7 @@ from crosspm.helpers.config import (
     Config,
 )
 from crosspm.helpers.downloader import Downloader
-from crosspm.helpers.promoter import Promoter
+# from crosspm.helpers.promoter import Promoter
 from crosspm.helpers.output import Output
 from crosspm.helpers.exceptions import *
 
@@ -144,7 +141,7 @@ class App(object):
             format_str = '%(asctime)-19s [%(levelname)-9s] %(message)s'
             if level_str == 'debug':
                 format_str = '%(asctime)-19s [%(levelname)-9s] %(name)-12s: %(message)s'
-            formatter = logging.Formatter(format_str,datefmt="%Y-%m-%d %H:%M:%S")
+            formatter = logging.Formatter(format_str, datefmt="%Y-%m-%d %H:%M:%S")
 
             if level:
                 sh = logging.StreamHandler(stream=sys.stderr)

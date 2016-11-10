@@ -91,22 +91,23 @@ class Cache(object):
                 'files': [],
                 'folders': [],
             }
-            for item in os.listdir(_dir_name):
-                item_name = os.path.realpath(os.path.join(_dir_name, item))
-                item_stat = os.stat(item_name)
-                _size = getattr(item_stat, 'st_size', 0)
-                _time = getattr(item_stat, 'st_ctime', datetime.now().timestamp())
-                if os.path.isfile(os.path.join(_dir_name, item)):
-                    res['size'] += _size
-                    res['time'] = max(res['time'], _time)
-                    res['files'].append({'size': _size,
-                                         'time': _time,
-                                         'path': item_name})
-                elif sub_dirs:
-                    _folder = get_dir(item_name)
-                    res['folders'].append(_folder)
-                    res['size'] += _folder['size']
-                    res['time'] = max(res['time'], _folder['time'])
+            if os.path.isdir(_dir_name):
+                for item in os.listdir(_dir_name):
+                    item_name = os.path.realpath(os.path.join(_dir_name, item))
+                    item_stat = os.stat(item_name)
+                    _size = getattr(item_stat, 'st_size', 0)
+                    _time = getattr(item_stat, 'st_ctime', datetime.now().timestamp())
+                    if os.path.isfile(os.path.join(_dir_name, item)):
+                        res['size'] += _size
+                        res['time'] = max(res['time'], _time)
+                        res['files'].append({'size': _size,
+                                             'time': _time,
+                                             'path': item_name})
+                    elif sub_dirs:
+                        _folder = get_dir(item_name)
+                        res['folders'].append(_folder)
+                        res['size'] += _folder['size']
+                        res['time'] = max(res['time'], _folder['time'])
             return res
 
         total = {
@@ -204,7 +205,7 @@ class Cache(object):
             for folder in sorted(total['unpacked']['folders'], key=self._sort):
                 do_clear = False
                 if max_size:
-                    if total_size - cleared - _size> max_size:
+                    if total_size - cleared - _size > max_size:
                         do_clear = True
                 if max_time:
                     if folder['time'] < max_time:
@@ -214,8 +215,8 @@ class Cache(object):
                 if len(folder['folders']) + len(folder['files']) == 0:
                     os.rmdir(folder['path'])
                     folders_to_delete += [folder]
-                # if (not do_clear) and (not max_time):
-                #     break
+                    # if (not do_clear) and (not max_time):
+                    #     break
             total['unpacked']['size'] -= _size
             cleared += _size
             for folder in folders_to_delete:

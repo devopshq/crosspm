@@ -222,6 +222,7 @@ We'll add some more examples soon. Here is one of configuration file examples fo
           93
           94
           95
+          96
 
      - ::
 
@@ -229,6 +230,7 @@ We'll add some more examples soon. Here is one of configuration file examples fo
             - cred.yaml
 
           cpm:
+            description: Simple example configuration
             dependencies: dependencies.txt
             dependencies-lock: dependencies.txt.lock
             cache:
@@ -341,6 +343,8 @@ Let's keep in mind that any value we use in path, properties and columns descrip
           :widths: 30 130
           :header-rows: 0
 
+          * - *description*
+            - Short description of your configuration file.
           * - *dependencies*
             - Manifest file name (not path - just filename)
           * - *dependencies-lock*

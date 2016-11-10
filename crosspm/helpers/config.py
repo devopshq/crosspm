@@ -66,6 +66,26 @@ class Config(object):
         self.cache = Cache(self, self.cache)
         # self._fails = {}
 
+    def find_cpmconfig(self):
+        try:
+            _temp = __import__('cpmconfig.cpmconfig', globals(), locals(), ['App'], 0)
+            cpm_find = _temp.App.find
+            _temp_conf = __import__('cpmconfig.conf', globals(), locals(), ['conf', 'conf_file', 'conf_path'], 0)
+            conf_path = getattr(_temp_conf, 'conf_path', '')
+            if not conf_path:
+                conf_file = getattr(_temp_conf, 'conf_file', '')
+                if not conf_file:
+                    conf = getattr(_temp_conf, 'conf', '')
+                    if conf:
+                        conf_path = cpm_find(None, conf)[2]
+                else:
+                    conf_path = cpm_find(None, conf_file)[2]
+        except:
+            conf_path = ''
+        if conf_path and not os.path.isfile(conf_path):
+            conf_path = ''
+        return conf_path
+
     def find_config_file(self, config_file_name=''):
         if not config_file_name:
             config_path_env = os.getenv(ENVIRONMENT_CONFIG_PATH)
@@ -88,6 +108,9 @@ class Config(object):
         else:
             if not os.path.isfile(config_file_name):
                 config_file_name = ''
+
+        if not config_file_name:
+            config_file_name = self.find_cpmconfig()
 
         if config_file_name == '':
             raise CrosspmException(
