@@ -563,7 +563,8 @@ class Parser(object):
             if v == '-':
                 v = None  # get default value on next line
             k, v = self._config.check_column_value(i, v, True)
-            _vars[k] = self.parse_by_mask(k, v, False, True)
+            if k:
+                _vars[k] = self.parse_by_mask(k, v, False, True)
 
         if len(_vars) == 0:
             raise CrosspmException(

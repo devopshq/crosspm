@@ -476,12 +476,15 @@ class Config(object):
             yield _src
 
     def check_column_value(self, i, v, get_list=False):
-        k = self._columns[i]
-        if k in self._options:
-            v = self._options[k]
-        if v is None:
-            if k in self._defaults:
-                v = self._defaults[k]
+        if i < len(self._columns):
+            k = self._columns[i]
+            if k in self._options:
+                v = self._options[k]
+            if v is None:
+                if k in self._defaults:
+                    v = self._defaults[k]
+        else:
+            k, v = '', ''
         return [k, v] if get_list else {k: v}
 
     def get_column_name(self, i):
