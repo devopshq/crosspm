@@ -4,6 +4,7 @@ import os
 # from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
 from datetime import datetime, timedelta
+import time
 
 
 class Cache(object):
@@ -96,7 +97,9 @@ class Cache(object):
                     item_name = os.path.realpath(os.path.join(_dir_name, item))
                     item_stat = os.stat(item_name)
                     _size = getattr(item_stat, 'st_size', 0)
-                    _time = getattr(item_stat, 'st_ctime', datetime.now().timestamp())
+                    _now = datetime.now()
+                    _time = getattr(item_stat, 'st_ctime',
+                                    time.mktime(_now.timetuple()) + float(_now.microsecond) / 1000000.0)
                     if os.path.isfile(os.path.join(_dir_name, item)):
                         res['size'] += _size
                         res['time'] = max(res['time'], _time)

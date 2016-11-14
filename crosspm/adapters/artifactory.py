@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+import time
 from crosspm.adapters.common import BaseAdapter
 from artifactory import ArtifactoryPath
 from crosspm.helpers.exceptions import *
@@ -125,7 +126,8 @@ class Adapter(BaseAdapter):
                       'size': 'st_size'}
         _stat_pkg = package.stat()
         _stat_pkg = {k: getattr(_stat_pkg, k, None) for k in _stat_attr.keys()}
-        _stat_pkg = {k: v.timestamp() if type(v) is datetime else v for k, v in _stat_pkg.items()}
+        _stat_pkg = {k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if type(v) is datetime else v for
+                     k, v in _stat_pkg.items()}
 
         _do_load = True
         if not os.path.exists(dest_path):
