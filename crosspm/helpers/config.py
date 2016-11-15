@@ -75,7 +75,7 @@ class Config(object):
             _override = config_data.pop('override', True)
             if isinstance(_override, str):
                 if _override.lower() in ['0', 'no', '-', 'false']:
-                    _override = True
+                    _override = False
             try:
                 _override = bool(_override)
             except:
