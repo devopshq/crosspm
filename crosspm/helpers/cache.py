@@ -24,7 +24,7 @@ class Cache(object):
         self._clear = cache_data.get('clear', {})
         self._clear['auto'] = self._clear.get('auto', False)
         if isinstance(self._clear['auto'], str):
-            if self._clear['auto'].lower() in ['0', 'no', '-']:
+            if self._clear['auto'].lower() in ['0', 'no', '-', 'false']:
                 self._clear['auto'] = False
         try:
             self._clear['auto'] = bool(self._clear['auto'])

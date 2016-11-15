@@ -28,6 +28,15 @@ DEFAULT_CONFIG_PATH = [
     os.path.realpath(os.path.join(os.getenv('APPDATA'), 'crosspm')),
     CROSSPM_ROOT_DIR,
 ]
+GLOBAL_CONFIG_FILE = [
+    '/etc/crosspm/global.yaml',
+] if not WINDOWS else [
+    '{system_drive}\\crosspm_global.yaml',
+    '{system_drive}\\crosspm\\global.yaml',
+    '{all_users}\\crosspm\\global.yaml',
+    '{program_data}\\crosspm\\global.yaml',
+]
+
 ENVIRONMENT_CONFIG_PATH = 'CROSSPM_CONFIG_PATH'
 CROSSPM_DEPENDENCY_FILENAME = 'dependencies.txt'  # maybe 'cpm.manifest'
 CROSSPM_DEPENDENCY_LOCK_FILENAME = CROSSPM_DEPENDENCY_FILENAME  # 'dependencies.txt.lock'
@@ -60,11 +69,48 @@ class Config(object):
     def __init__(self, config_file_name='', cmdline='', no_fails=False):
         self._log = logging.getLogger('crosspm')
         self._config_file_name = self.find_config_file(config_file_name)
-        config_data = self.read_config_file()
+        self._global_config_file_name = self.find_global_config_file()
+        if self._global_config_file_name:
+            config_data = self.read_config_file(True)
+            _override = config_data.pop('override', True)
+            if isinstance(_override, str):
+                if _override.lower() in ['0', 'no', '-', 'false']:
+                    _override = True
+            try:
+                _override = bool(_override)
+            except:
+                _override = True
+        else:
+            config_data = {}
+            _override = False
+        if _override:
+            config_data.update({k: v for k,v in self.read_config_file().items() if k not in config_data})
+            self._log.debug('Overriding config file values with global config.')
+        else:
+            config_data.update(self.read_config_file())
+
         self.parse_config(config_data, cmdline)
         self.no_fails = no_fails
         self.cache = Cache(self, self.cache)
         # self._fails = {}
+
+    def find_global_config_file(self):
+        args = {}
+        _win_disk = self.get_windows_system_disk()
+        if WINDOWS:
+            args = {
+                'system_drive': _win_disk,
+                'all_users': os.getenv('AllUsersProfile', os.path.join(_win_disk, 'Users\\All Users')),
+                'program_data': os.getenv('ProgramData', os.path.join(_win_disk, 'ProgramData')),
+            }
+        for config_path in GLOBAL_CONFIG_FILE:
+            try:
+                _path = os.path.realpath(config_path.format(**args))
+            except:
+                _path =''
+            if _path and os.path.isfile(_path):
+                return _path
+        return ''
 
     def find_cpmconfig(self):
         try:
@@ -121,16 +167,21 @@ class Config(object):
         self._log.info('Found config file at working directory [%s]', config_file_name)
         return os.path.realpath(config_file_name)
 
-    def read_config_file(self):
-        self._log.info('Reading config file... [%s]', self._config_file_name)
-        _ext = os.path.splitext(self._config_file_name)[1].lower()
+    def read_config_file(self, _global=False):
+        if _global:
+            _config_file_name = self._global_config_file_name
+            self._log.info('Reading global config file...')
+        else:
+            _config_file_name = self._config_file_name
+            self._log.info('Reading config file... [%s]', _config_file_name)
+        _ext = os.path.splitext(_config_file_name)[1].lower()
         _is_yaml = True
         if _ext in ['.yaml', '.yml']:
             _is_yaml = True
         elif _ext == '.json':
             _is_yaml = False
         else:
-            with open(self._config_file_name) as f:
+            with open(_config_file_name) as f:
                 for i, line in enumerate(f):
                     line = line.strip()
                     if not line:
@@ -141,9 +192,9 @@ class Config(object):
 
         try:
             if _is_yaml:
-                result = self.load_yaml()
+                result = self.load_yaml(_config_file_name)
             else:
-                with open(self._config_file_name) as f:
+                with open(_config_file_name) as f:
                     result = json.loads(f.read())
 
         except Exception as e:
@@ -179,11 +230,11 @@ class Config(object):
             import_file_name = os.path.realpath(import_file_name)
         return import_file_name
 
-    def load_yaml(self):
+    def load_yaml(self, _config_file_name):
         result = {}
         yaml_imports = ''
         yaml_content = ''
-        with open(self._config_file_name) as f:
+        with open(_config_file_name) as f:
             for line in f:
                 if (not yaml_imports) and (not yaml_content):
                     line_one = line.strip().replace(' ', '').lower()
@@ -550,3 +601,18 @@ class Config(object):
                 break
 
         return default
+
+    @staticmethod
+    def get_windows_system_disk():
+        result = os.getenv('SystemDrive', '')
+        if not result:
+            try:
+                _temp = __import__('win32api', globals(), locals(), ['GetSystemDirectory'], 0)
+                result = _temp.GetSystemDirectory()
+                if result:
+                    result = os.path.splitdrive(result)[0]
+            except:
+                pass
+        if not result:
+            result = 'C:'
+        return result
