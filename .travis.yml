@@ -8,9 +8,6 @@ before_install:
 - export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
 install:
 - pip install dohq-art
-- git clone git://github.com/shazow/urllib3.git
-- cd ./urllib3
-- python setup.py install
 before_script:
 - "./scripts/tests.sh"
 - git config --global user.email "ak@alkov.pro"
@@ -21,6 +18,10 @@ script:
 before_deploy:
 - ls -l build/
 - GH_TOKEN="$(cat $GH_TOKEN_FILE)"
+- git clone git://github.com/shazow/urllib3.git
+- cd ./urllib3
+- python setup.py install
+- cd ..
 deploy:
   provider: pypi
   user: alkov.pro
