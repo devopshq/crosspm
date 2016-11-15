@@ -1,5 +1,5 @@
 language: python
-python: '3.4'
+python: '3.5'
 branches:
   only:
   - master
@@ -8,6 +8,7 @@ before_install:
 - export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
 install:
 - pip install dohq-art
+- pip install urllib3
 before_script:
 - "./scripts/tests.sh"
 - git config --global user.email "ak@alkov.pro"
