@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
-from crosspm import config
+from crosspm.config import __version__
 
 setup(
     name='crosspm',
-    version=config.__version__,
+    version=__version__,
     description='Cross Package Manager',
     license='MIT',
     author='Alexander Kovalev',
