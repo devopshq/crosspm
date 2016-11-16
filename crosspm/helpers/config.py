@@ -47,6 +47,7 @@ disable_warnings()
 
 
 class Config(object):
+    _config_path_env = []
     _sources = []
     _adapters = {}
     _parsers = {}
@@ -67,6 +68,7 @@ class Config(object):
     crosspm_cache_root = ''
 
     def __init__(self, config_file_name='', cmdline='', no_fails=False):
+        self.init_env_config_path()
         self._log = logging.getLogger('crosspm')
         self._config_file_name = self.find_config_file(config_file_name)
         self._global_config_file_name = self.find_global_config_file()
@@ -93,6 +95,9 @@ class Config(object):
         self.no_fails = no_fails
         self.cache = Cache(self, self.cache)
         # self._fails = {}
+
+    def init_env_config_path(self):
+        self._config_path_env = [x for x in os.getenv(ENVIRONMENT_CONFIG_PATH, '').split(';') if x]
 
     def find_global_config_file(self):
         args = {}
@@ -134,11 +139,13 @@ class Config(object):
 
     def find_config_file(self, config_file_name=''):
         if not config_file_name:
-            config_path_env = os.getenv(ENVIRONMENT_CONFIG_PATH)
-            if config_path_env:
+            ind = 0
+            for config_path_env in self._config_path_env:
                 if config_path_env in DEFAULT_CONFIG_PATH:
                     DEFAULT_CONFIG_PATH.remove(config_path_env)
-                DEFAULT_CONFIG_PATH.insert(0, config_path_env)
+                DEFAULT_CONFIG_PATH.insert(ind, config_path_env)
+                if os.path.isfile(config_path_env):
+                    ind += 1
 
             _def_conf_file = [DEFAULT_CONFIG_FILE] if type(DEFAULT_CONFIG_FILE) is str else DEFAULT_CONFIG_FILE
             for config_path in DEFAULT_CONFIG_PATH:
@@ -207,17 +214,19 @@ class Config(object):
 
     def find_import_file(self, import_file_name=''):
         if import_file_name:
-            config_path_env = os.getenv(ENVIRONMENT_CONFIG_PATH)
-            if config_path_env:
-                if config_path_env in DEFAULT_CONFIG_PATH:
-                    DEFAULT_CONFIG_PATH.remove(config_path_env)
-                DEFAULT_CONFIG_PATH.insert(0, config_path_env)
+            for config_path_env in self._config_path_env:
+                if os.path.isdir(config_path_env):
+                    if config_path_env in DEFAULT_CONFIG_PATH:
+                        DEFAULT_CONFIG_PATH.remove(config_path_env)
+                    DEFAULT_CONFIG_PATH.insert(0, config_path_env)
 
             for config_path in DEFAULT_CONFIG_PATH:
-                import_file_name = os.path.join(config_path, import_file_name) if os.path.isdir(
-                    config_path) else config_path
-                if os.path.isfile(import_file_name):
-                    break
+                if os.path.isdir(config_path):
+                    import_file_name = os.path.join(config_path, import_file_name)
+                    if os.path.isfile(import_file_name):
+                        break
+                    else:
+                        import_file_name = ''
                 else:
                     import_file_name = ''
 
