@@ -28,13 +28,14 @@ DEFAULT_CONFIG_PATH = [
     os.path.realpath(os.path.join(os.getenv('APPDATA'), 'crosspm')),
     CROSSPM_ROOT_DIR,
 ]
-GLOBAL_CONFIG_FILE = [
-    '/etc/crosspm/global.yaml',
+GLOBAL_CONFIG_FILE = ['crosspm_global.yaml', 'global.yaml']
+GLOBAL_CONFIG_PATH = [
+    '/etc/crosspm',
 ] if not WINDOWS else [
-    '{system_drive}\\crosspm_global.yaml',
-    '{system_drive}\\crosspm\\global.yaml',
-    '{all_users}\\crosspm\\global.yaml',
-    '{program_data}\\crosspm\\global.yaml',
+    '{system_drive}',
+    '{system_drive}',
+    '{all_users}\\crosspm',
+    '{program_data}\\crosspm',
 ]
 
 ENVIRONMENT_CONFIG_PATH = 'CROSSPM_CONFIG_PATH'
@@ -86,7 +87,7 @@ class Config(object):
             config_data = {}
             _override = False
         if _override:
-            config_data.update({k: v for k,v in self.read_config_file().items() if k not in config_data})
+            config_data.update({k: v for k, v in self.read_config_file().items() if k not in config_data})
             self._log.debug('Overriding config file values with global config.')
         else:
             config_data.update(self.read_config_file())
@@ -108,13 +109,23 @@ class Config(object):
                 'all_users': os.getenv('AllUsersProfile', os.path.join(_win_disk, 'Users\\All Users')),
                 'program_data': os.getenv('ProgramData', os.path.join(_win_disk, 'ProgramData')),
             }
-        for config_path in GLOBAL_CONFIG_FILE:
+
+        for config_path_env in self._config_path_env:
+            if os.path.isdir(config_path_env):
+                if config_path_env in GLOBAL_CONFIG_PATH:
+                    GLOBAL_CONFIG_PATH.remove(config_path_env)
+                GLOBAL_CONFIG_PATH.insert(0, config_path_env)
+
+        for config_path in GLOBAL_CONFIG_PATH:
             try:
-                _path = os.path.realpath(config_path.format(**args))
+                _path = config_path.format(**args)
             except:
-                _path =''
-            if _path and os.path.isfile(_path):
-                return _path
+                _path = ''
+            if _path:
+                for config_name in GLOBAL_CONFIG_FILE:
+                    _file = os.path.realpath(os.path.join(_path, config_name))
+                    if os.path.isfile(_file):
+                        return _file
         return ''
 
     def find_cpmconfig(self):
@@ -214,12 +225,6 @@ class Config(object):
 
     def find_import_file(self, import_file_name=''):
         if import_file_name:
-            for config_path_env in self._config_path_env:
-                if os.path.isdir(config_path_env):
-                    if config_path_env in DEFAULT_CONFIG_PATH:
-                        DEFAULT_CONFIG_PATH.remove(config_path_env)
-                    DEFAULT_CONFIG_PATH.insert(0, config_path_env)
-
             for config_path in DEFAULT_CONFIG_PATH:
                 if os.path.isdir(config_path):
                     import_file_name = os.path.join(config_path, import_file_name)
