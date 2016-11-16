@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
-from crosspm.config import __version__
+from crosspm import config
 
 setup(
     name='crosspm',
-    version=__version__,
+    version=config.__version__,
     description='Cross Package Manager',
     license='MIT',
     author='Alexander Kovalev',
@@ -36,10 +36,12 @@ setup(
         'crosspm.adapters',
     ],
     setup_requires=[
+        'docopt',
         'pytest-runner',
         'wheel',
     ],
     tests_require=[
+        'docopt',
         'pytest',
         'pytest-flask',
     ],
