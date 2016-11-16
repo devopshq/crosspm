@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from crosspm.cpm import App
+from crosspm.cpm import CrossPM
 import sys
 
 def main():
-    app = App()
+    app = CrossPM()
     app.run()
 
 

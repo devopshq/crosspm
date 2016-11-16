@@ -19,7 +19,7 @@ DEVOPS_BUILD_PULL_REQUEST_NUMBER="$TRAVIS_PULL_REQUEST"
 DEVOPS_BUILD_NUMBER="$TRAVIS_BUILD_NUMBER"
 DEVOPS_BUILD_ID="$TRAVIS_BUILD_ID"
 DEVOPS_BUILD_DIR="$(pwd)/build"
-DEVOPS_BUILD_VERSION_FROM_FILE="$(extract_version_from_file crosspm/__init__.py)"
+DEVOPS_BUILD_VERSION_FROM_FILE="$(extract_version_from_file crosspm/config.py)"
 DEVOPS_BUILD_VERSION="${DEVOPS_BUILD_VERSION_FROM_FILE}"
 
 DEVOPS_BUILD_RELEASE=false
@@ -39,9 +39,9 @@ read -r DEVOPS_BUILD_RELEASE DEVOPS_BUILD_DEVELOP DEVOPS_BUILD_CI_INFO DEVOPS_BU
 
 if bool "$DEVOPS_BUILD_DEVELOP"; then
 
-    version_append_build_number "crosspm/__init__.py" "dev${DEVOPS_BUILD_NUMBER}"
+    version_append_build_number "crosspm/config.py" "dev${DEVOPS_BUILD_NUMBER}"
 
-    DEVOPS_BUILD_VERSION="$(extract_version_from_file crosspm/__init__.py)"
+    DEVOPS_BUILD_VERSION="$(extract_version_from_file crosspm/config.py)"
 
     echo "INFO:  ======== __version__ changed from '$DEVOPS_BUILD_VERSION_FROM_FILE' to '$DEVOPS_BUILD_VERSION'"
 

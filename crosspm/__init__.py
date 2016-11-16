@@ -1,1 +1,3 @@
-__version__ = '1.0.5'
+# -*- coding: utf-8 -*-
+from crosspm.cpm import CrossPM
+from config import __version__

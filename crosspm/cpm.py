@@ -33,7 +33,7 @@ Options:
 import logging
 from docopt import docopt
 import os
-import crosspm
+from crosspm import config
 from crosspm.helpers.archive import Archive
 from crosspm.helpers.config import (
     CROSSPM_DEPENDENCY_LOCK_FILENAME,
@@ -46,21 +46,22 @@ from crosspm.helpers.exceptions import *
 
 
 # TODO: Upgrade exceptions handling
-class App(object):
+class CrossPM(object):
     _config = None
     _args = None
     _output = Output()
 
-    def __init__(self):
+    def __init__(self, args=None):
         self._log = logging.getLogger('crosspm')
-        self._args = docopt(__doc__.format(version=crosspm.__version__,
+        self._args = docopt(__doc__.format(version=config.__version__,
                                            verb_level=Config.get_verbosity_level(),
                                            log_default=Config.get_verbosity_level(0, True),
                                            deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
                                            out_format=self._output.get_output_types(),
                                            out_format_default='stdout',
                                            ),
-                            version=crosspm.__version__)
+                            argv=args,
+                            version=config.__version__,)
 
         if type(self._args) is str:
             print(self._args)
@@ -215,5 +216,5 @@ class App(object):
 
 
 if __name__ == '__main__':
-    app = App()
+    app = CrossPM()
     app.run()

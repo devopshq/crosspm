@@ -118,12 +118,12 @@ class Config(object):
 
         for config_path in GLOBAL_CONFIG_PATH:
             try:
-                _path = config_path.format(**args)
+                _path = config_path.format(**args).strip().strip("'").strip('"')
             except:
                 _path = ''
             if _path:
                 for config_name in GLOBAL_CONFIG_FILE:
-                    _file = os.path.realpath(os.path.join(_path, config_name))
+                    _file = os.path.realpath(os.path.expanduser(os.path.join(_path, config_name)))
                     if os.path.isfile(_file):
                         return _file
         return ''
@@ -160,8 +160,10 @@ class Config(object):
 
             _def_conf_file = [DEFAULT_CONFIG_FILE] if type(DEFAULT_CONFIG_FILE) is str else DEFAULT_CONFIG_FILE
             for config_path in DEFAULT_CONFIG_PATH:
+                config_path = config_path.strip().strip("'").strip('"')
+                config_path = os.path.realpath(os.path.expanduser(config_path))
                 for _conf_file in _def_conf_file:
-                    config_file_name = os.path.join(config_path, _conf_file) if os.path.isdir(
+                    config_file_name = os.path.realpath(os.path.join(config_path, _conf_file)) if os.path.isdir(
                         config_path) else config_path
                     if os.path.isfile(config_file_name):
                         break
@@ -169,12 +171,15 @@ class Config(object):
                         config_file_name = ''
                 if config_file_name:
                     break
+
+            if not config_file_name:
+                config_file_name = self.find_cpmconfig()
         else:
+            config_file_name = config_file_name.strip().strip("'").strip('"')
+            config_file_name = os.path.realpath(os.path.expanduser(config_file_name))
+            self._log.info('Check config file [%s]', config_file_name)
             if not os.path.isfile(config_file_name):
                 config_file_name = ''
-
-        if not config_file_name:
-            config_file_name = self.find_cpmconfig()
 
         if config_file_name == '':
             raise CrosspmException(
@@ -182,8 +187,8 @@ class Config(object):
                 'Config file does not found',
             )
 
-        self._log.info('Found config file at working directory [%s]', config_file_name)
-        return os.path.realpath(config_file_name)
+        self._log.info('Found config file [%s]', config_file_name)
+        return config_file_name
 
     def read_config_file(self, _global=False):
         if _global:
@@ -226,8 +231,10 @@ class Config(object):
     def find_import_file(self, import_file_name=''):
         if import_file_name:
             for config_path in DEFAULT_CONFIG_PATH:
+                config_path = config_path.strip().strip("'").strip('"')
+                config_path = os.path.realpath(os.path.expanduser(config_path))
                 if os.path.isdir(config_path):
-                    import_file_name = os.path.join(config_path, import_file_name)
+                    import_file_name = os.path.realpath(os.path.join(config_path, import_file_name))
                     if os.path.isfile(import_file_name):
                         break
                     else:
@@ -241,7 +248,6 @@ class Config(object):
                     'Config import file does not found',
                 )
 
-            import_file_name = os.path.realpath(import_file_name)
         return import_file_name
 
     def load_yaml(self, _config_file_name):
@@ -421,7 +427,7 @@ class Config(object):
         if not self.crosspm_cache_root:
             home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
             self.crosspm_cache_root = os.path.join(home_dir, '.crosspm')
-
+        self.crosspm_cache_root = os.path.realpath(os.path.expanduser(self.crosspm_cache_root))
         self.cache = cache_config
 
     def init_not_columns(self):
