@@ -26,7 +26,7 @@ class Adapter(BaseAdapter):
             if _auth_type == 'simple':
                 _art_auth['auth'] = tuple(source.args['auth'])
             elif _auth_type == 'cert':
-                _art_auth['cert'] = os.path.realpath(source.args['auth'])
+                _art_auth['cert'] = os.path.realpath(os.path.expanduser(source.args['auth']))
         if 'verify' in source.args:
             _art_auth['verify'] = source.args['verify'].lower in ['true', 'yes', '1']
 

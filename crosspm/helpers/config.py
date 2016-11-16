@@ -174,6 +174,8 @@ class Config(object):
 
             if not config_file_name:
                 config_file_name = self.find_cpmconfig()
+            if config_file_name:
+                self._log.info('Found config file [%s]', config_file_name)
         else:
             config_file_name = config_file_name.strip().strip("'").strip('"')
             config_file_name = os.path.realpath(os.path.expanduser(config_file_name))
@@ -187,7 +189,6 @@ class Config(object):
                 'Config file does not found',
             )
 
-        self._log.info('Found config file [%s]', config_file_name)
         return config_file_name
 
     def read_config_file(self, _global=False):
