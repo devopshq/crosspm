@@ -36,12 +36,10 @@ setup(
         'crosspm.adapters',
     ],
     setup_requires=[
-        'docopt',
         'pytest-runner',
         'wheel',
     ],
     tests_require=[
-        'docopt',
         'pytest',
         'pytest-flask',
     ],
