@@ -50,6 +50,7 @@ class CrossPM(object):
     _config = None
     _args = None
     _output = Output()
+    _ready = False
 
     def __init__(self, args=None, throw_exceptions=None):
         if throw_exceptions is not None:
@@ -65,33 +66,38 @@ class CrossPM(object):
                                            out_format_default='stdout',
                                            ),
                             argv=args,
-                            version=config.__version__, )
+                            version=config.__version__)
 
         if type(self._args) is str:
-            print(self._args)
-            exit()
+            if self._throw_exceptions:
+                print(self._args)
+                exit()
+        self._ready = True
 
     def read_config(self):
-        self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'])
+        self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], self._args['--depslock-path'])
 
     def run(self):
-        errorcode, msg = self.do_run(self.check_common_args)
-        if errorcode == 0:
-            errorcode, msg = self.do_run(self.read_config)
-
+        if self._ready:
+            errorcode, msg = self.do_run(self.check_common_args)
             if errorcode == 0:
-                if self._args['download']:
-                    errorcode, msg = self.do_run(self.download)
-                    # self.download()
+                errorcode, msg = self.do_run(self.read_config)
 
-                elif self._args['promote']:
-                    errorcode, msg = self.do_run(self.promote)
+                if errorcode == 0:
+                    if self._args['download']:
+                        errorcode, msg = self.do_run(self.download)
+                        # self.download()
 
-                elif self._args['pack']:
-                    errorcode, msg = self.do_run(self.pack)
+                    elif self._args['promote']:
+                        errorcode, msg = self.do_run(self.promote)
 
-                elif self._args['cache']:
-                    errorcode, msg = self.do_run(self.cache)
+                    elif self._args['pack']:
+                        errorcode, msg = self.do_run(self.pack)
+
+                    elif self._args['cache']:
+                        errorcode, msg = self.do_run(self.cache)
+        else:
+            errorcode, msg = CROSSPM_ERRORCODE_WRONG_ARGS, self._args
         return (errorcode, msg)
 
     def do_run(self, func, *args, **kwargs):
@@ -192,7 +198,7 @@ class CrossPM(object):
             'out_format': ['--out-format', ''],
             'output': ['--output', ''],
             'out_prefix': ['--out-prefix', ''],
-            'depslock_path': ['--depslock-path', ''],
+            # 'depslock_path': ['--depslock-path', ''],
         }
 
         for k, v in params.items():
@@ -201,7 +207,8 @@ class CrossPM(object):
         do_load = not self._args['--list']
         if do_load:
             self._config.cache.auto_clear()
-        cpm_downloader = Downloader(self._config, params.pop('depslock_path'), do_load)
+        cpm_downloader = Downloader(self._config, do_load)
+        # cpm_downloader = Downloader(self._config, params.pop('depslock_path'), do_load)
         packages = cpm_downloader.download_packages()
 
         _not_found = any(_pkg is None for _pkg in packages.values())

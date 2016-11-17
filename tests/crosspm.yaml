@@ -51,21 +51,21 @@ common:
 
 sources:
   - repo:
-      - libs-cpp-release.snapshot
-      - libs.snapshot
-      auth_type: simple
-      auth:
-        - reader_cpp_libs
-        - "**********"
+    - libs-cpp-release.snapshot
+    - libs.snapshot
+    auth_type: simple
+    auth:
+      - reader_cpp_libs
+      - "**********"
 
   - type: jfrog-artifactory
-      parser: artifactory
-      server: https://repo1.someorg.com/artifactory/
-      repo: libs-other.snapshot
-      auth_type: simple
-      auth:
-        - "reader_libs"
-        - "**********"
+    parser: artifactory
+    server: https://repo1.someorg.com/artifactory/
+    repo: libs-other.snapshot
+    auth_type: simple
+    auth:
+      - "reader_libs"
+      - "**********"
 
 output:
   tree:

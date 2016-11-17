@@ -38,7 +38,7 @@ class Output(object):
         return result
 
     def write_to_file(self, text, out_file_path):
-        out_file_path = os.path.realpath(out_file_path)
+        # out_file_path = os.path.realpath(os.path.expanduser(out_file_path))
         out_dir_path = os.path.dirname(out_file_path)
 
         if not os.path.exists(out_dir_path):
@@ -70,13 +70,14 @@ class Output(object):
         result = f(self, packages)
 
         if result:
-            out_dir = os.path.dirname(params['output'])
-            if not os.path.exists(out_dir):
-                os.makedirs(out_dir)
-            self.write_to_file(result, params['output'])
+            out_file_path = os.path.realpath(os.path.expanduser(params['output']))
+            # out_dir = os.path.dirname(out_file_path)
+            # if not os.path.exists(out_dir):
+            #     os.makedirs(out_dir)
+            self.write_to_file(result, out_file_path)
             self._log.info(
                 'Write packages info to file [%s]\n\tcontent:\n\t%s',
-                params['output'],
+                out_file_path,
                 result,
             )
 

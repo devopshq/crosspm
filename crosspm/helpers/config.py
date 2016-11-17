@@ -67,11 +67,25 @@ class Config(object):
     deps_lock_file_name = ''
     windows = WINDOWS
     crosspm_cache_root = ''
+    depslock_path = ''
 
-    def __init__(self, config_file_name='', cmdline='', no_fails=False):
-        self.init_env_config_path()
+    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path=''):
         self._log = logging.getLogger('crosspm')
-        self._config_file_name = self.find_config_file(config_file_name)
+        self.init_env_config_path()
+
+        cpm_conf_name = ''
+        if depslock_path:
+            depslock_path = depslock_path.strip().strip('"').strip("'")
+            self.depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
+            cpm_conf_name = self.get_cpm_conf_name()
+            if os.path.isfile(depslock_path):
+                config_path_tmp = os.path.dirname(depslock_path)
+            else:
+                config_path_tmp = depslock_path
+            if config_path_tmp not in DEFAULT_CONFIG_PATH:
+                DEFAULT_CONFIG_PATH.append(config_path_tmp)
+
+        self._config_file_name = self.find_config_file(config_file_name, cpm_conf_name)
         self._global_config_file_name = self.find_global_config_file()
         if self._global_config_file_name:
             config_data = self.read_config_file(True)
@@ -96,6 +110,23 @@ class Config(object):
         self.no_fails = no_fails
         self.cache = Cache(self, self.cache)
         # self._fails = {}
+
+    def get_cpm_conf_name(self):
+        result = ''
+        if os.path.isfile(self.depslock_path):
+            try:
+                with open(self.depslock_path, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith('#'):
+                            line = [x.strip().strip('"').strip("'") for x in line.strip('#').split('=') if x]
+                            if len(line) > 1:
+                                if line[0].lower() == 'cpmconfig':
+                                    result = line[1].split('#')[0].strip('"').strip("'")
+                                    break
+            except:
+                pass
+        return result
 
     def init_env_config_path(self):
         self._config_path_env = [x for x in os.getenv(ENVIRONMENT_CONFIG_PATH, '').split(';') if x]
@@ -128,7 +159,8 @@ class Config(object):
                         return _file
         return ''
 
-    def find_cpmconfig(self):
+    def find_cpmconfig(self, conf_name=''):
+        conf_path_add = ''
         try:
             _temp = __import__('cpmconfig.cpmconfig', globals(), locals(), ['App'], 0)
             cpm_find = _temp.App.find
@@ -142,13 +174,20 @@ class Config(object):
                         conf_path = cpm_find(None, conf)[2]
                 else:
                     conf_path = cpm_find(None, conf_file)[2]
+            if conf_name:
+                conf_path_add = cpm_find(None, conf_name)[2]
+
         except:
             conf_path = ''
         if conf_path and not os.path.isfile(conf_path):
             conf_path = ''
+        if conf_path_add and not os.path.isfile(conf_path_add):
+            conf_path_add = ''
+        if conf_name:
+            return conf_path, conf_path_add
         return conf_path
 
-    def find_config_file(self, config_file_name=''):
+    def find_config_file(self, config_file_name='', cpm_conf_name=''):
         if not config_file_name:
             ind = 0
             for config_path_env in self._config_path_env:
@@ -157,6 +196,14 @@ class Config(object):
                 DEFAULT_CONFIG_PATH.insert(ind, config_path_env)
                 if os.path.isfile(config_path_env):
                     ind += 1
+                    config_path_tmp = os.path.dirname(config_path_env)
+                    if config_path_tmp in DEFAULT_CONFIG_PATH:
+                        DEFAULT_CONFIG_PATH.remove(config_path_tmp)
+                    DEFAULT_CONFIG_PATH.insert(ind, config_path_tmp)
+
+            cpm_file_default, cpm_file_deps = self.find_cpmconfig(cpm_conf_name)
+            if cpm_file_deps:
+                DEFAULT_CONFIG_PATH.insert(ind, cpm_file_deps)
 
             _def_conf_file = [DEFAULT_CONFIG_FILE] if type(DEFAULT_CONFIG_FILE) is str else DEFAULT_CONFIG_FILE
             for config_path in DEFAULT_CONFIG_PATH:
@@ -173,7 +220,7 @@ class Config(object):
                     break
 
             if not config_file_name:
-                config_file_name = self.find_cpmconfig()
+                config_file_name = cpm_file_default
             if config_file_name:
                 self._log.info('Found config file [%s]', config_file_name)
         else:
@@ -182,6 +229,10 @@ class Config(object):
             self._log.info('Check config file [%s]', config_file_name)
             if not os.path.isfile(config_file_name):
                 config_file_name = ''
+            else:
+                config_path_tmp = os.path.dirname(config_file_name)
+                if config_path_tmp not in DEFAULT_CONFIG_PATH:
+                    DEFAULT_CONFIG_PATH.append(config_path_tmp)
 
         if config_file_name == '':
             raise CrosspmException(
@@ -230,18 +281,19 @@ class Config(object):
         return result
 
     def find_import_file(self, import_file_name=''):
+        res_file_name = ''
         if import_file_name:
             for config_path in DEFAULT_CONFIG_PATH:
                 config_path = config_path.strip().strip("'").strip('"')
                 config_path = os.path.realpath(os.path.expanduser(config_path))
                 if os.path.isdir(config_path):
-                    import_file_name = os.path.realpath(os.path.join(config_path, import_file_name))
-                    if os.path.isfile(import_file_name):
+                    res_file_name = os.path.realpath(os.path.join(config_path, import_file_name))
+                    if os.path.isfile(res_file_name):
                         break
                     else:
-                        import_file_name = ''
+                        res_file_name = ''
                 else:
-                    import_file_name = ''
+                    res_file_name = ''
 
             if import_file_name == '':
                 raise CrosspmException(
@@ -249,7 +301,7 @@ class Config(object):
                     'Config import file does not found',
                 )
 
-        return import_file_name
+        return res_file_name
 
     def load_yaml(self, _config_file_name):
         result = {}
