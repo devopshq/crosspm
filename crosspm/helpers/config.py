@@ -183,9 +183,7 @@ class Config(object):
             conf_path = ''
         if conf_path_add and not os.path.isfile(conf_path_add):
             conf_path_add = ''
-        if conf_name:
-            return conf_path, conf_path_add
-        return conf_path
+        return conf_path, conf_path_add
 
     def find_config_file(self, config_file_name='', cpm_conf_name=''):
         if not config_file_name:
