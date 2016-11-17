@@ -51,6 +51,7 @@ class CrossPM(object):
     _args = None
     _output = Output()
     _ready = False
+    _throw_exceptions = True
 
     def __init__(self, args=None, throw_exceptions=None):
         if throw_exceptions is not None:
