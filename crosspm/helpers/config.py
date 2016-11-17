@@ -476,7 +476,7 @@ class Config(object):
                 self.deps_lock_file_name = self.deps_file_name
 
         # Cache init
-        self.crosspm_cache_root = crosspm.get('cache', '')
+        self.crosspm_cache_root = crosspm.get('cache', '').strip().strip('"').strip("'")
         if not self.crosspm_cache_root:
             home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
             self.crosspm_cache_root = os.path.join(home_dir, '.crosspm')
