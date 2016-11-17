@@ -20,7 +20,7 @@ Options:
     -L, --list                      Do not load packages and its dependencies. Just show what's found.
     -v LEVEL, --verbose=LEVEL       Set output verbosity: ({verb_level}) [default: ].
     -l LOGFILE, --log=LOGFILE       File name for log output. Log level is '{log_default}' if set when verbose doesn't.
-    -c=FILE, --config=FILE          Path to configuration file.
+    -c FILE, --config=FILE          Path to configuration file.
     -o OPTIONS, --options OPTIONS   Extra options.
     --depslock-path=FILE            Path to file with locked dependencies [./{deps_lock_default}]
     --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
@@ -51,7 +51,11 @@ class CrossPM(object):
     _args = None
     _output = Output()
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, throw_exceptions=None):
+        if throw_exceptions is not None:
+            self._throw_exceptions = throw_exceptions
+        elif args is not None:
+            self._throw_exceptions = False
         self._log = logging.getLogger('crosspm')
         self._args = docopt(__doc__.format(version=config.__version__,
                                            verb_level=Config.get_verbosity_level(),
@@ -61,7 +65,7 @@ class CrossPM(object):
                                            out_format_default='stdout',
                                            ),
                             argv=args,
-                            version=config.__version__,)
+                            version=config.__version__, )
 
         if type(self._args) is str:
             print(self._args)
@@ -71,40 +75,53 @@ class CrossPM(object):
         self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'])
 
     def run(self):
-        self.do_run(self.check_common_args)
-        self.do_run(self.read_config)
+        errorcode, msg = self.do_run(self.check_common_args)
+        if errorcode == 0:
+            errorcode, msg = self.do_run(self.read_config)
 
-        if self._args['download']:
-            self.do_run(self.download)
-            # self.download()
+            if errorcode == 0:
+                if self._args['download']:
+                    errorcode, msg = self.do_run(self.download)
+                    # self.download()
 
-        elif self._args['promote']:
-            self.do_run(self.promote)
+                elif self._args['promote']:
+                    errorcode, msg = self.do_run(self.promote)
 
-        elif self._args['pack']:
-            self.do_run(self.pack)
+                elif self._args['pack']:
+                    errorcode, msg = self.do_run(self.pack)
 
-        elif self._args['cache']:
-            self.do_run(self.cache)
+                elif self._args['cache']:
+                    errorcode, msg = self.do_run(self.cache)
+        return (errorcode, msg)
 
     def do_run(self, func, *args, **kwargs):
         try:
             func(*args, **kwargs)
         except CrosspmExceptionWrongArgs as e:
-            print(__doc__)
-            self._log.critical(e.msg)
-            sys.exit(e.error_code)
+            if self._throw_exceptions:
+                print(__doc__)
+                self._log.critical(e.msg)
+                sys.exit(e.error_code)
+            else:
+                return (e.error_code, e.msg)
 
         except CrosspmException as e:
-            print_stdout('')
-            self._log.critical(e.msg)
-            sys.exit(e.error_code)
+            if self._throw_exceptions:
+                print_stdout('')
+                self._log.critical(e.msg)
+                sys.exit(e.error_code)
+            else:
+                return (e.error_code, e.msg)
 
         except Exception as e:
-            print_stdout('')
-            self._log.exception(e)
-            self._log.critical('Unknown error occurred!')
-            sys.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR)
+            if self._throw_exceptions:
+                print_stdout('')
+                self._log.exception(e)
+                self._log.critical('Unknown error occurred!')
+                sys.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR)
+            else:
+                return (CROSSPM_ERRORCODE_UNKNOWN_ERROR, 'Unknown error occurred!')
+        return (0, '')
 
     def check_common_args(self):
         if self._args['--output']:

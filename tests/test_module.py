@@ -2,4 +2,4 @@
 # -*- coding: utf-8 -*-
 from crosspm import CrossPM
 argv = 'download -c "Z:\\home\\positive\\crosspm\\test\\test6\\crosspm.yaml" --depslock-path="Z:\\home\\positive\\crosspm\\test\\test6\\dependencies.txt"'
-CrossPM(argv).run()
+print(CrossPM(argv).run())
