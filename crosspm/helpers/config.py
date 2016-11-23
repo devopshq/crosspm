@@ -281,11 +281,14 @@ class Config(object):
     def find_import_file(self, import_file_name=''):
         res_file_name = ''
         if import_file_name:
-            for config_path in DEFAULT_CONFIG_PATH:
-                config_path = config_path.strip().strip("'").strip('"')
-                config_path = os.path.realpath(os.path.expanduser(config_path))
-                if os.path.isdir(config_path):
-                    res_file_name = os.path.realpath(os.path.join(config_path, import_file_name))
+            for config_path in [''] + DEFAULT_CONFIG_PATH:
+                if config_path:
+                    config_path = config_path.strip().strip("'").strip('"')
+                    config_path = os.path.realpath(os.path.expanduser(config_path))
+                if config_path == '' or os.path.isdir(config_path):
+                    res_file_name = os.path.realpath(
+                        os.path.expanduser(import_file_name) if config_path == '' else
+                        os.path.join(config_path, import_file_name))
                     if os.path.isfile(res_file_name):
                         break
                     else:
@@ -293,10 +296,10 @@ class Config(object):
                 else:
                     res_file_name = ''
 
-            if import_file_name == '':
+            if res_file_name == '':
                 raise CrosspmException(
                     CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
-                    'Config import file does not found',
+                    'Config import file "{}" does not found'.format(import_file_name),
                 )
 
         return res_file_name
