@@ -130,6 +130,11 @@ class Config(object):
 
     def init_env_config_path(self):
         self._config_path_env = [x for x in os.getenv(ENVIRONMENT_CONFIG_PATH, '').split(';') if x]
+        for config_path_env in self._config_path_env:
+            config_path_tmp = os.path.dirname(config_path_env) if os.path.isfile(config_path_env) else config_path_env
+            if config_path_tmp in DEFAULT_CONFIG_PATH:
+                DEFAULT_CONFIG_PATH.remove(config_path_tmp)
+            DEFAULT_CONFIG_PATH.insert(0, config_path_tmp)
 
     def find_global_config_file(self):
         args = {}
@@ -189,15 +194,11 @@ class Config(object):
         if not config_file_name:
             ind = 0
             for config_path_env in self._config_path_env:
-                if config_path_env in DEFAULT_CONFIG_PATH:
-                    DEFAULT_CONFIG_PATH.remove(config_path_env)
-                DEFAULT_CONFIG_PATH.insert(ind, config_path_env)
                 if os.path.isfile(config_path_env):
+                    if config_path_env in DEFAULT_CONFIG_PATH:
+                        DEFAULT_CONFIG_PATH.remove(config_path_env)
+                    DEFAULT_CONFIG_PATH.insert(ind, config_path_env)
                     ind += 1
-                    config_path_tmp = os.path.dirname(config_path_env)
-                    if config_path_tmp in DEFAULT_CONFIG_PATH:
-                        DEFAULT_CONFIG_PATH.remove(config_path_tmp)
-                    DEFAULT_CONFIG_PATH.insert(ind, config_path_tmp)
 
             cpm_file_default, cpm_file_deps = self.find_cpmconfig(cpm_conf_name)
             if cpm_file_deps:
