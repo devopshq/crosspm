@@ -18,8 +18,8 @@ class Parser(object):
 
     def __init__(self, name, data, config):
         self._name = name
-        self._sort = data.pop('sort', self._sort)
-        self._index = data.pop('index', self._index)
+        self._sort = data.get('sort', self._sort)
+        self._index = data.get('index', self._index)
         self._rules = {k: v for k, v in data.items() if k not in ['columns']}
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
