@@ -38,6 +38,12 @@ class Parser(object):
         for _name in self._rules:
             if not isinstance(self._rules[_name], (list, tuple)):
                 self._rules[_name] = [self._rules[_name]]
+            to_del = []
+            for _rule in self._rules[_name]:
+                if not _rule:
+                    to_del.append(_rule)
+            for _rule in to_del:
+                self._rules[_name].remove(_rule)
             for z, _rule in enumerate(self._rules[_name]):
                 if _name not in self._rules_vars:
                     self._rules_vars[_name] = []

@@ -33,7 +33,6 @@ GLOBAL_CONFIG_PATH = [
     '/etc/crosspm',
 ] if not WINDOWS else [
     '{system_drive}',
-    '{system_drive}',
     '{all_users}\\crosspm',
     '{program_data}\\crosspm',
 ]
