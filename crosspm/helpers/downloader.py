@@ -56,10 +56,11 @@ class Downloader(object):
                 self._log.info('')
                 self._log.info('Next source ...')
             _found_packages = _src.get_packages(self, list_or_file_path)
-            _packages.update({k: v for k, v in _found_packages.items() if (v is not None) or (k not in _packages)})
+            _packages.update(
+                {k: v for k, v in _found_packages.items() if _packages.get(k, None) is None})
             if isinstance(list_or_file_path, (list, tuple)) and not self._config.no_fails:
                 list_or_file_path = [x for x in list_or_file_path if
-                                     x[self._config.name_column] not in _packages.keys()]
+                                     _packages.get(x[self._config.name_column], None) is None]
 
         return _packages
 
