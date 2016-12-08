@@ -20,7 +20,7 @@ class Parser(object):
         self._name = name
         self._sort = data.get('sort', self._sort)
         self._index = data.get('index', self._index)
-        self._rules = {k: v for k, v in data.items() if k not in ['columns']}
+        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort']}
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
         self._config = config
