@@ -121,6 +121,7 @@ class Output(object):
         for _pkg in packages.values():
             if _pkg:
                 _pkg_name, _pkg_path = _pkg.get_name_and_path()
+                _pkg_path = _pkg_path.replace('\\\\', '\\').replace('\\', '\\\\')
                 _pkg_name = self.get_var_name(_pkg_name)
                 result += "{} = '{}'\n".format(_pkg_name, _pkg_path)
                 packages_dict_str += "\t'{}': '{}',\n".format(_pkg_name, _pkg_path)

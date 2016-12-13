@@ -203,7 +203,7 @@ class CrossPM(object):
         }
 
         for k, v in params.items():
-            params[k] = self._args[v[0]] if v[0] in self._args else v[1]
+            params[k] = self._args[v[0]].strip('"').strip("'") if v[0] in self._args else v[1]
 
         do_load = not self._args['--list']
         if do_load:
