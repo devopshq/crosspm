@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from datetime import datetime
 import time
 from crosspm.adapters.common import BaseAdapter
@@ -40,6 +41,7 @@ class Adapter(BaseAdapter):
                 _pkg_name_old = _pkg_name
                 self._log.info(
                     '{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
+            last_error = ''
             for _path in _paths['paths']:
                 _path_fixed, _path_pattern = parser.split_fixed_pattern(_path)
                 _repo_paths = ArtifactoryPath(_path_fixed, **_art_auth)
@@ -53,14 +55,33 @@ class Adapter(BaseAdapter):
                                 _packages += [_repo_path]
                         self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
                 except RuntimeError as e:
-                    pass
-                    # TODO: Check error
-                    # e.args[0] = '''{
-                    #                   "errors" : [ {
-                    #                     "status" : 404,
-                    #                     "message" : "Not Found"
-                    #                   } ]
-                    #                 }'''
+                    try:
+                        err = json.loads(e.args[0])
+                    except:
+                        err = {}
+                    if isinstance(err, dict):
+                        # TODO: Check errors
+                        # e.args[0] = '''{
+                        #                   "errors" : [ {
+                        #                     "status" : 404,
+                        #                     "message" : "Not Found"
+                        #                   } ]
+                        #                 }'''
+                        for error in err.get('errors', []):
+                            err_status = error.get('status', -1)
+                            err_msg = error.get('message', '')
+                            if err_status == 401:
+                                msg = 'Authentication error[{}]{}'.format(err_status,
+                                                                          (': {}'.format(err_msg)) if err_msg else '')
+                            elif err_status == 404:
+                                msg = last_error
+                            else:
+                                msg = 'Error[{}]{}'.format(err_status,
+                                                           (': {}'.format(err_msg)) if err_msg else '')
+                            if last_error != msg:
+                                self._log.error(msg)
+                            last_error = msg
+
             _package = None
             if _packages:
                 _packages = parser.filter_one(_packages, _paths['params'])
