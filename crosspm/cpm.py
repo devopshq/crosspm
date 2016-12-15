@@ -6,7 +6,7 @@ CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)
 
 Usage:
     crosspm download [options]
-    crosspm promote [options]       * Temporarily off
+    crosspm lock [options]
     crosspm pack <OUT> <SOURCE> [options]
     crosspm cache [size | age | clear [hard]]
     crosspm -h | --help
@@ -40,12 +40,11 @@ from crosspm.helpers.config import (
     Config,
 )
 from crosspm.helpers.downloader import Downloader
-# from crosspm.helpers.promoter import Promoter
+from crosspm.helpers.locker import Locker
 from crosspm.helpers.output import Output
 from crosspm.helpers.exceptions import *
 
 
-# TODO: Upgrade exceptions handling
 class CrossPM(object):
     _config = None
     _args = None
@@ -93,8 +92,8 @@ class CrossPM(object):
                         errorcode, msg = self.do_run(self.download)
                         # self.download()
 
-                    elif self._args['promote']:
-                        errorcode, msg = self.do_run(self.promote)
+                    elif self._args['lock']:
+                        errorcode, msg = self.do_run(self.lock)
 
                     elif self._args['pack']:
                         errorcode, msg = self.do_run(self.pack)
@@ -234,10 +233,10 @@ class CrossPM(object):
                 self._output.write(params, packages)
         return ''
 
-    def promote(self):
+    def lock(self):
         self._log.warning('This option is temporarily off.')
-        # cpm_promoter = Promoter(self._config)
-        # cpm_promoter.promote_packages()
+        cpm_locker = Locker(self._config)
+        cpm_locker.lock_packages()
 
     def pack(self):
         Archive.create(self._args['<OUT>'], self._args['<SOURCE>'])
