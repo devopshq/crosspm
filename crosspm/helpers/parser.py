@@ -366,48 +366,53 @@ class Parser(object):
             return True
         _res = True
         # _dirty = self._rules[rule_name].format(**params)
-        _dirties = self.fill_rule(rule_name, params)
-        for _dirty in _dirties:
-            _res_var = False
-            # TODO: Use split_with_regexp() instead
-            _dirty = [x.split(']') for x in _dirty.split('[')]
-            _dirty = self.list_flatter(_dirty)
-            _variants = self.get_variants(_dirty, [])
-            if type(value) is str:
-                _res_var = value in _variants
-            elif type(value) in (list, tuple):
+        _all_dirties = self.fill_rule(rule_name, params)
+        for _dirties in _all_dirties:
+            _res_sub = False
+            for _dirty in _dirties:
                 _res_var = False
-                for _variant in _variants:
-                    if _variant in value:
-                        _res_var = True
-                        break
-            elif type(value) is dict:
-                for _variant in _variants:
-                    _tmp = [x.strip() for x in _variant.split('=')]
-                    _tmp = [x if len(x) > 0 else '*' for x in _tmp]
-                    for _key in fnmatch.filter(value.keys(), _tmp[0]):
-                        if len(_tmp) > 1:
-                            _tmp_val = value[_key]
-                            if type(_tmp_val) is str:
-                                _tmp_val = [_tmp_val]
-                            elif type(_tmp_val) not in [list, tuple, dict]:
-                                raise CrosspmException(
-                                    CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
-                                    'Parser rule for [{}] not able to process [{}] data type.'.format(rule_name,
-                                                                                                      type(_tmp_val))
-                                )
-                            if len(fnmatch.filter(_tmp_val, _tmp[1])) > 0:
-                                _res_var = True
-                                break
-                        else:
+                # TODO: Use split_with_regexp() instead
+                _dirty = [x.split(']') for x in _dirty.split('[')]
+                _dirty = self.list_flatter(_dirty)
+                _variants = self.get_variants(_dirty, [])
+                if type(value) is str:
+                    _res_var = value in _variants
+                elif type(value) in (list, tuple):
+                    _res_var = False
+                    for _variant in _variants:
+                        if _variant in value:
                             _res_var = True
                             break
-            else:
-                raise CrosspmException(
-                    CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
-                    'Parser rule for [{}] not able to process [{}] data type.'.format(rule_name, type(value))
-                )
-            _res = _res and _res_var
+                elif type(value) is dict:
+                    for _variant in _variants:
+                        _tmp = [x.strip() for x in _variant.split('=')]
+                        _tmp = [x if len(x) > 0 else '*' for x in _tmp]
+                        for _key in fnmatch.filter(value.keys(), _tmp[0]):
+                            if len(_tmp) > 1:
+                                _tmp_val = value[_key]
+                                if type(_tmp_val) is str:
+                                    _tmp_val = [_tmp_val]
+                                elif type(_tmp_val) not in [list, tuple, dict]:
+                                    raise CrosspmException(
+                                        CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
+                                        'Parser rule for [{}] not able to process [{}] data type.'.format(rule_name,
+                                                                                                          type(_tmp_val))
+                                    )
+                                if len(fnmatch.filter(_tmp_val, _tmp[1])) > 0:
+                                    _res_var = True
+                                    break
+                            else:
+                                _res_var = True
+                                break
+                else:
+                    raise CrosspmException(
+                        CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
+                        'Parser rule for [{}] not able to process [{}] data type.'.format(rule_name, type(value))
+                    )
+                _res_sub = _res_sub or _res_var
+                if _res_sub:
+                    break
+            _res = _res and _res_sub
         return _res
 
     def iter_matched_values(self, column_name, value):
@@ -501,7 +506,7 @@ class Parser(object):
 
             if len(_res_part) == 0:
                 _res_part = [self._rules[rule_name][z].format(**_params)]
-            _res += _res_part
+            _res += [_res_part]
         return _res
 
     def get_paths(self, list_or_file_path, source):
@@ -513,16 +518,17 @@ class Parser(object):
                 _params['server'] = source.args['server']
                 _params['repo'] = _repo
                 # _dirty = self._rules['path'].format(**_params)
-                _dirties = self.fill_rule('path', _params)
+                _all_dirties = self.fill_rule('path', _params)
                 # _params.pop('server')
                 # _params.pop('repo')
-                for _dirty in _dirties:
-                    # TODO: Use split_with_regexp() instead
-                    _dirty = [x.split(']') for x in _dirty.split('[')]
-                    _dirty = self.list_flatter(_dirty)
-                    _paths += [{'paths': self.get_variants(_dirty, []),
-                                'params': {k: v for k, v in _params.items()},
-                                }]
+                for _dirties in _all_dirties:
+                    for _dirty in _dirties:
+                        # TODO: Use split_with_regexp() instead
+                        _dirty = [x.split(']') for x in _dirty.split('[')]
+                        _dirty = self.list_flatter(_dirty)
+                        _paths += [{'paths': self.get_variants(_dirty, []),
+                                    'params': {k: v for k, v in _params.items()},
+                                    }]
         return _paths
 
     def get_variants(self, dirty, paths):
