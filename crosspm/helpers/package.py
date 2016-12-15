@@ -114,9 +114,17 @@ class Package(object):
             return self._name
         return self._name, self._unpacked_path
 
-    def get_params(self, param_list):
-        result = {k: v for k, v in self._params_found.items() if k in param_list}
-        result.update({k: v for k, v in self._params.items() if (k in param_list and k not in result)})
+    def get_params(self, param_list=None, get_path=False):
+        if param_list and isinstance(param_list, str):
+            result = {param_list: self._name}
+        elif param_list and isinstance(param_list, (list, tuple)):
+            result = {k: v for k, v in self._params_found.items() if k in param_list}
+            result.update({k: v for k, v in self._params.items() if (k in param_list and k not in result)})
+        else:
+            result = {k: v for k, v in self._params_found.items()}
+            result.update({k: v for k, v in self._params.items() if k not in result})
+        if get_path:
+            result['path'] = self._unpacked_path
         return result
 
     def set_full_unique_name(self):

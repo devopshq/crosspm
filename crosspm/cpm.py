@@ -49,21 +49,24 @@ from crosspm.helpers.exceptions import *
 class CrossPM(object):
     _config = None
     _args = None
-    _output = Output()
+    _output = None
     _ready = False
     _throw_exceptions = True
+    _return_result = False
 
-    def __init__(self, args=None, throw_exceptions=None):
+    def __init__(self, args=None, throw_exceptions=None, return_result=False):
         if throw_exceptions is not None:
             self._throw_exceptions = throw_exceptions
         elif args is not None:
             self._throw_exceptions = False
+            self._return_result = return_result
+
         self._log = logging.getLogger('crosspm')
         self._args = docopt(__doc__.format(version=config.__version__,
                                            verb_level=Config.get_verbosity_level(),
                                            log_default=Config.get_verbosity_level(0, True),
                                            deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
-                                           out_format=self._output.get_output_types(),
+                                           out_format=Output.get_output_types(),
                                            out_format_default='stdout',
                                            ),
                             argv=args,
@@ -77,6 +80,7 @@ class CrossPM(object):
 
     def read_config(self):
         self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], self._args['--depslock-path'])
+        self._output = Output(self._config.output('result', None), self._config.name_column)
 
     def run(self):
         if self._ready:
@@ -103,7 +107,7 @@ class CrossPM(object):
 
     def do_run(self, func, *args, **kwargs):
         try:
-            func(*args, **kwargs)
+            res = func(*args, **kwargs)
         except CrosspmExceptionWrongArgs as e:
             if self._throw_exceptions:
                 print(__doc__)
@@ -128,7 +132,7 @@ class CrossPM(object):
                 sys.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR)
             else:
                 return (CROSSPM_ERRORCODE_UNKNOWN_ERROR, 'Unknown error occurred!')
-        return (0, '')
+        return (0, res)
 
     def check_common_args(self):
         if self._args['--output']:
@@ -183,29 +187,32 @@ class CrossPM(object):
                 self._log.addHandler(fh)
 
     def download(self):
-        if self._args['--out-format'] == 'stdout':
-            if self._args['--output']:
+        if self._return_result:
+            params = {}
+        else:
+            if self._args['--out-format'] == 'stdout':
+                if self._args['--output']:
+                    raise CrosspmExceptionWrongArgs(
+                        "unwanted argument '--output' while argument '--out-format={}'".format(
+                            self._args['--out-format'],
+                        ))
+            elif not self._args['--output']:
                 raise CrosspmExceptionWrongArgs(
-                    "unwanted argument '--output' while argument '--out-format={}'".format(
+                    "argument '--output' required when argument '--out-format={}'".format(
                         self._args['--out-format'],
                     ))
-        elif not self._args['--output']:
-            raise CrosspmExceptionWrongArgs(
-                "argument '--output' required when argument '--out-format={}'".format(
-                    self._args['--out-format'],
-                ))
 
-        params = {
-            'out_format': ['--out-format', ''],
-            'output': ['--output', ''],
-            'out_prefix': ['--out-prefix', ''],
-            # 'depslock_path': ['--depslock-path', ''],
-        }
+            params = {
+                'out_format': ['--out-format', ''],
+                'output': ['--output', ''],
+                'out_prefix': ['--out-prefix', ''],
+                # 'depslock_path': ['--depslock-path', ''],
+            }
 
-        for k, v in params.items():
-            params[k] = self._args[v[0]] if v[0] in self._args else v[1]
-            if isinstance(params[k], str):
-                params[k] = params[k].strip('"').strip("'")
+            for k, v in params.items():
+                params[k] = self._args[v[0]] if v[0] in self._args else v[1]
+                if isinstance(params[k], str):
+                    params[k] = params[k].strip('"').strip("'")
 
         do_load = not self._args['--list']
         if do_load:
@@ -221,7 +228,11 @@ class CrossPM(object):
                 'Some package(s) not found.'
             )
         if do_load:
-            self._output.write(params, packages)
+            if self._return_result:
+                return self._output.output_type_module(packages)
+            else:
+                self._output.write(params, packages)
+        return ''
 
     def promote(self):
         self._log.warning('This option is temporarily off.')

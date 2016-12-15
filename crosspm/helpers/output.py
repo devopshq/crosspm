@@ -3,10 +3,47 @@
 import logging
 import os
 import re
+import json
 from crosspm.helpers.exceptions import *
+from crosspm.helpers.parser import Parser
 
-# log = logging.getLogger(__name__)
 _output_format_map = {}
+(
+    PLAIN,
+    DICT,
+    LIST,
+) = range(3)
+
+
+class OutFormat(object):
+    def __init__(self, value, esc_path=False):
+        self._value = value
+        self._esc_path = esc_path
+
+    def __format__(self, fmt):
+        result = self._value
+        fmts = fmt.split('.')
+        if self._esc_path and ('path' not in fmts):
+            fmts.insert(0, 'path')
+        for fmt in fmts:
+            if fmt == 'upper':
+                result = str(result).upper()
+            elif fmt == 'lower':
+                result = str(result).lower()
+            elif fmt == 'quote':
+                result = '"{}"'.format(result)
+            elif fmt == 'unquote':
+                result = str(result).strip('"')
+            elif fmt == 'safe':
+                result = str(result).replace('-', '_')
+                result = re.sub(r'[^A-Z_a-z_0-9]', '', result)
+                if result:
+                    if not (result[0].isalpha() or '_' == result[0]):
+                        result = '_' + result
+            elif fmt == 'path':
+                result = str(result).replace('\\\\', '\\').replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
+
+        return str(result)
 
 
 def register_output_format(name):
@@ -15,26 +52,81 @@ def register_output_format(name):
 
         def wrapper(*args, **kwargs):
             return fn(*args, **kwargs)
+
         return wrapper
+
     return check_decorator
 
 
 class Output(object):
-    _prefix = ''
+    _config = {
+        'root': {'PACKAGES_ROOT'},
+        'key': 'package',
+        'value': 'path',
+        'columns': [
+            {
+                'column': 'package',
+                'value': '{:upper}_ROOT',
+            },
+            {
+                'column': 'path',
+                'value': '{}',
+            }
+        ]
+    }
+    _name_column = ''
+    _columns = []
 
-    def __init__(self):
+    def __init__(self, config=None, name_column=''):
         self._log = logging.getLogger('crosspm')
+        if name_column:
+            self._name_column = name_column
+        if config and isinstance(config, dict):
+            self._config = config
+        self.init_config()
+        if 'columns' not in self._config:
+            self._config['columns'] = []
+
+    def init_config(self):
+        root = self._config.get('root', '')
+        if isinstance(root, str):
+            self._config['type'] = PLAIN
+        elif isinstance(root, (dict, set)):
+            self._config['type'] = DICT
+            root = [x for x in root]
+            self._config['root'] = root[0] if len(root) > 0 else ''
+        elif isinstance(root, (list, tuple)):
+            self._config['type'] = LIST
+            self._config['root'] = root[0] if len(root) > 0 else ''
+
+        if 'columns' in self._config:
+            self._columns = []
+            for item in self._config['columns']:
+                if not item.get('value', ''):
+                    item['value'] = '{}'
+                if not item.get('name', ''):
+                    item['name'] = '{}'
+                if not item.get('column', ''):
+                    item['column'] = ''
+                    for cl in [y for y in [x[0] for x in Parser.split_with_regexp('{.*?}', item['name']) if x[1]] if y]:
+                        col = cl.split(':')[0]
+                        if col:
+                            item['column'] = col
+                            break
+                if item['column']:
+                    self._columns.append(item['column'])
+
+        if self._columns:
+            if self._name_column and self._name_column not in self._columns:
+                self._columns.append(self._name_column)
+        else:
+            if not self._name_column:
+                self._name_column = 'package'
+        if 'value' not in self._config:
+            self._config['value'] = ''
 
     def get_var_name(self, pkg_name):
-        result = '{}{}_ROOT'.format(self._prefix, pkg_name)
-
-        result = result.upper()
-        result = result.replace('-', '_')
-        result = re.sub(r'[^A-Z_0-9]', '', result)
-
-        if not result[0].isalpha() or '_' == result[0]:
-            result = '_' + result
-
+        result = '{:upper.safe}'.format(OutFormat(pkg_name))
         return result
 
     def write_to_file(self, text, out_file_path):
@@ -76,68 +168,146 @@ class Output(object):
             #     os.makedirs(out_dir)
             self.write_to_file(result, out_file_path)
             self._log.info(
-                'Write packages info to file [%s]\n\tcontent:\n\t%s',
+                'Write packages info to file [%s]\ncontent:\n\n%s',
                 out_file_path,
                 result,
             )
 
+    def format_column(self, column, name, value):
+        for item in self._config['columns']:
+            if item['column'] == column:
+                name = item['name'].format(OutFormat(name))
+                value = item['value'].format(OutFormat(value))
+                break
+        return {'name': name, 'value': value}
+
     @register_output_format('stdout')
     def output_type_stdout(self, packages):
-        # sys.stdout.write('\n')
-        # sys.stdout.flush()
-        for _pkg in packages.values():
-            if _pkg:
-                _pkg_name, _pkg_path = _pkg.get_name_and_path()
-                sys.stdout.write('{}{}: {}\n'.format(self._prefix, _pkg_name, _pkg_path))
-                sys.stdout.flush()
+        self._config['type'] = PLAIN
+        for k, v in self.output_type_module(packages).items():
+            sys.stdout.write('{}: {}\n'.format(self.get_var_name(k), v))
+            sys.stdout.flush()
         return None
 
     @register_output_format('shell')
     def output_type_shell(self, packages):
+        self._config['type'] = PLAIN
         result = '\n'
-        for _pkg in packages.values():
-            if _pkg:
-                _pkg_name, _pkg_path = _pkg.get_name_and_path()
-                result += "{}='{}'\n".format(self.get_var_name(_pkg_name), _pkg_path)
-
+        for k, v in self.output_type_module(packages).items():
+            result += "{}='{}'\n".format(self.get_var_name(k), v)
         result += '\n'
         return result
 
     @register_output_format('cmd')
     def output_type_cmd(self, packages):
+        self._config['type'] = PLAIN
         result = '\n'
+        for k, v in self.output_type_module(packages).items():
+            result += "set {}={}\n".format(self.get_var_name(k), v)
+        result += '\n'
+        return result
+
+    # @register_output_format('module')
+    def output_type_module(self, packages, esc_path=False):
+        result_list = []
         for _pkg in packages.values():
             if _pkg:
-                _pkg_name, _pkg_path = _pkg.get_name_and_path()
-                result += 'set {}={}\n'.format(self.get_var_name(_pkg_name), _pkg_path)
+                _pkg_params = _pkg.get_params(self._columns, True)
+                _res_item = {}
+                for item in self._config['columns']:
+                    name = item['name'].format(OutFormat(item['column']))
+                    value = _pkg_params.get(item['column'], '')
+                    if not isinstance(value, (list, dict, tuple)):
+                        value = item['value'].format(
+                            OutFormat(value, (item['column'] == 'path') if esc_path else False))
+                    _res_item[name] = value
+                result_list.append(_res_item)
 
-        result += '\n'
+        if self._config['type'] == LIST:
+            return result_list
+
+        result = {}
+        for item in result_list:
+            # TODO: Error handling
+            name = item[self._config['key']]
+            if self._config['value']:
+                value = item[self._config['value']]
+            else:
+                value = {k: v for k, v in item.items() if k != self._config['key']}
+
+            result[name] = value
+
         return result
 
     @register_output_format('python')
     def output_type_python(self, packages):
-        result = '# -*- coding: utf-8 -*-\n\n'
-        packages_dict_str = ''
-        for _pkg in packages.values():
-            if _pkg:
-                _pkg_name, _pkg_path = _pkg.get_name_and_path()
-                _pkg_path = _pkg_path.replace('\\\\', '\\').replace('\\', '\\\\')
-                _pkg_name = self.get_var_name(_pkg_name)
-                result += "{} = '{}'\n".format(_pkg_name, _pkg_path)
-                packages_dict_str += "\t'{}': '{}',\n".format(_pkg_name, _pkg_path)
+        def get_value(_v):
+            if isinstance(_v, (int, float, bool)):
+                _res = '{}'.format(str(_v))
+            elif isinstance(_v, (dict, tuple, list)):
+                _res = '{}'.format(str(_v))
+            else:
+                _res = "'{}'".format(str(_v))
+            return _res
 
-        result += '\nPACKAGES_ROOT = {\n' + packages_dict_str + '}\n'
+        result = '# -*- coding: utf-8 -*-\n\n'
+        res = ''
+        dict_or_list = self.output_type_module(packages, True)
+        for item in dict_or_list:
+            if self._config['type'] == LIST:
+                res += '    {\n'
+                for k, v in item.items():
+                    res += "        '{}': {},\n".format(k, get_value(v))
+                res += '    },\n'
+            elif self._config['type'] == DICT:
+                res += "    '{}': ".format(item)
+                if isinstance(dict_or_list[item], dict):
+                    res += '{\n'
+                    for k, v in dict_or_list[item].items():
+                        res += "        '{}': {},\n".format(k, get_value(v))
+                    res += '    },\n'
+                elif isinstance(dict_or_list[item], (list, tuple)):
+                    res += '[\n'
+                    for v in dict_or_list[item]:
+                        res += "        {},\n".format(get_value(v))
+                    res += '    ],\n'
+                else:  # str
+                    res += "{},\n".format(get_value(dict_or_list[item]))
+            else:
+                res += '{} = '.format(self.get_var_name(item), get_value(dict_or_list[item]))
+                if isinstance(dict_or_list[item], dict):
+                    res += '{\n'
+                    for k, v in dict_or_list[item].items():
+                        res += "    '{}': {},\n".format(k, get_value(v))
+                    res += '}\n'
+                elif isinstance(dict_or_list[item], (list, tuple)):
+                    res += '[\n'
+                    for v in dict_or_list[item]:
+                        res += "    {},\n".format(get_value(v))
+                    res += ']\n'
+                else:  # str
+                    res += "{}\n".format(get_value(dict_or_list[item]))
+
+        if self._config['type'] == LIST:
+            result += '{} = [\n'.format(self._config['root'] or 'PACKAGES_ROOT')
+            result += res
+            result += ']\n'
+        elif self._config['type'] == DICT:
+            result += '{} = {}\n'.format(self._config['root'] or 'PACKAGES_ROOT', '{')
+            result += res
+            result += '}\n'
+        else:
+            result += res
+
         return result
 
     @register_output_format('json')
     def output_type_json(self, packages):
-        result = '{\n'
-        n = len(packages)
-        for i, _pkg in enumerate(packages.values()):
-            if _pkg:
-                _pkg_name, _pkg_path = _pkg.get_name_and_path()
-                comma = ',' if i < n - 1 else ''
-                result += "\t\"{}\": \"{}\"{}\n".format(self.get_var_name(_pkg_name), _pkg_path, comma)
-
-        result += '}\n'
+        dict_or_list = self.output_type_module(packages)
+        if self._config['root']:
+            dict_or_list = {
+                self._config['root']: dict_or_list
+            }
+        # TODO: Find a proper way to avoid double backslashes in path only (or not?)
+        result = json.dumps(dict_or_list, indent=True)  # .replace('\\\\', '\\')
         return result
