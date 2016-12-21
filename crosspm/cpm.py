@@ -6,7 +6,7 @@ CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)
 
 Usage:
     crosspm download [options]
-    crosspm lock [options]
+    crosspm lock [DEPS] [DEPSLOCK] [options]
     crosspm pack <OUT> <SOURCE> [options]
     crosspm cache [size | age | clear [hard]]
     crosspm -h | --help
@@ -22,6 +22,7 @@ Options:
     -l LOGFILE, --log=LOGFILE       File name for log output. Log level is '{log_default}' if set when verbose doesn't.
     -c FILE, --config=FILE          Path to configuration file.
     -o OPTIONS, --options OPTIONS   Extra options.
+    --deps-path=FILE                Path to file with locked dependencies [./{deps_default}]
     --depslock-path=FILE            Path to file with locked dependencies [./{deps_lock_default}]
     --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                   Output file name (required if --out_format is not stdout)
@@ -37,6 +38,7 @@ from crosspm import config
 from crosspm.helpers.archive import Archive
 from crosspm.helpers.config import (
     CROSSPM_DEPENDENCY_LOCK_FILENAME,
+    CROSSPM_DEPENDENCY_FILENAME,
     Config,
 )
 from crosspm.helpers.downloader import Downloader
@@ -64,6 +66,7 @@ class CrossPM(object):
         self._args = docopt(__doc__.format(version=config.__version__,
                                            verb_level=Config.get_verbosity_level(),
                                            log_default=Config.get_verbosity_level(0, True),
+                                           deps_default=CROSSPM_DEPENDENCY_FILENAME,
                                            deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
                                            out_format=Output.get_output_types(),
                                            out_format_default='stdout',
@@ -78,7 +81,14 @@ class CrossPM(object):
         self._ready = True
 
     def read_config(self):
-        self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], self._args['--depslock-path'])
+        _deps_path = ''
+        _depslock_path = self._args['--depslock-path']
+        if self._args['lock']:
+            if self._args['DEPS']:
+                _deps_path = self._args['DEPS']
+            if self._args['DEPSLOCK']:
+                _depslock_path = self._args['DEPSLOCK']
+        self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path, _deps_path)
         self._output = Output(self._config.output('result', None), self._config.name_column)
 
     def run(self):
@@ -102,7 +112,7 @@ class CrossPM(object):
                         errorcode, msg = self.do_run(self.cache)
         else:
             errorcode, msg = CROSSPM_ERRORCODE_WRONG_ARGS, self._args
-        return (errorcode, msg)
+        return errorcode, msg
 
     def do_run(self, func, *args, **kwargs):
         try:
@@ -113,7 +123,7 @@ class CrossPM(object):
                 self._log.critical(e.msg)
                 sys.exit(e.error_code)
             else:
-                return (e.error_code, e.msg)
+                return e.error_code, e.msg
 
         except CrosspmException as e:
             if self._throw_exceptions:
@@ -121,7 +131,7 @@ class CrossPM(object):
                 self._log.critical(e.msg)
                 sys.exit(e.error_code)
             else:
-                return (e.error_code, e.msg)
+                return e.error_code, e.msg
 
         except Exception as e:
             if self._throw_exceptions:
@@ -130,8 +140,8 @@ class CrossPM(object):
                 self._log.critical('Unknown error occurred!')
                 sys.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR)
             else:
-                return (CROSSPM_ERRORCODE_UNKNOWN_ERROR, 'Unknown error occurred!')
-        return (0, res)
+                return CROSSPM_ERRORCODE_UNKNOWN_ERROR, 'Unknown error occurred!'
+        return 0, res
 
     def check_common_args(self):
         if self._args['--output']:
@@ -234,7 +244,7 @@ class CrossPM(object):
         return ''
 
     def lock(self):
-        self._log.warning('This option is temporarily off.')
+
         cpm_locker = Locker(self._config)
         cpm_locker.lock_packages()
 

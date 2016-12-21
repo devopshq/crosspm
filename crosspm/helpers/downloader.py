@@ -13,14 +13,10 @@ def update_progress(msg, progress):
 
 
 class Downloader(object):
-    # _log = None
-    # _config = None
     _depslock_path = ''
-    # _package = None
     _packages = {}
     do_load = True
 
-    # def __init__(self, config, depslock_path='', do_load=True):
     def __init__(self, config, do_load=True):
         self._log = logging.getLogger('crosspm')
         self._config = config

@@ -36,6 +36,7 @@ class Adapter(BaseAdapter):
         _pkg_name_old = ""
         for _paths in parser.get_paths(list_or_file_path, source):
             _packages = []
+            _params_found = {}
             _pkg_name = _paths['params'][_pkg_name_col]
             if _pkg_name != _pkg_name_old:
                 _pkg_name_old = _pkg_name
@@ -50,9 +51,12 @@ class Adapter(BaseAdapter):
                         _mark = 'found'
                         if parser.validate_path(str(_repo_path), _paths['params']):
                             _mark = 'match'
-                            if parser.validate(_repo_path.properties, 'properties', _paths['params']):
+                            _valid, _params = parser.validate(_repo_path.properties, 'properties', _paths['params'],
+                                                              return_params=True)
+                            if _valid:
                                 _mark = 'valid'
                                 _packages += [_repo_path]
+                                _params_found[_repo_path] = {k: v for k, v in _params.items()}
                         self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
                 except RuntimeError as e:
                     try:
@@ -96,8 +100,10 @@ class Adapter(BaseAdapter):
                     #                                               'md5',
                     #                                               'sha1',
                     #                                               'size')}
+                    _params_tmp = _params_found.get(_packages[0]['path'], {})
+                    _params_tmp.update({k: v for k, v in _packages[0]['params'].items() if k not in _params_tmp})
                     _package = Package(_pkg_name, _packages[0]['path'], _paths['params'], downloader, self, parser,
-                                       _packages[0]['params'])  # , _stat)
+                                       _params_tmp)  # , _stat)
                     _mark = 'chosen'
                     self._log.info('  {}: {}'.format(_mark, str(_packages[0]['path'])))
 
@@ -134,9 +140,12 @@ class Adapter(BaseAdapter):
                     _package.download(downloader.packed_path)
 
                     _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.temp_path)
-
                     if _deps_file:
                         _package.find_dependencies(_deps_file)
+                    else:
+                        _deps_file = _package.get_file(self._config.deps_file_name, downloader.temp_path)
+                        if _deps_file:
+                            _package.find_dependencies(_deps_file)
 
         return _packages_found
 

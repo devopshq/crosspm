@@ -82,7 +82,7 @@ class Package(object):
                     if not res_str:
                         cur_str = self._params.get(k, '')
                     if not res_str:
-                            cur_str = '{}{} '.format(left, cur_str)
+                        cur_str = '{}{} '.format(left, cur_str)
                     cur_format = '{}'
                     if v > 0:
                         cur_format = '{:%s}' % (v if len(cur_str) <= v else v + len(left))
@@ -114,7 +114,7 @@ class Package(object):
             return self._name
         return self._name, self._unpacked_path
 
-    def get_params(self, param_list=None, get_path=False):
+    def get_params(self, param_list=None, get_path=False, merged=False):
         if param_list and isinstance(param_list, str):
             result = {param_list: self._name}
         elif param_list and isinstance(param_list, (list, tuple)):
@@ -125,6 +125,8 @@ class Package(object):
             result.update({k: v for k, v in self._params.items() if k not in result})
         if get_path:
             result['path'] = self._unpacked_path
+        if merged:
+            result.update(self._parser.merge_valued(result))
         return result
 
     def set_full_unique_name(self):

@@ -68,15 +68,28 @@ class Config(object):
     crosspm_cache_root = ''
     depslock_path = ''
 
-    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path=''):
+    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path=''):
         self._log = logging.getLogger('crosspm')
         self.init_env_config_path()
 
         cpm_conf_name = ''
+        if deps_path:
+            deps_path = deps_path.strip().strip('"').strip("'")
+            self.deps_path = os.path.realpath(os.path.expanduser(deps_path))
+            if not cpm_conf_name:
+                cpm_conf_name = self.get_cpm_conf_name(deps_path)
+            if os.path.isfile(deps_path):
+                config_path_tmp = os.path.dirname(deps_path)
+            else:
+                config_path_tmp = deps_path
+            if config_path_tmp not in DEFAULT_CONFIG_PATH:
+                DEFAULT_CONFIG_PATH.append(config_path_tmp)
+
         if depslock_path:
             depslock_path = depslock_path.strip().strip('"').strip("'")
             self.depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
-            cpm_conf_name = self.get_cpm_conf_name()
+            if not cpm_conf_name:
+                cpm_conf_name = self.get_cpm_conf_name(depslock_path)
             if os.path.isfile(depslock_path):
                 config_path_tmp = os.path.dirname(depslock_path)
             else:
@@ -110,11 +123,13 @@ class Config(object):
         self.cache = Cache(self, self.cache)
         # self._fails = {}
 
-    def get_cpm_conf_name(self):
+    def get_cpm_conf_name(self, deps_filename=''):
+        if not deps_filename:
+            deps_filename = self.depslock_path
         result = ''
-        if os.path.isfile(self.depslock_path):
+        if os.path.isfile(deps_filename):
             try:
-                with open(self.depslock_path, 'r') as f:
+                with open(deps_filename, 'r') as f:
                     for line in f:
                         line = line.strip()
                         if line.startswith('#'):
@@ -614,6 +629,9 @@ class Config(object):
 
     def get_column_name(self, i):
         return self._columns[i] if len(self._columns) - 1 >= i else None
+
+    def get_columns(self):
+        return self._columns
 
     def complete_params(self, _vars):
         _vars.update({k: v for k, v in self._not_columns.items() if k not in _vars})

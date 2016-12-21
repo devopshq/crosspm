@@ -353,26 +353,28 @@ class Parser(object):
                 break
         return _result
 
-    def validate(self, value, rule_name, params):
+    def validate(self, value, rule_name, params, return_params=False):
         if rule_name not in self._rules:
-            return True
+            return (True, {}) if return_params else True
             # raise CrosspmException(
             #     CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
             #     'Parser rule for [{}] not found in config.'.format(rule_name)
             # )
         if len(self._rules[rule_name]) == 0:
-            return True  # len(value) == 0
+            return (True, {}) if return_params else True
         if self._rules[rule_name] is None:
-            return True
+            return (True, {}) if return_params else True
         _res = True
+        _res_params = {}
         # _dirty = self._rules[rule_name].format(**params)
-        _all_dirties = self.fill_rule(rule_name, params)
+        _all_dirties = self.fill_rule(rule_name, params, return_params=True)
         for _dirties in _all_dirties:
             _res_sub = False
-            for _dirty in _dirties:
+            _res_sub_params = {}
+            for _dirt in _dirties:
                 _res_var = False
                 # TODO: Use split_with_regexp() instead
-                _dirty = [x.split(']') for x in _dirty.split('[')]
+                _dirty = [x.split(']') for x in _dirt['var'].split('[')]
                 _dirty = self.list_flatter(_dirty)
                 _variants = self.get_variants(_dirty, [])
                 if type(value) is str:
@@ -395,8 +397,8 @@ class Parser(object):
                                 elif type(_tmp_val) not in [list, tuple, dict]:
                                     raise CrosspmException(
                                         CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
-                                        'Parser rule for [{}] not able to process [{}] data type.'.format(rule_name,
-                                                                                                          type(_tmp_val))
+                                        'Parser rule for [{}] not able to process [{}] data type.'.format(
+                                            rule_name, type(_tmp_val))
                                     )
                                 if len(fnmatch.filter(_tmp_val, _tmp[1])) > 0:
                                     _res_var = True
@@ -411,9 +413,13 @@ class Parser(object):
                     )
                 _res_sub = _res_sub or _res_var
                 if _res_sub:
+                    _res_sub_params = _dirt['params']
                     break
             _res = _res and _res_sub
-        return _res
+            if _res:
+                _res_params.update(_res_sub_params)
+        return (_res, _res_params) if return_params else _res
+
 
     def iter_matched_values(self, column_name, value):
         _values = self._config.get_values(column_name)
@@ -463,7 +469,7 @@ class Parser(object):
 
         return _match
 
-    def fill_rule(self, rule_name, params):
+    def fill_rule(self, rule_name, params, return_params=False):
         def fill_rule_inner(_cols, _params_inner, _pars=None):
             if _pars is None:
                 _pars = {}
@@ -502,12 +508,27 @@ class Parser(object):
 
             for _par in fill_rule_inner(_columns, []):
                 _params.update(_par)
-                _res_part += [self._rules[rule_name][z].format(**_params)]
+                _var = self._rules[rule_name][z].format(**_params)
+                if return_params:
+                    _res_part += [{'var': _var, 'params': {k: v for k, v in _par.items()}}]
+                else:
+                    _res_part += [_var]
 
             if len(_res_part) == 0:
-                _res_part = [self._rules[rule_name][z].format(**_params)]
+                _var = self._rules[rule_name][z].format(**_params)
+                if return_params:
+                    _res_part += [{'var': _var, 'params': {}}]
+                else:
+                    _res_part += [_var]
             _res += [_res_part]
         return _res
+
+    def merge_valued(self, params):
+        result = {}
+        for k, v in self._config.iter_valued_columns2(params.keys()):
+            if not v:
+                result[k] = self.merge_with_mask(k, params[k])
+        return result
 
     def get_paths(self, list_or_file_path, source):
         if 'path' not in self._rules:
