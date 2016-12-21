@@ -4,7 +4,7 @@ from crosspm import CrossPM
 import sys
 
 argv = 'download -c "Z:\\home\\positive\\crosspm\\test\\test14\\crosspm.yaml" --depslock-path="Z:\\home\\positive\\crosspm\\test\\test14\\dependencies.txt" --no-fails'
-err, res = CrossPM(argv, return_result=True).run()
+err, res = CrossPM(argv, return_result='Tree').run()
 if err == 0:  # Если не возникло других ошибок
     sys.stderr.write("\nCheck for multiple versions:\n\n")
     versions = {}
