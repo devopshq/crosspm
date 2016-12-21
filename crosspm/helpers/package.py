@@ -9,7 +9,7 @@ from crosspm.helpers.exceptions import *
 class Package(object):
     _packed_path = ''
     _unpacked_path = ''
-    _packages = {}
+    packages = {}
     _raw = []
     _root = False
     _params_found = {}
@@ -51,7 +51,7 @@ class Package(object):
 
     def find_dependencies(self, depslock_file_path):
         self._raw = [x for x in self._parser.iter_packages_params(depslock_file_path)]
-        self._packages = self._downloader.get_packages(self._raw)
+        self.packages = self._downloader.get_packages(self._raw)
 
     def unpack(self, dest_path='', force=False):
         if self._downloader.solid(self):
@@ -100,7 +100,7 @@ class Package(object):
                 _sign = '-'
         _left = '{}{}'.format(' ' * 4 * level, _sign)
         do_print(_left)
-        for _pkg_name, _pkg in self._packages.items():
+        for _pkg_name, _pkg in self.packages.items():
             if not _pkg:
                 _left = '{}-'.format(' ' * 4 * (level + 1))
                 self._log.info('{}{}'.format(_left, _pkg_name))

@@ -238,8 +238,8 @@ class CrossPM(object):
             )
         if do_load:
             if self._return_result:
-                if str(self._return_result).lower() == 'tree':
-                    return self._output.output_type_module(packages)
+                if str(self._return_result).lower() == 'raw':
+                    return cpm_downloader.get_raw_packages()
                 else:
                     return self._output.output_type_module(packages)
             else:

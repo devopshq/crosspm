@@ -118,3 +118,6 @@ class Downloader(object):
             self._packages[pkg_name] = package
 
         return _added, self._packages[pkg_name]
+
+    def get_raw_packages(self):
+        return self._root_package.packages
