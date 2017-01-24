@@ -263,3 +263,21 @@ class Cache(object):
         self._log.info('     other: {}'.format(datetime.fromtimestamp(total['other']['time'])))
         self._log.info('---------------------------')
         self._log.info('    oldest: {}'.format(datetime.fromtimestamp(oldest)))
+
+    def path_packed(self, package):
+        # TODO: Process path template with package parameters
+        return 'path_to_packed_file'
+
+    def path_unpacked(self, package):
+        # TODO: Process path template with package parameters
+        return 'path_to_unpacked_files_dir'
+
+    def exists_packed(self, package):
+        # TODO: Check if file exists and size and time match
+        path = self.path_packed(package)
+        return True
+
+    def exists_unpacked(self, package, filename=None):
+        # TODO: Check if file exists and size and time match
+        path = self.path_unpacked(package)
+        return True
