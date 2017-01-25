@@ -38,6 +38,24 @@ class Cache(object):
         except:
             self._clear['days'] = 0
 
+        _unique = config.get_fails('unique', None)
+        self._storage = cache_data.get('storage', {'packed': '', 'unpacked': ''})
+        if not self._storage['packed']:
+            if _unique and isinstance(_unique, (list, tuple)):
+                self._storage['packed'] = '/'.join('{%s}' % x for x in _unique)
+                if self._storage['packed']:
+                    self._storage['packed'] += '/{filename}'
+
+        if not self._storage['packed']:
+            self._storage['packed'] = '{%s}/{filename}' % config.name_column
+
+        if not self._storage['unpacked']:
+            if _unique and isinstance(_unique, (list, tuple)):
+                self._storage['unpacked'] = '/'.join('{%s}' % x for x in _unique)
+
+        if not self._storage['unpacked']:
+            self._storage['unpacked'] = '{%s}' % config.name_column
+
     def str_to_size(self, size):
         _size = str(size).replace(' ', '').lower()
         try:
@@ -265,8 +283,9 @@ class Cache(object):
         self._log.info('    oldest: {}'.format(datetime.fromtimestamp(oldest)))
 
     def path_packed(self, package):
+        res = self._storage['packed'].format(**(package.get_params(merged=True)))
         # TODO: Process path template with package parameters
-        return 'path_to_packed_file'
+        return res
 
     def path_unpacked(self, package):
         # TODO: Process path template with package parameters
