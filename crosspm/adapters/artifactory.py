@@ -57,6 +57,7 @@ class Adapter(BaseAdapter):
                                 _mark = 'valid'
                                 _packages += [_repo_path]
                                 _params_found[_repo_path] = {k: v for k, v in _params.items()}
+                                _params_found[_repo_path]['filename'] = str(_repo_path)
                         self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
                 except RuntimeError as e:
                     try:
@@ -144,13 +145,15 @@ class Adapter(BaseAdapter):
                         _package.find_dependencies(_deps_file)
                     elif self._config.deps_file_name:
                         _deps_file = _package.get_file(self._config.deps_file_name, downloader.temp_path)
-                        if os.path.isfile(_deps_file):
+                        if _deps_file and os.path.isfile(_deps_file):
                             _package.find_dependencies(_deps_file)
 
         return _packages_found
 
-    def download_package(self, package, dest_path):
-        _dest_file = os.path.join(dest_path, package.name)
+    def download_package(self, package, dest_path, _dest_file=''):
+        # _dest_file = os.path.join(dest_path, package.name)
+        if not _dest_file:
+            _dest_file = self._config.cache.path_packed(package)
         _stat_attr = {'ctime': 'st_atime',
                       'mtime': 'st_mtime',
                       'size': 'st_size'}

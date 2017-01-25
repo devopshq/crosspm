@@ -31,11 +31,11 @@ class Package(object):
             self._params_found = params_found
         self.stat = stat
 
-    def download(self, dest_path, force=False):
-        if force or not self._unpacked_path:
+    def download(self, dest_path, force=False, dest_file=''):
+        if force or not self._packed_path:
             dest_path = os.path.realpath(os.path.join(dest_path, self._name))
             _packed_path = self._packed_path
-            self._packed_path, _not_cached = self._adapter.download_package(self._pkg, dest_path)
+            self._packed_path, _not_cached = self._adapter.download_package(self._pkg, dest_path, dest_file)
             if not _packed_path:
                 self._not_cached = _not_cached
         return self._packed_path
