@@ -290,12 +290,17 @@ class Cache(object):
         else:
             res = ''
         res = os.path.realpath(os.path.join(self.packed_path, res))
-        # TODO: Process path template with package parameters
         return res
 
-    def path_unpacked(self, package):
-        # TODO: Process path template with package parameters
-        return 'path_to_unpacked_files_dir'
+    def path_unpacked(self, package=None, params=None):
+        if params:
+            res = self._storage['unpacked'].format(**params)
+        elif package:
+            res = self._storage['unpacked'].format(**(package.get_params(merged=True)))
+        else:
+            res = ''
+        res = os.path.realpath(os.path.join(self.unpacked_path, res))
+        return res
 
     def exists_packed(self, package):
         # TODO: Check if file exists and size and time match
