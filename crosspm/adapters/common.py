@@ -15,6 +15,6 @@ class BaseAdapter(object):
         # Here must be function
         return None
 
-    def download_package(self, package, dest_path):
+    def download_package(self, package, dest_path, _dest_file):
         # Here must be function
         return None, False

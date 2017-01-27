@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
+import shutil
 from datetime import datetime
 import time
+
+import pathlib
+
 from crosspm.adapters.common import BaseAdapter
-from artifactory import ArtifactoryPath
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.package import Package
 import os
@@ -13,24 +16,77 @@ CHUNK_SIZE = 1024
 
 setup = {
     "name": [
-        "artifactory",
-        "jfrog-artifactory",
+        "files",
     ],
 }
 
 
+class PureFilesPath(pathlib.PurePath):
+    """
+    A class to work with Files paths that doesn't connect
+    to any server. I.e. it supports only basic path
+    operations.
+    """
+    _flavour = pathlib._posix_flavour
+    __slots__ = ()
+
+
+class FilesPath(pathlib.Path, PureFilesPath):
+    def glob(self, pattern):
+        return super(FilesPath, self).glob(pattern)
+
+    def rglob(self, pattern):
+        return super(FilesPath, self).rglob(pattern)
+
+    def __new__(cls, *args, **kwargs):
+        obj = pathlib.Path.__new__(cls, *args, **kwargs)
+        return obj
+
+    @property
+    def properties(self):
+        """
+        Fetch artifact properties
+        """
+        return {}
+
+    @properties.setter
+    def properties(self, properties):
+        self.del_properties(self.properties, recursive=False)
+        self.set_properties(properties, recursive=False)
+
+    @properties.deleter
+    def properties(self):
+        self.del_properties(self.properties, recursive=False)
+
+    def set_properties(self, properties, recursive=True):
+        """
+        Adds new or modifies existing properties listed in properties
+
+        properties - is a dict which contains the property names and values to set.
+                     Property values can be a list or tuple to set multiple values
+                     for a key.
+        recursive  - on folders property attachment is recursive by default. It is
+                     possible to force recursive behavior.
+        """
+        if not properties:
+            return False
+
+        return True  # self._accessor.set_properties(self, properties, recursive)
+
+    def del_properties(self, properties, recursive=None):
+        """
+        Delete properties listed in properties
+
+        properties - iterable contains the property names to delete. If it is an
+                     str it will be casted to tuple.
+        recursive  - on folders property attachment is recursive by default. It is
+                     possible to force recursive behavior.
+        """
+        return True  # self._accessor.del_properties(self, properties, recursive)
+
+
 class Adapter(BaseAdapter):
     def get_packages(self, source, parser, downloader, list_or_file_path):
-        _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
-        _art_auth = {}
-        if 'auth' in source.args:
-            if _auth_type == 'simple':
-                _art_auth['auth'] = tuple(source.args['auth'])
-            elif _auth_type == 'cert':
-                _art_auth['cert'] = os.path.realpath(os.path.expanduser(source.args['auth']))
-        if 'verify' in source.args:
-            _art_auth['verify'] = source.args['verify'].lower in ['true', 'yes', '1']
-
         _pkg_name_col = self._config.name_column
         _packages_found = {}
         _pkg_name_old = ""
@@ -45,7 +101,7 @@ class Adapter(BaseAdapter):
             last_error = ''
             for _path in _paths['paths']:
                 _path_fixed, _path_pattern = parser.split_fixed_pattern(_path)
-                _repo_paths = ArtifactoryPath(_path_fixed, **_art_auth)
+                _repo_paths = FilesPath(_path_fixed)
                 try:
                     for _repo_path in _repo_paths.glob(_path_pattern):
                         _mark = 'found'
@@ -57,7 +113,7 @@ class Adapter(BaseAdapter):
                                 _mark = 'valid'
                                 _packages += [_repo_path]
                                 _params_found[_repo_path] = {k: v for k, v in _params.items()}
-                                _params_found[_repo_path]['filename'] = str(_repo_path)
+                                _params_found[_repo_path]['filename'] = _repo_path.name
                         self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
                 except RuntimeError as e:
                     try:
@@ -138,7 +194,9 @@ class Adapter(BaseAdapter):
 
             if _added and (_package is not None):
                 if downloader.do_load:
-                    _package.download(downloader.packed_path)
+                    _dest_file = self._config.cache.path_packed(package=_package)
+
+                    _package.download('file', dest_file=_dest_file)
 
                     _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.temp_path)
                     if _deps_file:
@@ -150,17 +208,17 @@ class Adapter(BaseAdapter):
 
         return _packages_found
 
-    def download_package(self, package, dest_path, _dest_file=''):
+    def download_package(self, package, dest_path, _dest_file):
         # _dest_file = os.path.join(dest_path, package.name)
-        if not _dest_file:
-            _dest_file = self._config.cache.path_packed(package)
+        # _dest_file = self._config.cache.path_packed(package)
+        dest_path = os.path.dirname(_dest_file)
         _stat_attr = {'ctime': 'st_atime',
                       'mtime': 'st_mtime',
                       'size': 'st_size'}
         _stat_pkg = package.stat()
-        _stat_pkg = {k: getattr(_stat_pkg, k, None) for k in _stat_attr.keys()}
-        _stat_pkg = {k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if type(v) is datetime else v for
-                     k, v in _stat_pkg.items()}
+        _stat_pkg = {k: getattr(_stat_pkg, v, None) for k, v in _stat_attr.items()}
+        # _stat_pkg = {k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if type(v) is datetime else v for
+        #              k, v in _stat_pkg.items()}
 
         _do_load = True
         if not os.path.exists(dest_path):
@@ -173,17 +231,18 @@ class Adapter(BaseAdapter):
 
         if _do_load:
             try:
-                # with package.open() as _src:
-                _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
-                _src.raise_for_status()
-
-                with open(_dest_file, 'wb+') as _dest:
-                    for chunk in _src.iter_content(CHUNK_SIZE):
-                        if chunk:  # filter out keep-alive new chunks
-                            _dest.write(chunk)
-                            _dest.flush()
-
-                _src.close()
+                shutil.copyfile(str(package), _dest_file)
+                # # with package.open() as _src:
+                # _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
+                # _src.raise_for_status()
+                #
+                # with open(_dest_file, 'wb+') as _dest:
+                #     for chunk in _src.iter_content(CHUNK_SIZE):
+                #         if chunk:  # filter out keep-alive new chunks
+                #             _dest.write(chunk)
+                #             _dest.flush()
+                #
+                # _src.close()
                 os.utime(_dest_file, (_stat_pkg['ctime'], _stat_pkg['mtime']))
 
             except Exception as e:
@@ -197,11 +256,11 @@ class Adapter(BaseAdapter):
         return _dest_file, _do_load
 
     def get_package_filename(self, package):
-        if isinstance(package, ArtifactoryPath):
+        if isinstance(package, FilesPath):
             return package.name
         return ''
 
     def get_package_path(self, package):
-        if isinstance(package, ArtifactoryPath):
+        if isinstance(package, FilesPath):
             return str(package)
         return ''

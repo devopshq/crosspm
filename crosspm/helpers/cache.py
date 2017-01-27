@@ -282,8 +282,14 @@ class Cache(object):
         self._log.info('---------------------------')
         self._log.info('    oldest: {}'.format(datetime.fromtimestamp(oldest)))
 
-    def path_packed(self, package):
-        res = self._storage['packed'].format(**(package.get_params(merged=True)))
+    def path_packed(self, package=None, params=None):
+        if params:
+            res = self._storage['packed'].format(**params)
+        elif package:
+            res = self._storage['packed'].format(**(package.get_params(merged=True)))
+        else:
+            res = ''
+        res = os.path.realpath(os.path.join(self.packed_path, res))
         # TODO: Process path template with package parameters
         return res
 
