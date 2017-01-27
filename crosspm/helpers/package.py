@@ -31,13 +31,22 @@ class Package(object):
             self._params_found = params_found
         self.stat = stat
 
-    def download(self, dest_path, force=False, dest_file=''):
-        if force or not self._packed_path:
-            dest_path = os.path.realpath(os.path.join(dest_path, self._name))
+    def download(self, force=False):
+        """
+        Download file containing this package.
+        :param force: Force download even if it seems file already exists
+        :return: Full path with filename of downloaded package file.
+        """
+        exists, dest_path = self._downloader.cache.exists_packed(package=self, pkg_path=self._packed_path)
+        if exists and not self._packed_path:
+            self._packed_path = dest_path
+
+        if force or not exists:
             _packed_path = self._packed_path
-            self._packed_path, _not_cached = self._adapter.download_package(self._pkg, dest_path, dest_file)
+            self._packed_path = self._adapter.download_package(self._pkg, dest_path)
             if not _packed_path:
-                self._not_cached = _not_cached
+                self._not_cached = True
+
         return self._packed_path
 
     def get_file(self, file_name, temp_path=None):

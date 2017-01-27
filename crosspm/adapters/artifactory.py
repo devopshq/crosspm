@@ -57,7 +57,7 @@ class Adapter(BaseAdapter):
                                 _mark = 'valid'
                                 _packages += [_repo_path]
                                 _params_found[_repo_path] = {k: v for k, v in _params.items()}
-                                _params_found[_repo_path]['filename'] = str(_repo_path)
+                                _params_found[_repo_path]['filename'] = str(_repo_path.name)
                         self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
                 except RuntimeError as e:
                     try:
@@ -65,13 +65,13 @@ class Adapter(BaseAdapter):
                     except:
                         err = {}
                     if isinstance(err, dict):
-                        # TODO: Check errors
-                        # e.args[0] = '''{
-                        #                   "errors" : [ {
+                        # Check errors
+                        # :e.args[0]: {
+                        #                 "errors" : [ {
                         #                     "status" : 404,
                         #                     "message" : "Not Found"
-                        #                   } ]
-                        #                 }'''
+                        #                  } ]
+                        #             }
                         for error in err.get('errors', []):
                             err_status = error.get('status', -1)
                             err_msg = error.get('message', '')
@@ -94,22 +94,16 @@ class Adapter(BaseAdapter):
                     _packages = [_packages]
 
                 if len(_packages) == 1:
-                    # one package found: ok!
-                    # _stat = _packages[0]['path'].stat()
-                    # _stat = {k: getattr(_stat, k, None) for k in ('ctime',
-                    #                                               'mtime',
-                    #                                               'md5',
-                    #                                               'sha1',
-                    #                                               'size')}
+                    _stat_pkg = self.pkg_stat(_packages[0]['path'])
+
                     _params_tmp = _params_found.get(_packages[0]['path'], {})
                     _params_tmp.update({k: v for k, v in _packages[0]['params'].items() if k not in _params_tmp})
                     _package = Package(_pkg_name, _packages[0]['path'], _paths['params'], downloader, self, parser,
-                                       _params_tmp)  # , _stat)
+                                       _params_tmp, _stat_pkg)
                     _mark = 'chosen'
                     self._log.info('  {}: {}'.format(_mark, str(_packages[0]['path'])))
 
                 elif len(_packages) > 1:
-                    # TODO: multiple packages found: wtf?!
                     raise CrosspmException(
                         CROSSPM_ERRORCODE_MULTIPLE_DEPS,
                         'Multiple instances found for package [{}] not found.'.format(_pkg_name)
@@ -120,11 +114,7 @@ class Adapter(BaseAdapter):
             else:
                 # Package not found: may be error, but it could be in other source.
                 pass
-                # _pkg_name = self._config.get_column_name(0)
-                # raise CrosspmException(
-                #     CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
-                #     'Package [{}] not found.'.format(_pkg_name)
-                # )
+
             if (_package is not None) or (not self._config.no_fails):
                 _added, _package = downloader.add_package(_pkg_name, _package)
             else:
@@ -138,63 +128,62 @@ class Adapter(BaseAdapter):
 
             if _added and (_package is not None):
                 if downloader.do_load:
-                    _package.download(downloader.packed_path)
+                    _package.download()
 
-                    _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.temp_path)
+                    _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.cache.temp_path)
                     if _deps_file:
                         _package.find_dependencies(_deps_file)
                     elif self._config.deps_file_name:
-                        _deps_file = _package.get_file(self._config.deps_file_name, downloader.temp_path)
+                        _deps_file = _package.get_file(self._config.deps_file_name, downloader.cache.temp_path)
                         if _deps_file and os.path.isfile(_deps_file):
                             _package.find_dependencies(_deps_file)
 
         return _packages_found
 
-    def download_package(self, package, dest_path, _dest_file=''):
-        # _dest_file = os.path.join(dest_path, package.name)
-        if not _dest_file:
-            _dest_file = self._config.cache.path_packed(package)
+    def pkg_stat(self, package):
         _stat_attr = {'ctime': 'st_atime',
                       'mtime': 'st_mtime',
                       'size': 'st_size'}
         _stat_pkg = package.stat()
         _stat_pkg = {k: getattr(_stat_pkg, k, None) for k in _stat_attr.keys()}
-        _stat_pkg = {k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if type(v) is datetime else v for
-                     k, v in _stat_pkg.items()}
+        _stat_pkg = {
+            k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if type(v) is datetime else v
+            for k, v in _stat_pkg.items()
+            }
+        return _stat_pkg
 
-        _do_load = True
-        if not os.path.exists(dest_path):
-            os.makedirs(dest_path)
-        elif os.path.exists(_dest_file):
-            _stat_file = os.stat(_dest_file)
-            _do_load = any(_stat_pkg[k] != getattr(_stat_file, v, -999) for k, v in _stat_attr.items())
-            if _do_load:
-                os.remove(_dest_file)
+    def download_package(self, package, dest_path):
+        dest_dir = os.path.dirname(dest_path)
 
-        if _do_load:
-            try:
-                # with package.open() as _src:
-                _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
-                _src.raise_for_status()
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+        elif os.path.exists(dest_path):
+            os.remove(dest_path)
 
-                with open(_dest_file, 'wb+') as _dest:
-                    for chunk in _src.iter_content(CHUNK_SIZE):
-                        if chunk:  # filter out keep-alive new chunks
-                            _dest.write(chunk)
-                            _dest.flush()
+        try:
+            _stat_pkg = self.pkg_stat(package)
+            # with package.open() as _src:
+            _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
+            _src.raise_for_status()
 
-                _src.close()
-                os.utime(_dest_file, (_stat_pkg['ctime'], _stat_pkg['mtime']))
+            with open(dest_path, 'wb+') as _dest:
+                for chunk in _src.iter_content(CHUNK_SIZE):
+                    if chunk:  # filter out keep-alive new chunks
+                        _dest.write(chunk)
+                        _dest.flush()
 
-            except Exception as e:
-                code = CROSSPM_ERRORCODE_SERVER_CONNECT_ERROR
-                msg = 'FAILED to download package {} at url: [{}]'.format(
-                    package.name,
-                    str(package),
-                )
-                raise CrosspmException(code, msg) from e
+            _src.close()
+            os.utime(dest_path, (_stat_pkg['ctime'], _stat_pkg['mtime']))
 
-        return _dest_file, _do_load
+        except Exception as e:
+            code = CROSSPM_ERRORCODE_SERVER_CONNECT_ERROR
+            msg = 'FAILED to download package {} at url: [{}]'.format(
+                package.name,
+                str(package),
+            )
+            raise CrosspmException(code, msg) from e
+
+        return dest_path
 
     def get_package_filename(self, package):
         if isinstance(package, ArtifactoryPath):

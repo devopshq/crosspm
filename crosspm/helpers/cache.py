@@ -302,10 +302,19 @@ class Cache(object):
         res = os.path.realpath(os.path.join(self.unpacked_path, res))
         return res
 
-    def exists_packed(self, package):
-        # TODO: Check if file exists and size and time match
-        path = self.path_packed(package)
-        return True
+    def exists_packed(self, package=None, params=None, pkg_path=''):
+        # Check if file exists and size and time match
+        path = self.path_packed(package, params) if not pkg_path else pkg_path
+        res = os.path.exists(path)
+        if res and package:
+            _stat_attr = {'ctime': 'st_atime',
+                          'mtime': 'st_mtime',
+                          'size': 'st_size'}
+            _stat_file = os.stat(path)
+            if any(package.stat[k] != getattr(_stat_file, v, -999) for k, v in _stat_attr.items()):
+                res = False
+
+        return res, path
 
     def exists_unpacked(self, package, filename=None):
         # TODO: Check if file exists and size and time match

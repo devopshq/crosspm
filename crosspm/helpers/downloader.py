@@ -20,17 +20,18 @@ class Downloader(object):
     def __init__(self, config, do_load=True):
         self._log = logging.getLogger('crosspm')
         self._config = config
+        self.cache = config.cache
         self.solid = config.solid
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
                                      config.get_parser('common'))
 
-        self._cache_path = config.crosspm_cache_root
-        if not os.path.exists(self._cache_path):
-            os.makedirs(self._cache_path)
+        # self._cache_path = config.crosspm_cache_root
+        # if not os.path.exists(self._cache_path):
+        #     os.makedirs(self._cache_path)
 
-        self.packed_path = os.path.realpath(os.path.join(self._cache_path, 'archive'))
-        self.unpacked_path = os.path.realpath(os.path.join(self._cache_path, 'cache'))
-        self.temp_path = os.path.realpath(os.path.join(self._cache_path, 'tmp'))
+        # self.packed_path = os.path.realpath(os.path.join(self._cache_path, 'archive'))
+        # self.unpacked_path = os.path.realpath(os.path.join(self._cache_path, 'cache'))
+        # self.temp_path = os.path.realpath(os.path.join(self._cache_path, 'tmp'))
 
         if not config.depslock_path:
             config.depslock_path = \
@@ -84,8 +85,8 @@ class Downloader(object):
             total = len(self._packages)
             for i, _pkg in enumerate(self._packages.values()):
                 update_progress('Download/Unpack:', float(i) / float(total) * 100.0)
-                if _pkg.download(self.packed_path):
-                    _pkg.unpack(self.unpacked_path)
+                if _pkg.download():  # self.packed_path):
+                    _pkg.unpack()  # self.unpacked_path)
 
             update_progress('Download/Unpack:', 100)
             print_stdout('')

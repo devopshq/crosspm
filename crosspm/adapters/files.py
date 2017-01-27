@@ -196,7 +196,7 @@ class Adapter(BaseAdapter):
                 if downloader.do_load:
                     _dest_file = self._config.cache.path_packed(package=_package)
 
-                    _package.download('file', dest_file=_dest_file)
+                    _package.download()
 
                     _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.temp_path)
                     if _deps_file:
@@ -208,10 +208,10 @@ class Adapter(BaseAdapter):
 
         return _packages_found
 
-    def download_package(self, package, dest_path, _dest_file):
+    def download_package(self, package, dest_path):
         # _dest_file = os.path.join(dest_path, package.name)
         # _dest_file = self._config.cache.path_packed(package)
-        dest_path = os.path.dirname(_dest_file)
+        dest_dir = os.path.dirname(dest_path)
         _stat_attr = {'ctime': 'st_atime',
                       'mtime': 'st_mtime',
                       'size': 'st_size'}
@@ -221,17 +221,17 @@ class Adapter(BaseAdapter):
         #              k, v in _stat_pkg.items()}
 
         _do_load = True
-        if not os.path.exists(dest_path):
-            os.makedirs(dest_path)
-        elif os.path.exists(_dest_file):
-            _stat_file = os.stat(_dest_file)
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+        elif os.path.exists(dest_path):
+            _stat_file = os.stat(dest_path)
             _do_load = any(_stat_pkg[k] != getattr(_stat_file, v, -999) for k, v in _stat_attr.items())
             if _do_load:
-                os.remove(_dest_file)
+                os.remove(dest_path)
 
         if _do_load:
             try:
-                shutil.copyfile(str(package), _dest_file)
+                shutil.copyfile(str(package), dest_path)
                 # # with package.open() as _src:
                 # _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
                 # _src.raise_for_status()
@@ -243,7 +243,7 @@ class Adapter(BaseAdapter):
                 #             _dest.flush()
                 #
                 # _src.close()
-                os.utime(_dest_file, (_stat_pkg['ctime'], _stat_pkg['mtime']))
+                os.utime(dest_path, (_stat_pkg['ctime'], _stat_pkg['mtime']))
 
             except Exception as e:
                 code = CROSSPM_ERRORCODE_SERVER_CONNECT_ERROR
@@ -253,7 +253,7 @@ class Adapter(BaseAdapter):
                 )
                 raise CrosspmException(code, msg) from e
 
-        return _dest_file, _do_load
+        return dest_path, _do_load
 
     def get_package_filename(self, package):
         if isinstance(package, FilesPath):
