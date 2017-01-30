@@ -66,7 +66,13 @@ class Package(object):
         if self._downloader.solid(self):
             self._unpacked_path = self._packed_path
         else:
-            if not dest_path:
+            exists, dest_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
+            if exists and not self._unpacked_path:
+                self._unpacked_path = dest_path
+
+            if force or not exists:
+
+            # if not dest_path:
                 dest_path = self._downloader.unpacked_path
             temp_path = os.path.realpath(os.path.join(dest_path, self._name))
             _exists = os.path.exists(temp_path)
