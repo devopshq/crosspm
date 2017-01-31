@@ -316,7 +316,9 @@ class Cache(object):
 
         return res, path
 
-    def exists_unpacked(self, package, filename=None):
+    def exists_unpacked(self, package, filename=None, params=None, pkg_path=''):
         # TODO: Check if file exists and size and time match
-        path = self.path_unpacked(package)
-        return True
+        path = self.path_unpacked(package, params) if not pkg_path else pkg_path
+        res = os.path.exists(path)
+
+        return res, path

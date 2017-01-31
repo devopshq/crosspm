@@ -49,14 +49,16 @@ class Adapter(BaseAdapter):
                 try:
                     for _repo_path in _repo_paths.glob(_path_pattern):
                         _mark = 'found'
-                        if parser.validate_path(str(_repo_path), _paths['params']):
+                        _matched, _params = parser.validate_path(str(_repo_path), _paths['params'])
+                        if _matched:
+                            _params_found[_repo_path] = {k: v for k, v in _params.items()}
                             _mark = 'match'
                             _valid, _params = parser.validate(_repo_path.properties, 'properties', _paths['params'],
                                                               return_params=True)
                             if _valid:
                                 _mark = 'valid'
                                 _packages += [_repo_path]
-                                _params_found[_repo_path] = {k: v for k, v in _params.items()}
+                                _params_found[_repo_path].update({k: v for k, v in _params.items()})
                                 _params_found[_repo_path]['filename'] = str(_repo_path.name)
                         self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
                 except RuntimeError as e:
@@ -89,7 +91,7 @@ class Adapter(BaseAdapter):
 
             _package = None
             if _packages:
-                _packages = parser.filter_one(_packages, _paths['params'])
+                _packages = parser.filter_one(_packages, _paths['params'], _params_found)
                 if type(_packages) is dict:
                     _packages = [_packages]
 

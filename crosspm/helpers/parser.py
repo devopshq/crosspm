@@ -196,8 +196,10 @@ class Parser(object):
         return _res + _res_tmp
 
     def validate_by_mask(self, column, value, param):
+        _res_value = []
         if column not in self._columns:
             _res = True  # nothing to validate
+            _res_value = value
         elif type(param) not in [list, tuple]:
             _res = False
         else:
@@ -210,9 +212,12 @@ class Parser(object):
                         _tmp = str(_tmp)
                 if not self.validate_atom(_tmp, param[i]):
                     _res = False
+                    _res_value = []
                     break
+                else:
+                    _res_value.append(_tmp)
 
-        return _res
+        return _res, _res_value
 
     @staticmethod
     def validate_atom(value, text):
@@ -318,6 +323,7 @@ class Parser(object):
             _new_path = ''
             rule = self._rules[_rule_name][rule_number]
             rule_parsed = self.parse_value_template(rule)
+            _res_params = {}
             for x, _part in enumerate(rule_parsed):
                 for y, _subpart in enumerate(_part[0]):
                     if _subpart[1]:
@@ -329,7 +335,9 @@ class Parser(object):
                             for _value_item in iter_with_extras(_subpart[0], _value):
                                 for _atom_item in _atoms:
                                     _atom = _atom_item['atom']
-                                    if self.validate_by_mask(_subpart[0], _atom, _value_item):
+                                    _valid, _valid_value = self.validate_by_mask(_subpart[0], _atom, _value_item)
+                                    if _valid:
+                                        _res_params[_subpart[0]] = _valid_value
                                         _new_path += _atom
                                         _path = _atom_item['path']
                                         _match = True
@@ -337,9 +345,21 @@ class Parser(object):
                                 if _match:
                                     break
                             if not _match:
-                                return False
+                                return False, {}
                         else:
-                            if _value is not None:
+                            if _value is None:
+                                _match = False
+                                for _value_item in self._config.get_values(_subpart[0]):
+                                    _atom = _path[:len(_value_item)]
+                                    if fnmatch.fnmatch(_atom, _value_item):  # may be just comparing would be better
+                                        _res_params[_subpart[0]] = _atom
+                                        _new_path += _atom
+                                        _path = _path[len(_value_item):]
+                                        _match = True
+                                        break
+                                if not _match:
+                                    return False, {}
+                            else:
                                 # it's a plain value
                                 _plain = not any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
                                 if _plain:
@@ -349,22 +369,29 @@ class Parser(object):
                                     for _value_item in iter_with_extras(_subpart[0], _value):
                                         _atom = _path[:len(_value_item)]
                                         if fnmatch.fnmatch(_atom, _value_item):  # may be just comparing would be better
+                                            _res_params[_subpart[0]] = _atom
                                             _new_path += _atom
                                             _path = _path[len(_value_item):]
                                             _match = True
                                             break
                                     if not _match:
-                                        return False
+                                        return False, {}
                                 else:
-                                    _atom, _path = get_atom(x, y, _path)
+                                    _atoms = get_atom(x, y, _path, self._columns[_subpart[0]])
                                     _match = False
                                     for _value_item in iter_with_extras(_subpart[0], _value):
-                                        if self.validate_atom(_atom, _value_item):
-                                            _new_path += _atom
-                                            _match = True
+                                        for _atom_item in _atoms:
+                                            _atom = _atom_item['atom']
+                                            if self.validate_atom(_atom, _value_item):
+                                                _res_params[_subpart[0]] = _atom
+                                                _new_path += _atom
+                                                _path = _atom_item['path']
+                                                _match = True
+                                                break
+                                        if _match:
                                             break
                                     if not _match:
-                                        return False
+                                        return False, {}
 
                     else:
                         # just part of template
@@ -383,17 +410,20 @@ class Parser(object):
                                 break
 
                         if not _res:
-                            return False
-            return _res
+                            return False, {}
+            return _res, _res_params
 
         _result = False
+        _result_params = {}
         # rule = self._rules[_rule_name]
         # for _rule in self._rules[_rule_name]:
         for i in range(len(self._rules[_rule_name])):
-            if do_check(i, str(path)):
+            _ok, _params = do_check(i, str(path))
+            if _ok:
                 _result = True
+                _result_params.update({k: v for k, v in _params.items() if k not in _result_params})
                 break
-        return _result
+        return _result, _result_params
 
     def validate(self, value, rule_name, params, return_params=False):
         if rule_name not in self._rules:
@@ -686,85 +716,135 @@ class Parser(object):
         return _path_fixed, _path_pattern
 
     # TODO: optimize code merging duplicated parts
-    def filter_one(self, packages, params):
-        def get_all_masked_atoms(path):
-            def do_find_atoms(rule, _path):
-                def get_atom(_x, _y, _path0):
-                    _pos = -1
-                    if _y < len(_part[0]) - 1:
-                        _sym0 = _part[0][_y + 1][0]
-                        _pos = _path0.find(_sym0)
-                    elif _x < len(rule_parsed) - 1:
-                        if rule_parsed[_x + 1][1]:
-                            _tmp0 = [xx.strip() for xx in rule_parsed[_x + 1][0][0][0].split('|')]
-                        else:
-                            _tmp0 = [rule_parsed[_x + 1][0][0][0]]
-                        for _sym0 in _tmp0:
-                            _pos = _path0.find(_sym0)
-                            if _pos >= 0:
-                                break
-
-                    if _pos >= 0:
-                        _atom0 = _path0[:_pos]
-                        _path0 = _path0[_pos:]
-                    else:
-                        _atom0 = _path0
-                        _path0 = ''
-                    return _atom0, _path0
-
-                _atoms_found = {}
-                rule_parsed = self.parse_value_template(rule)
-                for x, _part in enumerate(rule_parsed):
-                    for y, _subpart in enumerate(_part[0]):
-                        if _subpart[1]:
-                            _value = params[_subpart[0]]
-                            if _subpart[0] in self._columns:
-                                # we have a mask to process
-                                if _subpart[0] not in _atoms_found:
-                                    _atom, _path = get_atom(x, y, _path)
-                                    _atom = self.parse_by_mask(_subpart[0], _atom, True)
-                                    _tmp_atom = []
-                                    for z in _atom:
-                                        if z[1] == 'int':
-                                            try:
-                                                _tmp_atom += [int(z[0])]
-                                            except:
-                                                _tmp_atom += [z[0]]
-                                        else:
-                                            _tmp_atom += [z[0]]
-
-                                    _atoms_found[_subpart[0]] = _tmp_atom
-                            else:
-                                # it's a plain value
-                                if _value is None:
-                                    _plain = False
-                                else:
-                                    _plain = not any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
-                                if _plain:
-                                    _path = _path[len(_value):]
-                                else:
-                                    # TODO: rewrite get_atom !!!
-                                    _atom, _path = get_atom(x, y, _path)
-                                    if _subpart[0] not in _atoms_found:
-                                        _atoms_found[_subpart[0]] = [_atom]
-                        else:
-                            # just part of template
-                            if _part[1]:
-                                # square brackets means this part can be one of values
-                                _tmp = [xx.strip() for xx in _subpart[0].split('|')]
-                            else:
-                                _tmp = [_subpart[0]]
-                            for _sym in _tmp:
-                                _atom = _path[:len(_sym)]
-                                if fnmatch.fnmatch(_atom, _sym):  # may be just comparing would be better
-                                    _path = _path[len(_sym):]
-                                    break
-                return _atoms_found
-
-            _atom_list = {}
-            for _rule in self._rules['path']:
-                _atom_list.update(do_find_atoms(_rule, str(path)))
-            return _atom_list
+    def filter_one(self, packages, params, params_found):
+        # def get_all_masked_atoms(path):
+        #     def do_find_atoms(rule, _path):
+        #         def get_symbol_in_mask(_sym1, _val_mask):
+        #             _count = 0
+        #             _count_ext = 0
+        #             if _val_mask and isinstance(_val_mask, (list, tuple)):
+        #                 for _xx in _val_mask:
+        #                     for _yy in _xx[0]:
+        #                         if not _yy[1]:
+        #                             if _xx[1]:
+        #                                 _count_ext += _yy[0].count(_sym1)
+        #                             else:
+        #                                 _count += _yy[0].count(_sym1)
+        #             return _count, _count_ext
+        #
+        #         def get_atom(_x, _y, _path0, _val_mask=None):
+        #             _pos = -1
+        #             if _y < len(_part[0]) - 1:
+        #                 _sym0 = _part[0][_y + 1][0]
+        #                 _sym_count, _sym_ext = get_symbol_in_mask(_sym0, _val_mask)
+        #                 _pos0 = -1
+        #                 for _xx in range(_sym_count + 1):
+        #                     _pos0 = _path0.find(_sym0, _pos0 + 1)
+        #                     if _pos0 < 0:
+        #                         break
+        #                 if _pos0 < 0 or _sym_ext == 0:
+        #                     _pos = _pos0
+        #                 else:
+        #                     _pos = [_pos0]
+        #                     for _xx in range(_sym_ext):
+        #                         _pos0 = _path0.find(_sym0, _pos0 + 1)
+        #                         if _pos0 < 0:
+        #                             _pos += [len(_path0)]
+        #                             break
+        #                         else:
+        #                             _pos += [_pos0]
+        #
+        #             elif _x < len(rule_parsed) - 1:
+        #                 if rule_parsed[_x + 1][1]:
+        #                     _tmp0 = [xx.strip() for xx in rule_parsed[_x + 1][0][0][0].split('|')]
+        #                 else:
+        #                     _tmp0 = [rule_parsed[_x + 1][0][0][0]]
+        #                 for _sym0 in _tmp0:
+        #                     _pos = _path0.find(_sym0)
+        #                     if _pos >= 0:
+        #                         break
+        #
+        #             if isinstance(_pos, int):
+        #                 if _pos >= 0:
+        #                     _atom0 = [{'atom': _path0[:_pos],
+        #                                'path': _path0[_pos:],
+        #                                }]
+        #                 else:
+        #                     _atom0 = [{'atom': _path0,
+        #                                'path0': '',
+        #                                }]
+        #             else:
+        #                 _atom0 = [{'atom': _path0[:_pos[_xx]], 'path': _path0[_pos[_xx]:]} for _xx in range(len(_pos))]
+        #
+        #             return _atom0
+        #
+        #         _atoms_found = {}
+        #         rule_parsed = self.parse_value_template(rule)
+        #         for x, _part in enumerate(rule_parsed):
+        #             for y, _subpart in enumerate(_part[0]):
+        #                 if _subpart[1]:
+        #                     _value = params[_subpart[0]]
+        #                     if _subpart[0] in self._columns:
+        #                         # we have a mask to process
+        #                         if _subpart[0] not in _atoms_found:
+        #                             _atoms = get_atom(x, y, _path, self._columns[_subpart[0]])
+        #                             for _atom_item in _atoms:
+        #                                 _atom = _atom_item['atom']
+        #                                 _path = _atom_item['path']
+        #
+        #                                 # _atom, _path = get_atom(x, y, _path)
+        #                                 _atom = self.parse_by_mask(_subpart[0], _atom, True)
+        #                                 _tmp_atom = []
+        #                                 for z in _atom:
+        #                                     if z[1] == 'int':
+        #                                         try:
+        #                                             _tmp_atom += [int(z[0])]
+        #                                         except:
+        #                                             _tmp_atom += [z[0]]
+        #                                     else:
+        #                                         _tmp_atom += [z[0]]
+        #
+        #                                 _atoms_found[_subpart[0]] = _tmp_atom
+        #                     else:
+        #                         # it's a plain value
+        #                         if _value is None:
+        #                             _plain = False
+        #                         else:
+        #                             _plain = not any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
+        #                         if _plain:
+        #                             _path = _path[len(_value):]
+        #                         else:
+        #                             _atoms = get_atom(x, y, _path, self._columns.get(_subpart[0], None))
+        #                             for _atom_item in _atoms:
+        #                                 _atom = _atom_item['atom']
+        #                                 _path = _atom_item['path']
+        #
+        #                                 # TODO: rewrite get_atom !!!
+        #                                 # _atom, _path = get_atom(x, y, _path)
+        #                                 if _subpart[0] not in _atoms_found:
+        #                                     _atoms_found[_subpart[0]] = [_atom]
+        #                 else:
+        #                     # just part of template
+        #                     if _part[1]:
+        #                         # square brackets means this part can be one of values
+        #                         _tmp = [xx.strip() for xx in _subpart[0].split('|')]
+        #                     else:
+        #                         _tmp = [_subpart[0]]
+        #                     for _sym in _tmp:
+        #                         _atom = _path[:len(_sym)]
+        #                         if fnmatch.fnmatch(_atom, _sym):  # may be just comparing would be better
+        #                             _path = _path[len(_sym):]
+        #                             break
+        #         return _atoms_found
+        #
+        #     _atom_list = {}
+        #     for _rule in self._rules['path']:
+        #         _atom_list.update(do_find_atoms(_rule, str(path)))
+        #     return _atom_list
+        def merge_params(path):
+            _res_params = {k: v for k, v in params_found.get(path, {}).items()}
+            _res_params.update({k: v for k, v in params.items() if k not in _res_params})
+            return _res_params
 
         def filter_fn(item):
             _result = True
@@ -814,7 +894,7 @@ class Parser(object):
 
             return _result
 
-        ext_packages = [{'params': get_all_masked_atoms(x), 'columns': self._columns, 'path': x} for x in packages]
+        ext_packages = [{'params': merge_params(x), 'columns': self._columns, 'path': x} for x in packages]
 
         # TODO: Filter by columns with parsing template (i.e. version)
         filtered_packages = list(filter(
