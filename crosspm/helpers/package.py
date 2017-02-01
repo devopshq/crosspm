@@ -74,14 +74,14 @@ class Package(object):
 
             # if not dest_path:
             #     dest_path = self._downloader.unpacked_path
-            temp_path = os.path.realpath(os.path.join(dest_path, self._name))
+            # temp_path = os.path.realpath(os.path.join(dest_path, self._name))
             # _exists = os.path.exists(temp_path)
             if not self._not_cached:
-                self._unpacked_path = temp_path if exists else ''
+                self._unpacked_path = dest_path if exists else ''  # temp_path if exists else ''
             if force or self._not_cached or (not exists):
                 try:
-                    Archive.extract(self._packed_path, temp_path)
-                    self._unpacked_path = temp_path
+                    Archive.extract(self._packed_path, dest_path)  # temp_path)
+                    self._unpacked_path = dest_path  # temp_path
                 except:
                     self._unpacked_path = ''
 

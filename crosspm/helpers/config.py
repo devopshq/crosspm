@@ -118,8 +118,8 @@ class Config(object):
         else:
             config_data.update(self.read_config_file())
 
-        self.parse_config(config_data, cmdline)
         self.no_fails = no_fails
+        self.parse_config(config_data, cmdline)
         self.cache = Cache(self, self.cache)
         # self._fails = {}
 
@@ -377,10 +377,6 @@ class Config(object):
         if 'values' in config_data:
             self._values = config_data['values']
 
-        # init output
-        if 'output' in config_data:
-            self._output = config_data['output']
-
         # init options
         if 'options' in config_data:
             self._options = config_data['options']
@@ -399,6 +395,10 @@ class Config(object):
         # init fails
         if 'fails' in config_data:
             self._fails = config_data['fails']
+
+        # init output
+        if 'output' in config_data:
+            self._output = config_data['output']
 
         # init common parameters
         _common = {}

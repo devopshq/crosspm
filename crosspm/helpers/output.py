@@ -61,28 +61,53 @@ def register_output_format(name):
 class Output(object):
     _config = {
         'root': {'PACKAGES_ROOT'},
-        'key': 'package',
+        # 'key': 'package',
         'value': 'path',
-        'columns': [
-            {
-                'column': 'package',
-                'value': '{:upper}_ROOT',
-            },
-            {
-                'column': 'path',
-                'value': '{}',
-            }
-        ]
+        # 'columns': [
+        #     {
+        #         'column': 'package',
+        #         'value': '{:upper}_ROOT',
+        #     },
+        #     {
+        #         'column': 'path',
+        #         'value': '{}',
+        #     }
+        # ]
     }
     _name_column = ''
     _columns = []
 
-    def __init__(self, config=None, name_column=''):
+    def __init__(self, data=None, name_column='', config=None):
         self._log = logging.getLogger('crosspm')
         if name_column:
             self._name_column = name_column
-        if config and isinstance(config, dict):
-            self._config = config
+            self._config['key'] = name_column
+        if data and isinstance(data, dict):
+            self._config = data
+        # self.init_config()
+        if 'columns' not in self._config:
+            self._config['columns'] = []
+
+        if len(self._config['columns']) == 0:
+            if config.no_fails:
+                param_list = [x for x in config.get_fails('unique', {})]
+                if self._name_column not in param_list:
+                    param_list.insert(0, self._name_column)
+                pkg_name = '/'.join('{%s:upper}' % x for x in param_list)
+            else:
+                pkg_name = '{:upper}_ROOT'
+
+            self._config['columns'] = [
+                {
+                    'column': self._name_column,
+                    'value': pkg_name,
+                },
+                {
+                    'column': 'path',
+                    'value': '{}',
+                },
+            ]
+
         self.init_config()
         if 'columns' not in self._config:
             self._config['columns'] = []
@@ -98,6 +123,9 @@ class Output(object):
         elif isinstance(root, (list, tuple)):
             self._config['type'] = LIST
             self._config['root'] = root[0] if len(root) > 0 else ''
+
+        key = self._config.get('key', '')
+        key0 = None
 
         if 'columns' in self._config:
             self._columns = []
@@ -115,6 +143,14 @@ class Output(object):
                             break
                 if item['column']:
                     self._columns.append(item['column'])
+                    if key == item['column']:
+                        key0 = ''
+                    elif key0 is None:
+                        key0 = item['column']
+
+        if key0:
+            key = key0
+        self._config['key'] = key
 
         if self._columns:
             if self._name_column and self._name_column not in self._columns:
