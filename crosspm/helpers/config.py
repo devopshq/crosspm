@@ -634,6 +634,7 @@ class Config(object):
         return self._columns
 
     def complete_params(self, _vars):
+        _vars.update({k: '' for k in self._columns if k not in _vars})
         _vars.update({k: v for k, v in self._not_columns.items() if k not in _vars})
         return _vars
 

@@ -46,6 +46,12 @@ class Package(object):
             self._packed_path = self._adapter.download_package(self._pkg, dest_path)
             if not _packed_path:
                 self._not_cached = True
+        else:
+            exists, dest_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
+            if exists and not self._unpacked_path:
+                self._unpacked_path = dest_path
+                self._not_cached = False
+
 
         return self._packed_path
 
@@ -82,6 +88,7 @@ class Package(object):
                 try:
                     Archive.extract(self._packed_path, dest_path)  # temp_path)
                     self._unpacked_path = dest_path  # temp_path
+                    self._not_cached = False
                 except:
                     self._unpacked_path = ''
 

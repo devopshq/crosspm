@@ -89,13 +89,14 @@ class Output(object):
             self._config['columns'] = []
 
         if len(self._config['columns']) == 0:
-            if config.no_fails:
-                param_list = [x for x in config.get_fails('unique', {})]
-                if self._name_column not in param_list:
-                    param_list.insert(0, self._name_column)
-                pkg_name = '/'.join('{%s:upper}' % x for x in param_list)
-            else:
-                pkg_name = '{:upper}_ROOT'
+            # TODO: implement this:
+            # if config.no_fails:
+            #     param_list = [x for x in config.get_fails('unique', {})]
+            #     if self._name_column not in param_list:
+            #         param_list.insert(0, self._name_column)
+            #     pkg_name = '/'.join('{%s:upper}' % x for x in param_list)
+            # else:
+            pkg_name = '{:upper}_ROOT'
 
             self._config['columns'] = [
                 {
@@ -254,8 +255,17 @@ class Output(object):
                     name = item['name'].format(OutFormat(item['column']))
                     value = _pkg_params.get(item['column'], '')
                     if not isinstance(value, (list, dict, tuple)):
-                        value = item['value'].format(
-                            OutFormat(value, (item['column'] == 'path') if esc_path else False))
+                        try:
+                            value = item['value'].format(
+                                OutFormat(value, (item['column'] == 'path') if esc_path else False))
+                        except:
+                            value = ''
+                    # TODO: implement this:
+                    # if not value:
+                    #     try:
+                    #         value = item['value'].format(OutFormat(_pkg.get_params('', True)))
+                    #     except:
+                    #         pass
                     _res_item[name] = value
                 result_list.append(_res_item)
 
