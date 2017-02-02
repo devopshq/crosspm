@@ -362,7 +362,8 @@ class Parser(object):
                             else:
                                 # it's a plain value
                                 _plain = not any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
-                                if _plain:
+                                # TODO: process masked values (ex. branch = release*)
+                                if _plain or (_subpart[0] not in self._columns):
                                     # _atom = _path[:len(_value)]
                                     # _rule = _part.format(**params)
                                     _match = False
