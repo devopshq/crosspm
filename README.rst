@@ -90,7 +90,7 @@ You'll see something like this::
 
   Usage:
       crosspm download [options]
-      crosspm promote [options]       * Temporarily off
+      crosspm lock [DEPS] [DEPSLOCK] [options]
       crosspm pack <OUT> <SOURCE> [options]
       crosspm cache [size | age | clear [hard]]
       crosspm -h | --help
@@ -106,13 +106,13 @@ You'll see something like this::
       -l LOGFILE, --log=LOGFILE       File name for log output. Log level is '{log_default}' if set when verbose doesn't.
       -c FILE, --config=FILE          Path to configuration file.
       -o OPTIONS, --options OPTIONS   Extra options.
-      --depslock-path=FILE            Path to file with locked dependencies [./{deps_lock_default}]
-      --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
+      --deps-path=FILE                Path to file with locked dependencies [./dependencies.txt]
+      --depslock-path=FILE            Path to file with locked dependencies [./dependencies.txt]
+      --out-format=TYPE               Output data format. Available formats:(['stdout', 'cmd', 'python', 'shell', 'json']) [default: stdout]
       --output=FILE                   Output file name (required if --out_format is not stdout)
-      --out-prefix=PREFIX             Prefix for output variable name [default: ] (no prefix at all)
       --no-fails                      Ignore fails config if possible.
 
-Full description for each parameter will be added here some day before NY 2017 :)
+Full description for each parameter will be added here some day before near Spring 2017 :)
 
 Examples
 --------

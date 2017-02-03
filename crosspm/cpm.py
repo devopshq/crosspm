@@ -26,7 +26,6 @@ Options:
     --depslock-path=FILE            Path to file with locked dependencies [./{deps_lock_default}]
     --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                   Output file name (required if --out_format is not stdout)
-    --out-prefix=PREFIX             Prefix for output variable name [default: ] (no prefix at all)
     --no-fails                      Ignore fails config if possible.
 
 """
@@ -214,7 +213,7 @@ class CrossPM(object):
             params = {
                 'out_format': ['--out-format', ''],
                 'output': ['--output', ''],
-                'out_prefix': ['--out-prefix', ''],
+                # 'out_prefix': ['--out-prefix', ''],
                 # 'depslock_path': ['--depslock-path', ''],
             }
 
