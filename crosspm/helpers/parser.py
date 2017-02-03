@@ -866,13 +866,14 @@ class Parser(object):
                                 if _column[1]:
                                     _var = _vars[i] if len(_vars) > i else ''
                                     _rule = _rules[i] if len(_rules) > i else ''
+                                    _is_var = (_var is not None) and (len(str(_var)) > 0)
                                     if _rule is None:  # '2.3.*'   - Include versions both with or without last part
                                         pass
-                                    elif _rule == '' and _var and len(
+                                    elif _rule == '' and _is_var and len(
                                             str(_var)) > 0:  # '2.3.*-'  - Do not include versions with last part
                                         _result = False
                                         break
-                                    elif _rule and not _var:  # '2.3.*-*' - Do not include versions without last part
+                                    elif _rule and not _is_var:  # '2.3.*-*' - Do not include versions without last part
                                         _result = False
                                         break
                         if not _result:
