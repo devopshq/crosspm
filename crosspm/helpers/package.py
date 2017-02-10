@@ -2,6 +2,8 @@
 import logging
 import os
 import fnmatch
+
+import shutil
 from crosspm.helpers.archive import Archive
 from crosspm.helpers.exceptions import *
 
@@ -41,17 +43,20 @@ class Package(object):
         if exists and not self._packed_path:
             self._packed_path = dest_path
 
+        unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
+
         if force or not exists:
-            _packed_path = self._packed_path
+            # _packed_path = self._packed_path
             self._packed_path = self._adapter.download_package(self._pkg, dest_path)
-            if not _packed_path:
-                self._not_cached = True
+            # if not _packed_path:
+            self._not_cached = True
         else:
-            exists, dest_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
-            if exists and not self._unpacked_path:
-                self._unpacked_path = dest_path
+            if unp_exists and not self._unpacked_path:
+                self._unpacked_path = unp_path
                 self._not_cached = False
 
+        if self._not_cached and unp_exists:
+            shutil.rmtree(unp_path, ignore_errors=True)
 
         return self._packed_path
 
@@ -85,12 +90,9 @@ class Package(object):
             if not self._not_cached:
                 self._unpacked_path = dest_path if exists else ''  # temp_path if exists else ''
             if force or self._not_cached or (not exists):
-                try:
-                    Archive.extract(self._packed_path, dest_path)  # temp_path)
-                    self._unpacked_path = dest_path  # temp_path
-                    self._not_cached = False
-                except:
-                    self._unpacked_path = ''
+                Archive.extract(self._packed_path, dest_path)  # temp_path)
+                self._unpacked_path = dest_path  # temp_path
+                self._not_cached = False
 
     def pack(self, src_path):
         Archive.create(self._packed_path, src_path)

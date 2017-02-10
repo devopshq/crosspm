@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 """
-CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)
-
 Usage:
     crosspm download [options]
     crosspm lock [DEPS] [DEPSLOCK] [options]
@@ -33,7 +31,7 @@ Options:
 import logging
 from docopt import docopt
 import os
-from crosspm import config
+from crosspm import version
 from crosspm.helpers.archive import Archive
 from crosspm.helpers.config import (
     CROSSPM_DEPENDENCY_LOCK_FILENAME,
@@ -44,6 +42,8 @@ from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.locker import Locker
 from crosspm.helpers.output import Output
 from crosspm.helpers.exceptions import *
+
+app_name = 'CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)'.format(version=version)
 
 
 class CrossPM(object):
@@ -62,8 +62,7 @@ class CrossPM(object):
             self._return_result = return_result
 
         self._log = logging.getLogger('crosspm')
-        self._args = docopt(__doc__.format(version=config.__version__,
-                                           verb_level=Config.get_verbosity_level(),
+        self._args = docopt(__doc__.format(verb_level=Config.get_verbosity_level(),
                                            log_default=Config.get_verbosity_level(0, True),
                                            deps_default=CROSSPM_DEPENDENCY_FILENAME,
                                            deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
@@ -71,12 +70,14 @@ class CrossPM(object):
                                            out_format_default='stdout',
                                            ),
                             argv=args,
-                            version=config.__version__)
+                            version=version)
 
         if type(self._args) is str:
             if self._throw_exceptions:
+                print(app_name)
                 print(self._args)
                 exit()
+
         self._ready = True
 
     def read_config(self):
@@ -87,11 +88,14 @@ class CrossPM(object):
                 _deps_path = self._args['DEPS']
             if self._args['DEPSLOCK']:
                 _depslock_path = self._args['DEPSLOCK']
-        self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path, _deps_path)
+        self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
+                              _deps_path)
         self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
 
     def run(self):
         if self._ready:
+            errorcode, msg = self.do_run(self.set_logging_level)
+            self._log.info(app_name)
             errorcode, msg = self.do_run(self.check_common_args)
             if errorcode == 0:
                 errorcode, msg = self.do_run(self.read_config)
@@ -151,8 +155,6 @@ class CrossPM(object):
                     '"%s" is a directory - can\'t write to it'
                 )
             self._args['--output'] = output
-
-        self.set_logging_level()
 
     def set_logging_level(self):
         level_str = self._args['--verbose'].strip().lower()

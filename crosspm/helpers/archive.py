@@ -47,31 +47,43 @@ class Archive(object):
         # remove temp dir
         if os.path.exists(dst_dir_path_tmp):
             shutil.rmtree(dst_dir_path_tmp)
+        if os.path.exists(dst_dir_path):
+            os.renames(dst_dir_path, dst_dir_path_tmp)
 
         if tarfile.is_tarfile(archive_name):
             with contextlib.closing(tarfile.TarFile.open(archive_name, 'r:*')) as tf:
                 if file_name:
-                    tf.extract(file_name, path=dst_dir_path_tmp)
+                    tf.extract(file_name, path=dst_dir_path)
                 else:
-                    tf.extractall(path=dst_dir_path_tmp)
+                    tf.extractall(path=dst_dir_path)
 
         elif zipfile.is_zipfile(archive_name):
             with contextlib.closing(zipfile.ZipFile(archive_name, mode='r')) as zf:
                 if file_name:
-                    zf.extract(file_name, path=dst_dir_path_tmp)
+                    zf.extract(file_name, path=dst_dir_path)
                 else:
-                    zf.extractall(path=dst_dir_path_tmp)
+                    zf.extractall(path=dst_dir_path)
 
         else:
+            tries = 0
+            while tries < 3:
+                tries += 1
+                try:
+                    if os.path.exists(dst_dir_path):
+                        shutil.rmtree(dst_dir_path)
+                    if os.path.exists(dst_dir_path_tmp):
+                        os.renames(dst_dir_path_tmp, dst_dir_path)
+                    tries = 3
+                except:
+                    pass
             raise CrosspmException(
                 CROSSPM_ERRORCODE_UNKNOWN_ARCHIVE,
                 'unknown archive type. File: [{}]'.format(archive_name),
             )
 
         # remove temp dir
-        if os.path.exists(dst_dir_path):
-            shutil.rmtree(dst_dir_path)
-        os.renames(dst_dir_path_tmp, dst_dir_path)
+        if os.path.exists(dst_dir_path_tmp):
+            shutil.rmtree(dst_dir_path_tmp)
 
     @staticmethod
     def extract_file(archive_name, dst_dir_path, file_name):

@@ -37,14 +37,19 @@ read -r DEVOPS_BUILD_RELEASE DEVOPS_BUILD_DEVELOP DEVOPS_BUILD_CI_INFO DEVOPS_BU
 #    cat README.rst | grep -q "$(get_url_travis_build_status $DEVOPS_BUILD_BRANCH)\$" || error "ERROR: file README.rst contains incorrect url to travis build status"
 #fi
 
+if bool "$DEVOPS_BUILD_RELEASE"; then
+
+    version_append_build_number "crosspm/config.py" "${DEVOPS_BUILD_NUMBER}"
+    DEVOPS_BUILD_VERSION="$(extract_version_from_file crosspm/config.py)"
+    echo "INFO:  ======== __version__ changed from '$DEVOPS_BUILD_VERSION_FROM_FILE' to '$DEVOPS_BUILD_VERSION'"
+
+fi
+
 if bool "$DEVOPS_BUILD_DEVELOP"; then
 
     version_append_build_number "crosspm/config.py" "dev${DEVOPS_BUILD_NUMBER}"
-
     DEVOPS_BUILD_VERSION="$(extract_version_from_file crosspm/config.py)"
-
     echo "INFO:  ======== __version__ changed from '$DEVOPS_BUILD_VERSION_FROM_FILE' to '$DEVOPS_BUILD_VERSION'"
-
     sed -i "s/Development\ Status\ ::\ 5\ -\ Production\/Stable/Development\ Status\ ::\ 4\ -\ Beta/g" ./setup.py
 
 fi
