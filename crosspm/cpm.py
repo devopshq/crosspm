@@ -62,13 +62,15 @@ class CrossPM(object):
             self._return_result = return_result
 
         self._log = logging.getLogger('crosspm')
-        self._args = docopt(__doc__.format(verb_level=Config.get_verbosity_level(),
-                                           log_default=Config.get_verbosity_level(0, True),
-                                           deps_default=CROSSPM_DEPENDENCY_FILENAME,
-                                           deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
-                                           out_format=Output.get_output_types(),
-                                           out_format_default='stdout',
-                                           ),
+        self._args = docopt('{}\n{}'.format(app_name,
+                                            __doc__.format(verb_level=Config.get_verbosity_level(),
+                                                           log_default=Config.get_verbosity_level(0, True),
+                                                           deps_default=CROSSPM_DEPENDENCY_FILENAME,
+                                                           deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
+                                                           out_format=Output.get_output_types(),
+                                                           out_format_default='stdout',
+                                                           ),
+                                            ),
                             argv=args,
                             version=version)
 
