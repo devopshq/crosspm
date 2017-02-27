@@ -640,7 +640,8 @@ class Parser(object):
 
     def get_variants(self, dirty, paths):
         if len(dirty) == 1:
-            paths.append(dirty[0])
+            if dirty[0] not in paths:
+                paths.append(dirty[0])
         else:
             for i, stub in enumerate(dirty):
                 if i % 2 != 0:
