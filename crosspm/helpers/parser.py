@@ -148,6 +148,7 @@ class Parser(object):
     def merge_with_mask(self, column, value):
         if column not in self._columns:
             if type(value) in [list, tuple]:
+                # TODO: Check for value is not None - if it is, raise "column value not set"
                 value = ''.join(value)
             return value  # nothing to parse
         if type(value) not in [list, tuple]:
@@ -362,19 +363,32 @@ class Parser(object):
                             else:
                                 # it's a plain value
                                 _plain = not any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
-                                # TODO: process masked values (ex. branch = release*)
+                                _mask = '*' in _value
                                 if _plain or (_subpart[0] not in self._columns):
-                                    # _atom = _path[:len(_value)]
-                                    # _rule = _part.format(**params)
                                     _match = False
-                                    for _value_item in iter_with_extras(_subpart[0], _value):
-                                        _atom = _path[:len(_value_item)]
-                                        if fnmatch.fnmatch(_atom, _value_item):  # may be just comparing would be better
-                                            _res_params[_subpart[0]] = _atom
-                                            _new_path += _atom
-                                            _path = _path[len(_value_item):]
-                                            _match = True
-                                            break
+                                    if _mask:
+                                        # process masked values (ex. branch = release*)
+                                        _atoms = get_atom(x, y, _path)
+                                        for _value_item in iter_with_extras(_subpart[0], _value):
+                                            for _atom_item in _atoms:
+                                                _atom = _atom_item['atom']
+                                                if self.validate_atom(_atom, _value_item):
+                                                    _res_params[_subpart[0]] = _atom
+                                                    _new_path += _atom
+                                                    _path = _atom_item['path']
+                                                    _match = True
+                                                    break
+                                            if _match:
+                                                break
+                                    else:
+                                        for _value_item in iter_with_extras(_subpart[0], _value):
+                                            _atom = _path[:len(_value_item)]
+                                            if fnmatch.fnmatch(_atom, _value_item):  # may be just comparing would be better
+                                                _res_params[_subpart[0]] = _atom
+                                                _new_path += _atom
+                                                _path = _path[len(_value_item):]
+                                                _match = True
+                                                break
                                     if not _match:
                                         return False, {}
                                 else:
