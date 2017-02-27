@@ -779,6 +779,24 @@ class Parser(object):
                 if _atom_name == '*':
                     _result += [_atoms_found[x] for x in _atoms_found if x not in self._sort]
                 else:
+                    _atom_item = _atoms_found.get(_atom_name, [])
+                    if isinstance(_atom_item, (list, tuple)):
+                        if _atom_name in self._columns:
+                            i = -1
+                            for _column in item['columns'][_atom_name]:
+                                for _sub_col in _column[0]:
+                                    if _sub_col[1]:
+                                        i += 1
+                                        if _sub_col[0] == 'int':
+                                            try:
+                                                _atom_item[i] = int(_atom_item[i])
+                                            except ValueError:
+                                                _atom_item[i] = 0
+                                        elif _sub_col[0] == 'str':
+                                            try:
+                                                _atom_item[i] = str(_atom_item[i])
+                                            except ValueError:
+                                                _atom_item[i] = ''
                     _result += [_atoms_found.get(_atom_name, [])]
 
             _result = [item for sublist in _result for item in sublist]
