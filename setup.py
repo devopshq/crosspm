@@ -42,6 +42,7 @@ setup(
     tests_require=[
         'pytest',
         'pytest-flask',
+        'pyyaml',
     ],
     install_requires=[
         'requests',
