@@ -64,9 +64,9 @@ python3 setup.py egg_info sdist --dist-dir "$DEVOPS_BUILD_DIR" bdist_wheel --dis
 echo "INFO:  ======== content of build dir"
 ls -l "$DEVOPS_BUILD_DIR"
 
-echo "INFO:  ======== testing..."
+# echo "INFO:  ======== testing..."
 
-python3 setup.py test
+# python3 setup.py test
 
 
 if ! bool "$DEVOPS_BUILD_CI_INFO"; then
