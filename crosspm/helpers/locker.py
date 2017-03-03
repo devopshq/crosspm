@@ -15,7 +15,8 @@ class Locker(Downloader):
     def __init__(self, config):
         super(Locker, self).__init__(config, False)
 
-        config.deps_path = config.deps_file_name if config.deps_file_name else CROSSPM_DEPENDENCY_FILENAME
+        if not getattr(config, 'deps_path', ''):
+            config.deps_path = config.deps_file_name or CROSSPM_DEPENDENCY_FILENAME
         deps_path = config.deps_path.strip().strip('"').strip("'")
         self._deps_path = os.path.realpath(os.path.expanduser(deps_path))
 

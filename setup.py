@@ -36,7 +36,6 @@ setup(
         'crosspm.adapters',
     ],
     setup_requires=[
-        'pytest-runner',
         'wheel',
     ],
     tests_require=[

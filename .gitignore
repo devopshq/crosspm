@@ -6,5 +6,5 @@ dist/
 tests/pt/
 docs/_build/
 /tests_old/
-/.cache/
-/.eggs/
+.cache
+.eggs

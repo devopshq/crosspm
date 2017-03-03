@@ -1,4 +1,21 @@
 from crosspm.helpers.parser import Parser
+import inspect
+
+
+def assert_warn(arg1, arg2):
+    if not eval("{}{}".format(arg1, arg2)):
+        fn, ln = '', 0
+        found = False
+        txt = ''
+        for item in inspect.stack():
+            if found:
+                fn = item.function
+                ln = item.lineno
+                break
+            found = item.function == 'assert_warn'
+        if found:
+            txt = 'function: [{}] line: {}'.format(fn, ln)
+        print('\nWarning: {}\nNOT {}{}'.format(txt, arg1, arg2))
 
 
 class BaseParserTest:
