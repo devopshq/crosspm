@@ -775,7 +775,7 @@ class Parser(object):
 
         def sorted_fn(item):
             _result = []
-            _atoms_found = item['params']
+            _atoms_found = {k: v for k, v in item['params'].items()}
             for _atom_name in self._sort:
                 if _atom_name == '*':
                     _result += [_atoms_found[x] for x in _atoms_found if x not in self._sort]
