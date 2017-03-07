@@ -325,6 +325,7 @@ class Parser(object):
             rule = self._rules[_rule_name][rule_number]
             rule_parsed = self.parse_value_template(rule)
             _res_params = {}
+            _res_params_raw = {}
             for x, _part in enumerate(rule_parsed):
                 for y, _subpart in enumerate(_part[0]):
                     if _subpart[1]:
@@ -339,6 +340,7 @@ class Parser(object):
                                     _valid, _valid_value = self.validate_by_mask(_subpart[0], _atom, _value_item)
                                     if _valid:
                                         _res_params[_subpart[0]] = _valid_value
+                                        _res_params_raw[_subpart[0]] = _atom
                                         _new_path += _atom
                                         _path = _atom_item['path']
                                         _match = True
@@ -346,7 +348,7 @@ class Parser(object):
                                 if _match:
                                     break
                             if not _match:
-                                return False, {}
+                                return False, {}, {}
                         else:
                             if _value is None:
                                 _match = False
@@ -359,7 +361,7 @@ class Parser(object):
                                         _match = True
                                         break
                                 if not _match:
-                                    return False, {}
+                                    return False, {}, {}
                             else:
                                 # it's a plain value
                                 _plain = not any(x in _value for x in ('>=', '<=', '==', '>', '<', '=', '*'))
@@ -390,7 +392,7 @@ class Parser(object):
                                                 _match = True
                                                 break
                                     if not _match:
-                                        return False, {}
+                                        return False, {}, {}
                                 else:
                                     _atoms = get_atom(x, y, _path, self._columns[_subpart[0]])
                                     _match = False
@@ -406,7 +408,7 @@ class Parser(object):
                                         if _match:
                                             break
                                     if not _match:
-                                        return False, {}
+                                        return False, {}, {}
 
                     else:
                         # just part of template
@@ -425,20 +427,22 @@ class Parser(object):
                                 break
 
                         if not _res:
-                            return False, {}
-            return _res, _res_params
+                            return False, {}, {}
+            return _res, _res_params, _res_params_raw
 
         _result = False
         _result_params = {}
+        _result_params_raw = {}
         # rule = self._rules[_rule_name]
         # for _rule in self._rules[_rule_name]:
         for i in range(len(self._rules[_rule_name])):
-            _ok, _params = do_check(i, str(path))
+            _ok, _params, _params_raw = do_check(i, str(path))
             if _ok:
                 _result = True
                 _result_params.update({k: v for k, v in _params.items() if k not in _result_params})
+                _result_params_raw.update({k: v for k, v in _params_raw.items() if k not in _result_params_raw})
                 break
-        return _result, _result_params
+        return _result, _result_params, _result_params_raw
 
     def validate(self, value, rule_name, params, return_params=False):
         if rule_name not in self._rules:
@@ -775,7 +779,7 @@ class Parser(object):
 
         def sorted_fn(item):
             _result = []
-            _atoms_found = {k: v for k, v in item['params'].items()}
+            _atoms_found = item['params']
             for _atom_name in self._sort:
                 if _atom_name == '*':
                     _result += [_atoms_found[x] for x in _atoms_found if x not in self._sort]

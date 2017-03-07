@@ -102,8 +102,8 @@ You'll see something like this::
       -h, --help                      Show this screen.
       --version                       Show version.
       -L, --list                      Do not load packages and its dependencies. Just show what's found.
-      -v LEVEL, --verbose=LEVEL       Set output verbosity: ({verb_level}) [default: ].
-      -l LOGFILE, --log=LOGFILE       File name for log output. Log level is '{log_default}' if set when verbose doesn't.
+      -v LEVEL, --verbose=LEVEL       Set output verbosity: (critical, error, warning, info, debug) [default: ].
+      -l LOGFILE, --log=LOGFILE       File name for log output. Log level is 'info' if set when verbose doesn't.
       -c FILE, --config=FILE          Path to configuration file.
       -o OPTIONS, --options OPTIONS   Extra options.
       --deps-path=FILE                Path to file with locked dependencies [./dependencies.txt]

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 
-from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.output import Output
@@ -51,7 +50,7 @@ class Locker(Downloader):
             columns = self._config.get_columns()
             widths = {}
             for _pkg in self._packages.values():
-                _params = _pkg.get_params(columns, merged=True)
+                _params = _pkg.get_params(columns, merged=True, raw=True)
                 packages.append(_params)
                 comment = 1
                 for _col in columns:

@@ -37,6 +37,7 @@ class Adapter(BaseAdapter):
         for _paths in parser.get_paths(list_or_file_path, source):
             _packages = []
             _params_found = {}
+            _params_found_raw = {}
             _pkg_name = _paths['params'][_pkg_name_col]
             if _pkg_name != _pkg_name_old:
                 _pkg_name_old = _pkg_name
@@ -49,10 +50,12 @@ class Adapter(BaseAdapter):
                 try:
                     for _repo_path in _repo_paths.glob(_path_pattern):
                         _mark = 'found'
-                        _matched, _params = parser.validate_path(str(_repo_path), _paths['params'])
+                        _matched, _params, _params_raw = parser.validate_path(str(_repo_path), _paths['params'])
                         if _matched:
                             _params_found[_repo_path] = {k: v for k, v in _params.items()}
+                            _params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
                             _mark = 'match'
+                            # TODO: _params_raw
                             _valid, _params = parser.validate(_repo_path.properties, 'properties', _paths['params'],
                                                               return_params=True)
                             if _valid:
@@ -98,10 +101,11 @@ class Adapter(BaseAdapter):
                 if len(_packages) == 1:
                     _stat_pkg = self.pkg_stat(_packages[0]['path'])
 
+                    _params_raw = _params_found_raw.get(_packages[0]['path'], {})
                     _params_tmp = _params_found.get(_packages[0]['path'], {})
                     _params_tmp.update({k: v for k, v in _packages[0]['params'].items() if k not in _params_tmp})
                     _package = Package(_pkg_name, _packages[0]['path'], _paths['params'], downloader, self, parser,
-                                       _params_tmp, _stat_pkg)
+                                       _params_tmp,_params_raw, _stat_pkg)
                     _mark = 'chosen'
                     self._log.info('  {}: {}'.format(_mark, str(_packages[0]['path'])))
 

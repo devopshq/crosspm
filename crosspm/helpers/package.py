@@ -15,10 +15,11 @@ class Package(object):
     _raw = []
     _root = False
     _params_found = {}
+    _params_found_raw = {}
     stat = None
     _not_cached = True
 
-    def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, stat=None):
+    def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, params_found_raw=None, stat=None):
         self._log = logging.getLogger('crosspm')
         if type(pkg) is int:
             if pkg == 0:
@@ -31,6 +32,8 @@ class Package(object):
         self._downloader = downloader
         if params_found:
             self._params_found = params_found
+        if params_found_raw:
+            self._params_found_raw = params_found_raw
         self.stat = stat
 
     def download(self, force=False):
@@ -138,7 +141,7 @@ class Package(object):
             return self._name
         return self._name, self._unpacked_path
 
-    def get_params(self, param_list=None, get_path=False, merged=False):
+    def get_params(self, param_list=None, get_path=False, merged=False, raw=False):
         if param_list and isinstance(param_list, str):
             result = {param_list: self._name}
         elif param_list and isinstance(param_list, (list, tuple)):
@@ -151,6 +154,8 @@ class Package(object):
             result['path'] = self._unpacked_path
         if merged:
             result.update(self._parser.merge_valued(result))
+        if raw:
+            result.update({k: v for k, v in self._params_found_raw.items()})
         return result
 
     def set_full_unique_name(self):
