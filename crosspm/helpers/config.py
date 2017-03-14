@@ -476,6 +476,18 @@ class Config(object):
     def init_cpm_and_cache(self, crosspm, cmdline, cache_config):
         if 'cache' not in crosspm:
             crosspm['cache'] = {}
+
+        # have to merge dicts:
+        parts = ('clear', 'storage')
+        cache_config.update(
+            {k: v for k, v in crosspm['cache'].items() if (k not in cache_config) and (k not in parts)})
+        for part in parts:
+            if part in crosspm['cache']:
+                if part not in cache_config:
+                    cache_config[part] = {}
+                cache_config[part].update(
+                    {k: v for k, v in crosspm['cache'][part].items() if k not in cache_config[part]})
+
         if 'path' in cache_config:
             crosspm['cache'] = cache_config.pop('path')
         else:
