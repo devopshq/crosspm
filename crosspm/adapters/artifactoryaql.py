@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 import json
-from datetime import datetime
 import time
+import os
+import requests
+
+from requests.auth import HTTPBasicAuth
+from datetime import datetime
+
 from crosspm.adapters.common import BaseAdapter
 from artifactory import ArtifactoryPath
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.package import Package
-import os
-import requests
 
 CHUNK_SIZE = 1024
 
@@ -45,10 +48,42 @@ class Adapter(BaseAdapter):
                     '{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
             last_error = ''
             for _path in _paths['paths']:
-                _path_fixed, _path_pattern = parser.split_fixed_pattern(_path)
-                _repo_paths = ArtifactoryPath(_path_fixed, **_art_auth)
+                _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
                 try:
-                    for _repo_path in _repo_paths.glob(_path_pattern):
+                    _artifactory_server = _paths['params']['server']
+                    _search_repo = _paths['params']['repo']
+
+                    # Get AQL path pattern, with fixed part path, without artifactory url and repository name
+                    _aql_path_pattern = _path_fixed[len(_artifactory_server) + 1:] + _path_pattern
+                    _aql_query_url = '{}/api/search/aql'.format(_artifactory_server)
+                    _aql_query_dict = {
+                        "repo": {
+                            "$eq": _search_repo,
+                        },
+                        "path": {
+                            "$match": _aql_path_pattern,
+                        },
+                        "name": {
+                            "$match": _file_name_pattern,
+                        },
+                    }
+                    _aql_query_text = "items.find({query_dict})".format(query_dict=json.dumps(_aql_query_dict))
+
+                    r = requests.post(_aql_query_url, verify=False,
+                                      auth=HTTPBasicAuth(*_art_auth['auth']),
+                                      data=_aql_query_text,
+                                      )
+                    r.raise_for_status()
+
+                    _found_paths = r.json()
+                    for _found in _found_paths['results']:
+                        _repo_path = "{artifactory}/{repo}/{path}/{file_name}".format(
+                            artifactory=_artifactory_server,
+                            repo=_found['repo'],
+                            path=_found['path'],
+                            file_name=_found['name'])
+                        _repo_path = ArtifactoryPath(_repo_path, **_art_auth)
+
                         _mark = 'found'
                         _matched, _params, _params_raw = parser.validate_path(str(_repo_path), _paths['params'])
                         if _matched:
@@ -105,7 +140,7 @@ class Adapter(BaseAdapter):
                     _params_tmp = _params_found.get(_packages[0]['path'], {})
                     _params_tmp.update({k: v for k, v in _packages[0]['params'].items() if k not in _params_tmp})
                     _package = Package(_pkg_name, _packages[0]['path'], _paths['params'], downloader, self, parser,
-                                       _params_tmp,_params_raw, _stat_pkg)
+                                       _params_tmp, _params_raw, _stat_pkg)
                     _mark = 'chosen'
                     self._log.info('  {}: {}'.format(_mark, str(_packages[0]['path'])))
 
