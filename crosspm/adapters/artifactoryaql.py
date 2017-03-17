@@ -54,8 +54,9 @@ class Adapter(BaseAdapter):
                     _search_repo = _paths['params']['repo']
 
                     # Get AQL path pattern, with fixed part path, without artifactory url and repository name
-                    _aql_path_pattern = _path_fixed[
-                                        len(_artifactory_server) + 1 + len(_search_repo) + 1:] + _path_pattern
+                    _aql_path_pattern = _path_fixed[len(_artifactory_server) + 1 + len(_search_repo) + 1:]
+                    if _path_pattern:
+                        _aql_path_pattern = _aql_path_pattern + "/" + _path_pattern
 
                     _aql_query_url = '{}/api/search/aql'.format(_artifactory_server)
                     _aql_query_dict = {
