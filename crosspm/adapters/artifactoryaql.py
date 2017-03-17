@@ -93,9 +93,13 @@ class Adapter(BaseAdapter):
                             _params_found[_repo_path] = {k: v for k, v in _params.items()}
                             _params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
                             _mark = 'match'
+
                             # TODO: _params_raw
-                            _valid, _params = parser.validate(_repo_path.properties, 'properties', _paths['params'],
-                                                              return_params=True)
+                            if parser._rules.get('properties'):
+                                _valid, _params = parser.validate(_repo_path.properties, 'properties', _paths['params'],
+                                                                  return_params=True)
+                            else:
+                                _valid, _params = True, {}
                             if _valid:
                                 _mark = 'valid'
                                 _packages += [_repo_path]
