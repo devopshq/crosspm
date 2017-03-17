@@ -22,6 +22,10 @@ Out-of-the-box modules:
 
   - Artifactory
 
+  - Artifactory-AQL (supported since artifactory 3.5.0): Uses AQL_
+
+.. _AQL: https://www.jfrog.com/confluence/display/RTF/Artifactory+Query+Language
+
 ..
 
 - Package file formats
