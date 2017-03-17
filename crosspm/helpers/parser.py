@@ -744,15 +744,20 @@ class Parser(object):
         :return:
             _path_fixed: https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/
             _path_pattern: *.*.*/vc100/x86/win
-            _file_name_pattern: boost.*.*.*.zip
+            _file_name_pattern: boost.*.*.*.tar.gz
         """
         _first_pattern_pos = path.find('*')
-        _path_separator_pos = path.rfind('/', 0, _first_pattern_pos) + 1
+        _path_separator_pos = path.rfind('/', 0, _first_pattern_pos)
         _path_fixed = path[:_path_separator_pos]
-        _path_pattern = path[_path_separator_pos:]
+        _path_pattern = path[_path_separator_pos + 1:]
         _file_name_pattern_separator_pos = _path_pattern.rfind('/', 0) + 1
         _file_name_pattern = _path_pattern[_file_name_pattern_separator_pos:]
-        _path_pattern = _path_pattern[:_file_name_pattern_separator_pos - 1]
+
+        if _path_pattern.find('*'):
+            _path_pattern = ""
+        else:
+            _path_pattern = _path_pattern[:_file_name_pattern_separator_pos - 1]
+
         return _path_fixed, _path_pattern, _file_name_pattern
 
     def filter_one(self, packages, params, params_found):

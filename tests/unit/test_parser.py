@@ -80,3 +80,35 @@ class TestParser(BaseParserTest):
 
     def test__merge_with_mask(self):
         pass
+
+    @pytest.mark.artifactoryaql
+    def test_split_fixed_pattern_with_file_name_with_mask(self):
+        parser = self._parsers.get('common', None)
+
+        path = "https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz"
+        path_fixed = "https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm"
+        path_pattern = "*.*.*/vc110/x86/win"
+        file_name_pattern = "boost.*.*.*.tar.gz"
+
+
+        _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(path)
+
+        assert path_fixed == _path_fixed
+        assert path_pattern == _path_pattern
+        assert file_name_pattern == _file_name_pattern
+
+    @pytest.mark.artifactoryaql
+    def test_split_fixed_pattern_with_file_name_with_lock(self):
+        parser = self._parsers.get('common', None)
+
+        path = "https://repo.ptsecurity.ru/artifactory/libs-cpp-release.snapshot/zlib/1.2.8-pm/1.2.8.199/vc110/x86/win/zlib.1.2.8.199.tar.gz"
+        path_fixed = "https://repo.ptsecurity.ru/artifactory/libs-cpp-release.snapshot/zlib/1.2.8-pm/1.2.8.199/vc110/x86/win"
+        path_pattern = ""
+        file_name_pattern = "zlib.1.2.8.199.tar.gz"
+
+
+        _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(path)
+
+        assert path_fixed == _path_fixed
+        assert path_pattern == _path_pattern
+        assert file_name_pattern == _file_name_pattern
