@@ -1,5 +1,6 @@
 from crosspm.helpers.parser import Parser
 import inspect
+import sys
 
 
 def assert_warn(arg1, arg2):
@@ -12,7 +13,12 @@ def assert_warn(arg1, arg2):
                 fn = item.function
                 ln = item.lineno
                 break
+        # Old python support
+        if sys.version_info >= (3, 5):
             found = item.function == 'assert_warn'
+        else:
+            found = True
+
         if found:
             txt = 'function: [{}] line: {}'.format(fn, ln)
         print('\nWarning: {}\nNOT {}{}'.format(txt, arg1, arg2))
