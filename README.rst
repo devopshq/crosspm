@@ -21,6 +21,9 @@ Out-of-the-box modules:
 - Adapters
 
   - Artifactory
+  - Artifactory-AQL (supported since artifactory 3.5.0):
+    Uses `AQL <https://www.jfrog.com/confluence/display/RTF/Artifactory+Query+Language>`_
+  - files (simple repository on your local filesystem)
 
 ..
 
@@ -36,7 +39,6 @@ Modules planned to implement:
 
 - Adapters
 
-  - filesystem
   - git
   - smb
   - sftp/ftp
