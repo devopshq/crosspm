@@ -730,6 +730,13 @@ class Parser(object):
 
     @staticmethod
     def split_fixed_pattern(path):
+        """
+        Split path into fixed and masked parts
+        :param path: e.g https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
+        :return:
+            _path_fixed: https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/
+            _path_pattern: *.*.*/vc100/x86/win/boost.*.*.*.tar.gz
+        """
         _first_pattern_pos = path.find('*')
         _path_separator_pos = path.rfind('/', 0, _first_pattern_pos) + 1
         _path_fixed = path[:_path_separator_pos]
@@ -739,7 +746,7 @@ class Parser(object):
     @staticmethod
     def split_fixed_pattern_with_file_name(path):
         """
-        Split fixed path
+        Split path into fixed, masked parts and filename
         :param path: e.g https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
         :return:
             _path_fixed: https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/
@@ -862,3 +869,9 @@ class Parser(object):
             pkg_name = '/'.join(self.merge_with_mask(x, params[x]) for x in param_list)
 
         return pkg_name
+
+    def has_rule(self, rule_name):
+        res = False
+        if self._rules.get(rule_name, False):
+            res = True
+        return res
