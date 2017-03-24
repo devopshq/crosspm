@@ -95,7 +95,7 @@ class Adapter(BaseAdapter):
                             _mark = 'match'
 
                             # TODO: _params_raw
-                            if parser._rules.get('properties'):
+                            if parser.has_rule('properties'):
                                 _valid, _params = parser.validate(_repo_path.properties, 'properties', _paths['params'],
                                                                   return_params=True)
                             else:
