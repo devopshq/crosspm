@@ -125,3 +125,18 @@ class TestParser(BaseParserTest):
         assert path_fixed == _path_fixed
         assert path_pattern == _path_pattern
         assert file_name_pattern == _file_name_pattern
+
+    @pytest.mark.artifactoryaql
+    def test_split_fixed_pattern_with_file_name_with_mask_only_in_file_name(self):
+        parser = self._parsers.get('common', None)
+
+        path = "https://repo.example.com/artifactory/repo.snapshot/my-tools/my-tools/my-tools.*.*.*-release*.tgz"
+        path_fixed = "https://repo.example.com/artifactory/repo.snapshot/my-tools/my-tools"
+        path_pattern = ""
+        file_name_pattern = "my-tools.*.*.*-release*.tgz"
+
+        _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(path)
+
+        assert path_fixed == _path_fixed
+        assert path_pattern == _path_pattern
+        assert file_name_pattern == _file_name_pattern

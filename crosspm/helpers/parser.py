@@ -760,7 +760,7 @@ class Parser(object):
         _file_name_pattern_separator_pos = _path_pattern.rfind('/', 0) + 1
         _file_name_pattern = _path_pattern[_file_name_pattern_separator_pos:]
 
-        if _path_pattern.find('*') == -1:
+        if _path_pattern.find('*') == -1 or _path_pattern == _file_name_pattern:
             _path_pattern = ""
         else:
             _path_pattern = _path_pattern[:_file_name_pattern_separator_pos - 1]
