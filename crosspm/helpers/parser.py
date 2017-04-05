@@ -757,13 +757,13 @@ class Parser(object):
         _path_separator_pos = path.rfind('/', 0, _first_pattern_pos)
         _path_fixed = path[:_path_separator_pos]
         _path_pattern = path[_path_separator_pos + 1:]
-        _file_name_pattern_separator_pos = _path_pattern.rfind('/', 0) + 1
-        _file_name_pattern = _path_pattern[_file_name_pattern_separator_pos:]
+        _file_name_pattern_separator_pos = _path_pattern.rfind('/', 0)
+        _file_name_pattern = _path_pattern[_file_name_pattern_separator_pos + 1:]
 
-        if _path_pattern.find('*') == -1:
+        if _path_pattern.find('*') == -1 or _file_name_pattern_separator_pos == -1:
             _path_pattern = ""
         else:
-            _path_pattern = _path_pattern[:_file_name_pattern_separator_pos - 1]
+            _path_pattern = _path_pattern[:_file_name_pattern_separator_pos]
 
         return _path_fixed, _path_pattern, _file_name_pattern
 

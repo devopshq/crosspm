@@ -112,12 +112,27 @@ class TestParser(BaseParserTest):
         assert file_name_pattern == _file_name_pattern
 
     @pytest.mark.artifactoryaql
-    def test_split_fixed_pattern_with_file_name_with_part_lock(self):
+    def test_split_fixed_pattern_with_file_name_with_partial_lock(self):
         parser = self._parsers.get('common', None)
 
         path = "https://repo.example.com/artifactory/libs-cpp-release.snapshot/build-tools/master/0.6.*/vc120/x86/win/build-tools.0.6.*.tar.gz"
         path_fixed = "https://repo.example.com/artifactory/libs-cpp-release.snapshot/build-tools/master"
         path_pattern = "0.6.*/vc120/x86/win"
+        file_name_pattern = "build-tools.0.6.*.tar.gz"
+
+        _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(path)
+
+        assert path_fixed == _path_fixed
+        assert path_pattern == _path_pattern
+        assert file_name_pattern == _file_name_pattern
+
+    @pytest.mark.artifactoryaql
+    def test_split_fixed_pattern_with_file_name_with_masked_filename_only(self):
+        parser = self._parsers.get('common', None)
+
+        path = "https://repo.example.com/artifactory/libs-cpp-release.snapshot/build-tools/master/vc120/x86/win/build-tools.0.6.*.tar.gz"
+        path_fixed = "https://repo.example.com/artifactory/libs-cpp-release.snapshot/build-tools/master/vc120/x86/win"
+        path_pattern = ""
         file_name_pattern = "build-tools.0.6.*.tar.gz"
 
         _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(path)
