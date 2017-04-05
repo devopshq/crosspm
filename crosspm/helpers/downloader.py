@@ -5,7 +5,7 @@ import logging
 from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
-from helpers.parser import Parser
+from crosspm.helpers.parser import Parser
 
 
 def update_progress(msg, progress):
