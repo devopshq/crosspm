@@ -677,6 +677,10 @@ class Parser(object):
                         continue
 
                     yield self.get_package_params(i, line)
+        elif (type(list_or_file_path) is dict) and ('raw' in list_or_file_path):
+            for _item in list_or_file_path['raw']:
+                _tmp_item = {k: self.parse_by_mask(k, v, False, True) for k, v in _item.items()}
+                yield _tmp_item
         else:
             for _item in list_or_file_path:
                 yield _item
@@ -697,7 +701,9 @@ class Parser(object):
                 'Nothing parsed at line {}: [{}]'.format(line_no, line.strip())
             )
 
-        _vars = self._config.complete_params(_vars)
+        _vars.update(
+            {k: self.parse_by_mask(k, v, False, True) for k, v in self._config.complete_params(_vars, False).items()}
+        )
 
         return _vars
 

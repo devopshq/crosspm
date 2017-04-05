@@ -19,7 +19,8 @@ class Package(object):
     stat = None
     _not_cached = True
 
-    def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, params_found_raw=None, stat=None):
+    def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, params_found_raw=None,
+                 stat=None):
         self._log = logging.getLogger('crosspm')
         if type(pkg) is int:
             if pkg == 0:
@@ -74,7 +75,7 @@ class Package(object):
 
     def find_dependencies(self, depslock_file_path):
         self._raw = [x for x in self._parser.iter_packages_params(depslock_file_path)]
-        self.packages = self._downloader.get_packages(self._raw)
+        self.packages = self._downloader.get_packages({'raw': self._raw})
 
     def unpack(self, dest_path='', force=False):
         if self._downloader.solid(self):
