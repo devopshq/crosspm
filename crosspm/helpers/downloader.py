@@ -9,7 +9,7 @@ from crosspm.helpers.parser import Parser
 
 
 def update_progress(msg, progress):
-    sys.stderr.write('\r{0} [{1:10}] {2}%'.format(msg, '#' * int(progress / 10.0), int(progress)))
+    sys.stderr.write('\r{0} [{1:10}] {2}%'.format(msg, '#' * int(float(progress) / 10.0), int(progress)))
     sys.stderr.flush()
 
 
