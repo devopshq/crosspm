@@ -677,6 +677,10 @@ class Parser(object):
                         continue
 
                     yield self.get_package_params(i, line)
+        elif (type(list_or_file_path) is dict) and ('raw' in list_or_file_path):
+            for _item in list_or_file_path['raw']:
+                _tmp_item = {k: self.parse_by_mask(k, v, False, True) for k, v in _item.items()}
+                yield _tmp_item
         else:
             for _item in list_or_file_path:
                 yield _item
@@ -697,7 +701,9 @@ class Parser(object):
                 'Nothing parsed at line {}: [{}]'.format(line_no, line.strip())
             )
 
-        _vars = self._config.complete_params(_vars)
+        _vars.update(
+            {k: self.parse_by_mask(k, v, False, True) for k, v in self._config.complete_params(_vars, False).items()}
+        )
 
         return _vars
 
@@ -757,13 +763,13 @@ class Parser(object):
         _path_separator_pos = path.rfind('/', 0, _first_pattern_pos)
         _path_fixed = path[:_path_separator_pos]
         _path_pattern = path[_path_separator_pos + 1:]
-        _file_name_pattern_separator_pos = _path_pattern.rfind('/', 0) + 1
-        _file_name_pattern = _path_pattern[_file_name_pattern_separator_pos:]
+        _file_name_pattern_separator_pos = _path_pattern.rfind('/', 0)
+        _file_name_pattern = _path_pattern[_file_name_pattern_separator_pos + 1:]
 
-        if _path_pattern.find('*') == -1 or _path_pattern == _file_name_pattern:
+        if _path_pattern.find('*') == -1 or _file_name_pattern_separator_pos == -1:
             _path_pattern = ""
         else:
-            _path_pattern = _path_pattern[:_file_name_pattern_separator_pos - 1]
+            _path_pattern = _path_pattern[:_file_name_pattern_separator_pos]
 
         return _path_fixed, _path_pattern, _file_name_pattern
 

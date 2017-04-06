@@ -5,10 +5,11 @@ import logging
 from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
+from crosspm.helpers.parser import Parser
 
 
 def update_progress(msg, progress):
-    sys.stderr.write('\r{0} [{1:10}] {2}%'.format(msg, '#' * int(progress / 10.0), int(progress)))
+    sys.stderr.write('\r{0} [{1:10}] {2}%'.format(msg, '#' * int(float(progress) / 10.0), int(progress)))
     sys.stderr.flush()
 
 
@@ -23,7 +24,7 @@ class Downloader(object):
         self.cache = config.cache
         self.solid = config.solid
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
-                                     config.get_parser('common'))
+                                     Parser('common', {}, config))
 
         # self._cache_path = config.crosspm_cache_root
         # if not os.path.exists(self._cache_path):

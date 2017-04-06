@@ -527,14 +527,15 @@ class Config(object):
         if 'common' not in parsers:
             parsers['common'] = {}
         for k, v in parsers.items():
-            if k not in self._parsers:
-                v.update({_k: _v for _k, _v in parsers['common'].items() if _k not in v})
-                self._parsers[k] = Parser(k, v, self)
-            else:
-                code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
-                msg = 'Config file contains multiple definitions of the same parser: [{}]'.format(k)
-                self._log.exception(msg)
-                raise CrosspmException(code, msg)
+            if k != 'common':
+                if k not in self._parsers:
+                    v.update({_k: _v for _k, _v in parsers['common'].items() if _k not in v})
+                    self._parsers[k] = Parser(k, v, self)
+                else:
+                    code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
+                    msg = 'Config file contains multiple definitions of the same parser: [{}]'.format(k)
+                    self._log.exception(msg)
+                    raise CrosspmException(code, msg)
         if len(self._parsers) == 0:
             code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
             msg = 'Config file does not contain parsers! Unable to process any further.'
@@ -645,10 +646,11 @@ class Config(object):
     def get_columns(self):
         return self._columns
 
-    def complete_params(self, _vars):
-        _vars.update({k: v for k, v in self._not_columns.items() if k not in _vars})
-        _vars.update({k: '' for k in self._columns if k not in _vars})
-        return _vars
+    def complete_params(self, _vars, update=True):
+        result = _vars if update else {}
+        result.update({k: v for k, v in self._not_columns.items() if k not in _vars})
+        result.update({k: '' for k in self._columns if (k not in _vars) and (k not in result)})
+        return result
 
     def get_values(self, column_name):
         _res = None
