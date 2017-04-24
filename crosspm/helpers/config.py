@@ -46,30 +46,28 @@ CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
 disable_warnings()
 
 
-class Config(object):
-    _config_path_env = []
-    _sources = []
-    _adapters = {}
-    _parsers = {}
-    _defaults = {}
-    _columns = []
-    _not_columns = {}
-    _options = {}
-    _values = {}
-    _output = {}
-    _solid = {}
-    _fails = {}
-    cache = None
-    no_fails = False
-    name_column = ''
-    deps_file_name = ''
-    deps_lock_file_name = ''
+class Config:
     windows = WINDOWS
-    crosspm_cache_root = ''
-    depslock_path = ''
 
     def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path=''):
         self._log = logging.getLogger('crosspm')
+        self._config_path_env = []
+        self._sources = []
+        self._adapters = {}
+        self._parsers = {}
+        self._defaults = {}
+        self._columns = []
+        self._not_columns = {}
+        self._options = {}
+        self._values = {}
+        self._output = {}
+        self._solid = {}
+        self._fails = {}
+        self.name_column = ''
+        self.deps_file_name = ''
+        self.deps_lock_file_name = ''
+        self.crosspm_cache_root = ''
+        self.depslock_path = ''
         self.init_env_config_path()
 
         cpm_conf_name = ''
@@ -120,7 +118,7 @@ class Config(object):
 
         self.no_fails = no_fails
         self.parse_config(config_data, cmdline)
-        self.cache = Cache(self, self.cache)
+        self.cache = Cache(self, {})
         # self._fails = {}
 
     def get_cpm_conf_name(self, deps_filename=''):

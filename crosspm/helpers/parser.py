@@ -5,24 +5,21 @@ import os
 from crosspm.helpers.exceptions import *
 
 
-class Parser(object):
-    # _name = ''
-    # _rules = {}
-    # _config = None
-    _rules_vars = {}
-    _rules_vars_extra = {}
-    _columns = {}
-    _col_types = []
-    _sort = []
-    _index = -1
-
+class Parser:
     def __init__(self, name, data, config):
+        self._rules_vars = {}
+        self._rules_vars_extra = {}
+        self._columns = {}
+        self._defaults = {}
+        self._col_types = []
         self._name = name
-        self._sort = data.get('sort', self._sort)
-        self._index = data.get('index', self._index)
-        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort']}
+        self._sort = data.get('sort', [])
+        self._index = data.get('index', -1)
+        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults']}
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
+        if 'defaults' in data:
+            self._defaults = {k: self.parse_value_template(v) for k, v in data['defaults'].items() if v != ''}
         self._config = config
         self.init_rules_vars()
 
@@ -626,8 +623,12 @@ class Parser(object):
             return None
         _paths = []
         for _params in self.iter_packages_params(list_or_file_path):
+            _params['server'] = source.args['server']
+            _sub_paths = {
+                'params': {k: v for k, v in _params.items() if k != 'repo'},
+                'paths': [],
+            }
             for _repo in source.args['repo']:
-                _params['server'] = source.args['server']
                 _params['repo'] = _repo
                 # _dirty = self._rules['path'].format(**_params)
                 _all_dirties = self.fill_rule('path', _params)
@@ -638,9 +639,10 @@ class Parser(object):
                         # TODO: Use split_with_regexp() instead
                         _dirty = [x.split(']') for x in _dirty.split('[')]
                         _dirty = self.list_flatter(_dirty)
-                        _paths += [{'paths': self.get_variants(_dirty, []),
-                                    'params': {k: v for k, v in _params.items()},
-                                    }]
+                        _sub_paths['paths'] += [{'paths': self.get_variants(_dirty, []),
+                                                 'repo': _repo,
+                                                 }]
+            _paths += [_sub_paths]
         return _paths
 
     def get_variants(self, dirty, paths):
@@ -672,6 +674,10 @@ class Parser(object):
             with open(list_or_file_path, 'r') as f:
                 for i, line in enumerate(f):
                     line = line.strip()
+
+                    #  if i == 0 and line.startswith(''.join(map(chr,(1087,187,1111)))):
+                    if i == 0 and line.startswith(chr(1087) + chr(187) + chr(1111)):  # TODO: why?
+                        line = line[3:]
 
                     if not line or line.startswith(('#', '[',)):
                         continue

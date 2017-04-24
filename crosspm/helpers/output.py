@@ -15,7 +15,7 @@ _output_format_map = {}
 ) = range(3)
 
 
-class OutFormat(object):
+class OutFormat:
     def __init__(self, value, esc_path=False):
         self._value = value
         self._esc_path = esc_path
@@ -58,7 +58,7 @@ def register_output_format(name):
     return check_decorator
 
 
-class Output(object):
+class Output:
     _config = {
         'root': {'PACKAGES_ROOT'},
         # 'key': 'package',

@@ -2,11 +2,7 @@
 # from crosspm.helpers.exceptions import *
 
 
-class Source(object):
-    _adapter = None
-    _parser = None
-    args = {}
-
+class Source:
     def __init__(self, adapter, parser, data):
         self._adapter = adapter
         self._parser = parser

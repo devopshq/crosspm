@@ -46,15 +46,14 @@ from crosspm.helpers.exceptions import *
 app_name = 'CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)'.format(version=version)
 
 
-class CrossPM(object):
-    _config = None
-    _args = None
-    _output = None
+class CrossPM:
     _ready = False
-    _throw_exceptions = True
-    _return_result = False
 
     def __init__(self, args=None, throw_exceptions=None, return_result=False):
+        self._config = None
+        self._output = None
+        self._throw_exceptions = True
+        self._return_result = False
         if throw_exceptions is not None:
             self._throw_exceptions = throw_exceptions
         elif args is not None:

@@ -8,10 +8,8 @@ from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME, CROSSPM_DEP
 
 
 class Locker(Downloader):
-    _deps_path = ''
-    do_load = False
-
     def __init__(self, config):
+        self.do_load = False
         super(Locker, self).__init__(config, False)
 
         if not getattr(config, 'deps_path', ''):

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import logging
-
 from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
@@ -13,12 +12,9 @@ def update_progress(msg, progress):
     sys.stderr.flush()
 
 
-class Downloader(object):
-    _depslock_path = ''
-    _packages = {}
-    do_load = True
-
+class Downloader:
     def __init__(self, config, do_load=True):
+        self._packages = {}
         self._log = logging.getLogger('crosspm')
         self._config = config
         self.cache = config.cache
