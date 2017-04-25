@@ -47,7 +47,8 @@ class Locker(Downloader):
             packages = []
             columns = self._config.get_columns()
             widths = {}
-            for _pkg in self._packages.values():
+            for _pkg_name in sorted(self._packages, key=lambda x: str(x).lower()):
+                _pkg = self._packages[_pkg_name]
                 _params = _pkg.get_params(columns, merged=True, raw=True)
                 packages.append(_params)
                 comment = 1

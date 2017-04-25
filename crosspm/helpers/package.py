@@ -126,7 +126,8 @@ class Package:
                 _sign = '-'
         _left = '{}{}'.format(' ' * 4 * level, _sign)
         do_print(_left)
-        for _pkg_name, _pkg in self.packages.items():
+        for _pkg_name in sorted(self.packages, key=lambda x: str(x).lower()):
+            _pkg = self.packages[_pkg_name]
             if not _pkg:
                 _left = '{}-'.format(' ' * 4 * (level + 1))
                 self._log.info('{}{}'.format(_left, _pkg_name))
