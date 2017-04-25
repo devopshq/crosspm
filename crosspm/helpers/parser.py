@@ -11,6 +11,7 @@ class Parser:
         self._rules_vars_extra = {}
         self._columns = {}
         self._defaults = {}
+        self._defaults_masked = {}
         self._col_types = []
         self._name = name
         self._sort = data.get('sort', [])
@@ -18,10 +19,10 @@ class Parser:
         self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults']}
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
-        if 'defaults' in data:
-            self._defaults = {k: self.parse_value_template(v) for k, v in data['defaults'].items() if v != ''}
         self._config = config
         self.init_rules_vars()
+        if 'defaults' in data:
+            self.init_defaults(data['defaults'])
 
     def get_vars(self):
         _vars = []
@@ -29,6 +30,29 @@ class Parser:
             _vars += [item for sublist in _rule_vars for item in sublist if item not in _vars]
             # _vars += [x for x in _rule_vars if x not in _vars]
         return _vars
+
+    def init_defaults(self, defaults):
+        if isinstance(defaults, dict):
+            self._defaults = {k: v for k, v in defaults.items()}
+            self._defaults_masked = {}
+            for _rules_name, _rules in self._rules.items():
+                if _rules_name == 'path':
+                    continue
+                self._defaults_masked[_rules_name] = []
+                for _rule in _rules:
+                    _rule_tmp = _rule
+                    for _name in [x for x in re.findall('{.*?}', _rule_tmp)]:
+                        _name_replace = _name[1:-1].split('|')[0]
+                        _rule_tmp.replace(_name, _name_replace)
+                        if _name_replace not in self._defaults:
+                            self._defaults[_name_replace] = ''
+                    _tmp = [x.strip() for x in _rule_tmp.split('=')]
+                    _mask = re.sub('{.*?}', '*', _tmp[0])
+                    _val = ''
+                    _key = _tmp[0].format(**self._defaults)
+                    if len(_tmp) > 1:
+                        _val = _tmp[1].format(**self._defaults)
+                    self._defaults_masked[_rules_name].append({'mask': _mask, 'key': _key, 'value': _val})
 
     def init_rules_vars(self):
         self._rules_vars = {}
@@ -456,7 +480,19 @@ class Parser:
         _res = True
         _res_params = {}
         # _dirty = self._rules[rule_name].format(**params)
-        _all_dirties = self.fill_rule(rule_name, params, return_params=True)
+        _all_dirties = self.fill_rule(rule_name, params, return_params=True, return_defaults=True)
+        # _all_defaults = []
+        # if self._defaults:
+        #     if type(value) is dict:
+        #         for _default in self.fill_rule(rule_name, self._defaults, return_params=False):
+        #             _tmp = [x.strip() for x in _default.split('=')]
+        #             _tmp = [x if len(x) > 0 else '*' for x in _tmp]
+        #             for _key in fnmatch.filter(value.keys(), _tmp[0]):
+        #                 if len(_tmp) > 1:
+        #                     _tmp_val = value[_key]
+        #             if _tmp[0] not in value:
+        #                 value[_tmp[0]] = _tmp[1]
+
         for _dirties in _all_dirties:
             _res_sub = False
             _res_sub_params = {}
@@ -475,10 +511,20 @@ class Parser:
                             _res_var = True
                             break
                 elif type(value) is dict:
+                    _key = ''
+                    if 'mask' in _dirt.get('default', {}):
+                        _mask = _dirt['default'].get('mask', '')
+                        if len(fnmatch.filter(value.keys(), _mask)) == 0:
+                            _key = _dirt['default'].get('key', '')
+                            value[_key] = [_dirt['default'].get('value', '')]
+
                     for _variant in _variants:
                         _tmp = [x.strip() for x in _variant.split('=')]
                         _tmp = [x if len(x) > 0 else '*' for x in _tmp]
-                        for _key in fnmatch.filter(value.keys(), _tmp[0]):
+                        _key_list = fnmatch.filter(value.keys(), _tmp[0])
+                        if len(_key_list) == 0 and '*' in _key:
+                            _key_list = [_key]
+                        for _key in _key_list:
                             if len(_tmp) > 1:
                                 _tmp_val = value[_key]
                                 if type(_tmp_val) is str:
@@ -557,7 +603,7 @@ class Parser:
 
         return _match
 
-    def fill_rule(self, rule_name, params, return_params=False):
+    def fill_rule(self, rule_name, params, return_params=False, return_defaults=False):
         def fill_rule_inner(_cols, _params_inner, _pars=None):
             if _pars is None:
                 _pars = {}
@@ -575,6 +621,8 @@ class Parser:
         for z in range(len(self._rules_vars[rule_name])):
             _res_part = []
             _params = {k: v for k, v in params.items()}
+            _default = ''
+            _mask = ''
             _columns = []
             for _col, _valued in self._config.iter_valued_columns2(self._rules_vars[rule_name][z]):
                 if _valued:
@@ -597,15 +645,29 @@ class Parser:
             for _par in fill_rule_inner(_columns, []):
                 _params.update(_par)
                 _var = self._rules[rule_name][z].format(**_params)
-                if return_params:
-                    _res_part += [{'var': _var, 'params': {k: v for k, v in _par.items()}}]
+                if return_params or return_defaults:
+                    _tmp_res_part = {'var': _var}
+                    if return_params:
+                        _tmp_res_part['params'] = {k: v for k, v in _par.items()}
+                    if return_defaults and rule_name in self._defaults_masked:
+                        _tmp_res_part['default'] = self._defaults_masked[rule_name][z]
+                    else:
+                        _tmp_res_part['default'] = {}
+                    _res_part += [_tmp_res_part]
                 else:
                     _res_part += [_var]
 
             if len(_res_part) == 0:
                 _var = self._rules[rule_name][z].format(**_params)
-                if return_params:
-                    _res_part += [{'var': _var, 'params': {}}]
+                if return_params or return_defaults:
+                    _tmp_res_part = {'var': _var}
+                    if return_params:
+                        _tmp_res_part['params'] = {}
+                    if return_defaults and rule_name in self._defaults_masked:
+                        _tmp_res_part['default'] = self._defaults_masked[rule_name][z]
+                    else:
+                        _tmp_res_part['default'] = {}
+                    _res_part += [_tmp_res_part]
                 else:
                     _res_part += [_var]
             _res += [_res_part]
