@@ -176,6 +176,7 @@ class CrossPM:
             log_abs = None
 
         level = Config.get_verbosity_level(level_str or 'console')
+        self._log.handlers = []
         if level or log_abs:
             self._log.setLevel(level)
             format_str = '%(asctime)-19s [%(levelname)-9s] %(message)s'
