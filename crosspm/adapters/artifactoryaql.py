@@ -82,7 +82,8 @@ class Adapter(BaseAdapter):
                                 "$match": _file_name_pattern,
                             },
                         }
-                        _art_auth_etc['data'] = "items.find({query_dict})".format(query_dict=json.dumps(_aql_query_dict))
+                        _art_auth_etc['data'] = 'items.find({query_dict}).include("*", "property")'.format(
+                            query_dict=json.dumps(_aql_query_dict))
                         r = requests.post(_aql_query_url, **_art_auth_etc)
                         r.raise_for_status()
 
@@ -104,7 +105,8 @@ class Adapter(BaseAdapter):
 
                                 # TODO: _params_raw
                                 if parser.has_rule('properties'):
-                                    _valid, _params = parser.validate(_repo_path.properties, 'properties', _tmp_params,
+                                    _found_properties = {x['key']: x.get('value', '') for x in _found['properties']}
+                                    _valid, _params = parser.validate(_found_properties, 'properties', _tmp_params,
                                                                       return_params=True)
                                 else:
                                     _valid, _params = True, {}
@@ -132,7 +134,8 @@ class Adapter(BaseAdapter):
                                 err_msg = error.get('message', '')
                                 if err_status == 401:
                                     msg = 'Authentication error[{}]{}'.format(err_status,
-                                                                              (': {}'.format(err_msg)) if err_msg else '')
+                                                                              (': {}'.format(
+                                                                                  err_msg)) if err_msg else '')
                                 elif err_status == 404:
                                     msg = last_error
                                 else:
@@ -205,7 +208,7 @@ class Adapter(BaseAdapter):
         _stat_pkg = {
             k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if type(v) is datetime else v
             for k, v in _stat_pkg.items()
-        }
+            }
         return _stat_pkg
 
     def download_package(self, package, dest_path):
