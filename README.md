@@ -212,7 +212,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     dependencies - Manifest file name (not path - just filename)
     
     dependencies-lock - Manifest with locked dependencies (without masks and conditions) file name 
-                        (not path - just filename). Equals to *dependencies* if not set.
+                        (not path - just filename). Equals to "dependencies" if not set.
     
     cache - Path for CrossPM temporary files, downloaded package archives and unpacked packages. 
             Ignored if cache folder is configured in top "cache" item.
@@ -230,7 +230,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     clear - Parameters for cleaning cache.
         days - Delete files or folders older than "days".
         size - Delete older files and folders if cache size is bigger than "size". 
-               Could be in *b*, *Kb*, *Mb*, *Gb*. Bytes (*b*) is a default.
+               Could be in b, Kb, Mb, Gb. Bytes (b) is a default.
         auto - Call cache check and clear before download.
 
 **columns** - Manifest file columns definition. Asterisk here points to name column (column of manifest file with package name). CrossPM uses it for building list with unique packages (i.e. by package name)
@@ -276,7 +276,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     
     properties - Extra properties. i.e. object properties in Artifactory.
 
-**defaults** - Default values for columns not defined in *options*.
+**defaults** - Default values for columns not defined in "options".
 
 **solid** - Set of rules pointing to packages which doesn't need to be unpacked.
     
