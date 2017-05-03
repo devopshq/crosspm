@@ -211,9 +211,11 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     
     dependencies - Manifest file name (not path - just filename)
     
-    dependencies-lock - Manifest with locked dependencies (without masks and conditions) file name (not path - just filename). Equals to *dependencies* if not set.
+    dependencies-lock - Manifest with locked dependencies (without masks and conditions) file name 
+                        (not path - just filename). Equals to *dependencies* if not set.
     
-    cache - Path for CrossPM temporary files, downloaded package archives and unpacked packages. Ignored if cache folder is configured in top *cache* item.
+    cache - Path for CrossPM temporary files, downloaded package archives and unpacked packages. 
+            Ignored if cache folder is configured in top "cache" item.
 
 **cache** - Parameters for cache handling
     
@@ -223,11 +225,12 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     
     default - Default path to cache folder. Used if command line option and environment variable are not set.
     
-    path - Path to cache folder. *cmdline*, *env* and *default* are ignored if *path* set.
+    path - Path to cache folder. "cmdline", "env" and "default" are ignored if "path" set.
     
     clear - Parameters for cleaning cache.
-        days - Delete files or folders older than *days*.
-        size - Delete older files and folders if cache size is bigger than         *size*. Could be in *b*, *Kb*, *Mb*, *Gb*. Bytes (*b*) is a default.
+        days - Delete files or folders older than "days".
+        size - Delete older files and folders if cache size is bigger than "size". 
+               Could be in *b*, *Kb*, *Mb*, *Gb*. Bytes (*b*) is a default.
         auto - Call cache check and clear before download.
 
 **columns** - Manifest file columns definition. Asterisk here points to name column (column of manifest file with package name). CrossPM uses it for building list with unique packages (i.e. by package name)
@@ -236,11 +239,11 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 
 **options** - Here we can define commandline options and environment variable names from which we will get some of columns values. We can define default values for those columns here too. Each option must be configured with this parameters:
 
-    *cmdline* -- Command line option name with option's value.
+    cmdline - Command line option name with option's value.
 
-    *env* -- Environment variable name with option's value. Used if command line option is not set.
+    env - Environment variable name with option's value. Used if command line option is not set.
 
-    *default* -- Default option's value. Used if command line option and environment variable are not set.
+    default - Default option's value. Used if command line option and environment variable are not set.
 
 **parsers** - Rules for parsing columns, paths, properties, etc.
     
@@ -250,13 +253,15 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     ```
     version: "{int}.{int}.{int}[.{int}][-{str}]"
     ```
-    means that version column contains three numeric parts divided by a dot, followed by numeric or string or numeric and string parts with dividers or nothing at all.
+    means that version column contains three numeric parts divided by a dot, followed by numeric or string 
+    or numeric and string parts with dividers or nothing at all.
     
-    sort - List of column names in sorting order. Used for sorting packages if more than one version found for defined parameters. Asterisk can be one of values of a list representing all columns not mentioned here.
+    sort - List of column names in sorting order. Used for sorting packages if more than one version found 
+    for defined parameters. Asterisk can be one of values of a list representing all columns not mentioned here.
     
     index - Used for picking one element from sorted list. It's just a list index as in python.
     
-    path - Path template for searching packages in repository. Here **{}** is column, **[|]** is variation. 
+    path - Path template for searching packages in repository. Here {} is column, [|] is variation. 
     Example:
     ```
     path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]"
@@ -287,15 +292,15 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 
     type - Source type. Available types list depends on existing adapter modules.
     
-    parser - Available parsers defined in *parsers*.
+    parser - Available parsers defined in parsers.
     
     server - Root URL of repository server.
     
     repo - Subpath to specific part of repository on server.
     
-    auth_type - Authorization type. For example *simple*.
+    auth_type - Authorization type. For example "simple".
     
-    auth - Authorization data. For *simple* here we define login and password.
+    auth - Authorization data. For "simple" here we define login and password.
 
 **output** - Report output format definition.
     
