@@ -17,6 +17,8 @@ before_script:
 before_deploy:
 - ls -l build/
 - GH_TOKEN="$(cat $GH_TOKEN_FILE)"
+script:
+- echo "script :)"
 deploy:
   provider: pypi
   user: devopshq
