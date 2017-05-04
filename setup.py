@@ -6,18 +6,21 @@ from crosspm import config
 
 try:
     import pypandoc
+
+    print("Converting README...")
     long_description = pypandoc.convert('README.md', 'rst')
-    long_description = long_description.replace("\r","") # Do not forget this line
+    long_description = long_description.replace("\r", "")  # Do not forget this line
 except (IOError, ImportError, OSError):
     print("Pandoc not found. Long_description conversion failure.")
     with open('README.md', encoding="utf-8") as f:
         long_description = f.read()
-try:
-    with open('README.rst', 'w') as f:
-        f.write(long_description)
-except:
-    pass
-
+else:
+    print("Saving README.rst...")
+    try:
+        with open('README.rst', 'w') as f:
+            f.write(long_description)
+    except:
+        print("  failed!")
 
 setup(
     name='crosspm',
@@ -60,6 +63,7 @@ setup(
     ],
     setup_requires=[
         'wheel',
+        'pypandoc',
     ],
     tests_require=[
         'pytest',
