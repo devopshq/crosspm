@@ -1,10 +1,10 @@
 CrossPM
 =======
 
-[![](https://travis-ci.org/devopshq/crosspm.svg?branch=master)](https://travis-ci.org/devopshq/crosspm)
-[![](https://api.codacy.com/project/badge/Grade/1b610f6ba99443908f914de0880ed6cc)](https://www.codacy.com/app/tim55667757/crosspm/dashboard)
-[![](https://img.shields.io/pypi/v/crosspm.svg)](https://pypi.python.org/pypi/crosspm)
-[![](https://img.shields.io/pypi/l/crosspm.svg)](https://github.com/devopshq/crosspm/blob/master/LICENSE)
+[![build](https://travis-ci.org/devopshq/crosspm.svg?branch=master)][1]
+[![codacy](https://api.codacy.com/project/badge/Grade/1b610f6ba99443908f914de0880ed6cc)](https://www.codacy.com/app/tim55667757/crosspm/dashboard)
+[![pypi](https://img.shields.io/pypi/v/crosspm.svg)](https://pypi.python.org/pypi/crosspm)
+[![license](https://img.shields.io/pypi/l/crosspm.svg)](https://github.com/devopshq/crosspm/blob/master/LICENSE)
 
 *Index:*
 - [Introduction](#Chapter_1)
@@ -330,3 +330,5 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 <a name="Chapter_5_2_13"></a>***output*** - Report output format definition.
     
     tree - columns and widths for tree output, printed in the end of CrossPM job.
+
+[1]:https://travis-ci.org/devopshq/crosspm

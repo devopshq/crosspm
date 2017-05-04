@@ -33,7 +33,8 @@ try:
 
     print("Converting README...")
     long_description = pypandoc.convert('README.md', 'rst')
-    # long_description = long_description.replace('\n\n', '\n')
+    if branch:
+        long_description = long_description.replace('crosspm.svg?branch=master', 'crosspm.svg?branch={}'.format(branch))
     index_begin = long_description.find('\n*Index:*')
     index_end = long_description.find('\nIntroduction')
     examples = long_description.find("\nYou'll see something")
