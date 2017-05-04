@@ -118,7 +118,7 @@ setup(
         '': [
             '*.cmake',
             '../LICENSE',
-            '../README.*',
+            # '../README.*',
         ],
     },
 )
