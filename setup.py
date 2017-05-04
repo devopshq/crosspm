@@ -9,7 +9,6 @@ try:
 
     print("Converting README...")
     long_description = pypandoc.convert('README.md', 'rst')
-    long_description = long_description.replace("\r", "")  # Do not forget this line
 except (IOError, ImportError, OSError):
     print("Pandoc not found. Long_description conversion failure.")
     with open('README.md', encoding="utf-8") as f:
