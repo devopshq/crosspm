@@ -40,10 +40,10 @@ try:
     links = long_description.find('\n.. |crosspm')
     long_description = '{}{}More information here: {}\n{}'.format(
         long_description[:index_begin],
-        long_description[index_end:examples+1],
+        long_description[index_end:examples + 1],
         url,
         long_description[links:],
-    ).replace('\r\n','\n')
+    ).replace('\r\n', '\n')
 
 except (IOError, ImportError, OSError):
     print("Pandoc not found. Long_description conversion failure.")
@@ -55,8 +55,8 @@ else:
         if len(long_description) > 0:
             with open('README.rst', 'w', encoding="utf-8") as f:
                 f.write(long_description)
-            # if travis:
-            #     os.remove('README.md')
+                # if travis:
+                #     os.remove('README.md')
     except:
         print("  failed!")
 
@@ -68,6 +68,7 @@ setup(
     author='Alexander Kovalev',
     author_email='ak@alkov.pro',
     url=url,
+    long_description=long_description,
     download_url='https://github.com/devopshq/crosspm.git',
     entry_points={'console_scripts': ['crosspm=crosspm.__main__:main']},
     classifiers=[
