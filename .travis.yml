@@ -15,7 +15,6 @@ before_script:
 - git config --global user.email "ak@alkov.pro"
 - git config --global user.name "Alexander Kovalev"
 before_deploy:
-- ls -l build/
 - GH_TOKEN="$(cat $GH_TOKEN_FILE)"
 script:
 - echo "script :)"

@@ -62,7 +62,7 @@ else:
 
 setup(
     name='crosspm',
-    version=config.__version__,
+    version=version,
     description='Cross Package Manager',
     license='MIT',
     author='Alexander Kovalev',
