@@ -37,7 +37,7 @@ try:
     index_begin = long_description.find('\n*Index:*')
     index_end = long_description.find('\nIntroduction')
     examples = long_description.find("\nYou'll see something")
-    links = long_description.find('\n.. |crosspm')
+    links = long_description.find('\n.. |image')
     if all((index_begin >= 0,
             index_end >= 0,
             examples >= 0,
