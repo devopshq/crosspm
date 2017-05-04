@@ -33,17 +33,22 @@ try:
 
     print("Converting README...")
     long_description = pypandoc.convert('README.md', 'rst')
-    long_description = long_description.replace('\n\n', '\n').replace('***', '*')
-    index_begin = long_description.find('\n*Index:*')
-    index_end = long_description.find('\nIntroduction')
-    examples = long_description.find('\nExamples')
-    links = long_description.find('\n.. |crosspm')
-    long_description = '{}{}More information here: {}\n{}'.format(
-        long_description[:index_begin],
-        long_description[index_end:examples + 1],
-        url,
-        long_description[links:],
-    ).replace('\r\n', '\n')
+    # long_description = long_description.replace('\n\n', '\n')
+    # index_begin = long_description.find('\n*Index:*')
+    # index_end = long_description.find('\nIntroduction')
+    # examples = long_description.find('\nExamples')
+    # links = long_description.find('\n.. |crosspm')
+    # if all((index_begin >= 0,
+    #         index_end >= 0,
+    #         examples >= 0,
+    #         links >= 0,
+    #         )):
+    #     long_description = '{}{}More information here: {}\n{}'.format(
+    #         long_description[:index_begin],
+    #         long_description[index_end:examples + 1],
+    #         url,
+    #         long_description[links:],
+    #     )  #.replace('\r\n', '\n')
 
 except (IOError, ImportError, OSError):
     print("Pandoc not found. Long_description conversion failure.")
