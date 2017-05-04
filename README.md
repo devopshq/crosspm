@@ -1,7 +1,7 @@
 CrossPM
 =======
 
-[![build](https://travis-ci.org/devopshq/crosspm.svg?branch=master)][1]
+[![build](https://travis-ci.org/devopshq/crosspm.svg?branch=master)](https://travis-ci.org/devopshq/crosspm)
 [![codacy](https://api.codacy.com/project/badge/Grade/1b610f6ba99443908f914de0880ed6cc)](https://www.codacy.com/app/tim55667757/crosspm/dashboard)
 [![pypi](https://img.shields.io/pypi/v/crosspm.svg)](https://pypi.python.org/pypi/crosspm)
 [![license](https://img.shields.io/pypi/l/crosspm.svg)](https://github.com/devopshq/crosspm/blob/master/LICENSE)
@@ -231,33 +231,29 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 <a name="Chapter_5_2_1"></a>***import*** - If defined, imports yaml config parts from other files. Must be the first parameter in config file.
 
 <a name="Chapter_5_2_2"></a>***cpm*** - Main configuration such as manifest file name and cache path.
-    
-    description - Short description of your configuration file.
-    
-    dependencies - Manifest file name (not path - just filename)
-    
-    dependencies-lock - Manifest with locked dependencies (without masks and conditions) file name 
-                        (not path - just filename). Equals to "dependencies" if not set.
-    
-    cache - Path for CrossPM temporary files, downloaded package archives and unpacked packages. 
-            Ignored if cache folder is configured in top "cache" item.
-
+<dl>
+  <dd><i>description</i> - Short description of your configuration file.</dd>
+  <dd><i>dependencies</i> - Manifest file name (not path - just filename)</dd>
+  <dd><i>dependencies-lock</i> - Manifest with locked dependencies (without masks and conditions) file name 
+                                 (not path - just filename). Equals to "dependencies" if not set.</dd>
+  <dd><i>cache</i> - Path for CrossPM temporary files, downloaded package archives and unpacked packages. 
+                     Ignored if cache folder is configured in top "cache" item.</dd>
+</dl>
 <a name="Chapter_5_2_3"></a>***cache*** - Parameters for cache handling
-    
-    cmdline - Command line option name with path to cache folder.
-    
-    env - Environment variable name with path to cache folder. Used if command line option is not set.
-    
-    default - Default path to cache folder. Used if command line option and environment variable are not set.
-    
-    path - Path to cache folder. "cmdline", "env" and "default" are ignored if "path" set.
-    
-    clear - Parameters for cleaning cache.
-        days - Delete files or folders older than "days".
-        size - Delete older files and folders if cache size is bigger than "size". 
-               Could be in b, Kb, Mb, Gb. Bytes (b) is a default.
-        auto - Call cache check and clear before download.
-
+<dl>
+  <dd><i>cmdline</i> - Command line option name with path to cache folder.</dd>
+  <dd><i>env</i> - Environment variable name with path to cache folder. Used if command line option is not set.</dd>
+  <dd><i>default</i> - Default path to cache folder. Used if command line option and environment variable are not set.</dd>
+  <dd><i>path</i> - Path to cache folder. "cmdline", "env" and "default" are ignored if "path" set.</dd>
+  <dd><i>clear</i> - Parameters for cleaning cache.
+  <dl>
+    <dd><i>days</i> - Delete files or folders older than "days".</dd>
+    <dd><i>size</i> - Delete older files and folders if cache size is bigger than "size". 
+                      Could be in b, Kb, Mb, Gb. Bytes (b) is a default.</dd>
+    <dd><i>auto</i> - Call cache check and clear before download.</dd>
+  </dl>
+  </dd>
+</dl>
 <a name="Chapter_5_2_4"></a>***columns*** - Manifest file columns definition. Asterisk here points to name column (column of manifest file with package name). CrossPM uses it for building list with unique packages (i.e. by package name)
 
 <a name="Chapter_5_2_5"></a>***values*** - Lists or dicts of available values for some columns (if we need it).
@@ -274,10 +270,10 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     
     columns - Dictionary with column name as a key and template as a value. 
     Example:
+        
+        version: "{int}.{int}.{int}[.{int}][-{str}]"
     
-    ```
-    version: "{int}.{int}.{int}[.{int}][-{str}]"
-    ```
+    
     means that version column contains three numeric parts divided by a dot, followed by numeric or string 
     or numeric and string parts with dividers or nothing at all.
     
@@ -288,16 +284,17 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     
     path - Path template for searching packages in repository. Here {} is column, [|] is variation. 
     Example:
-    ```
-    path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]"
-    ```
+    
+        path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]"
+    
+    
     these paths will be searched:
-    ```
-    https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.zip
-    https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.tar.gz
-    https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.zip
-    https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.tar.gz
-    ```
+    
+        https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.zip
+        https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.tar.gz
+        https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.zip
+        https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.tar.gz
+    
     
     properties - Extra properties. i.e. object properties in Artifactory.
 
@@ -330,5 +327,3 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 <a name="Chapter_5_2_13"></a>***output*** - Report output format definition.
     
     tree - columns and widths for tree output, printed in the end of CrossPM job.
-
-[1]:https://travis-ci.org/devopshq/crosspm
