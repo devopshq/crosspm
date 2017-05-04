@@ -231,6 +231,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 <a name="Chapter_5_2_1"></a>***import*** - If defined, imports yaml config parts from other files. Must be the first parameter in config file.
 
 <a name="Chapter_5_2_2"></a>***cpm*** - Main configuration such as manifest file name and cache path.
+
 <dl>
   <dd><i>description</i> - Short description of your configuration file.</dd>
   <dd><i>dependencies</i> - Manifest file name (not path - just filename)</dd>
@@ -239,7 +240,9 @@ Let's keep in mind that any value we use in path, properties and columns descrip
   <dd><i>cache</i> - Path for CrossPM temporary files, downloaded package archives and unpacked packages. 
                      Ignored if cache folder is configured in top "cache" item.</dd>
 </dl>
+
 <a name="Chapter_5_2_3"></a>***cache*** - Parameters for cache handling
+
 <dl>
   <dd><i>cmdline</i> - Command line option name with path to cache folder.</dd>
   <dd><i>env</i> - Environment variable name with path to cache folder. Used if command line option is not set.</dd>
@@ -254,76 +257,87 @@ Let's keep in mind that any value we use in path, properties and columns descrip
   </dl>
   </dd>
 </dl>
+
 <a name="Chapter_5_2_4"></a>***columns*** - Manifest file columns definition. Asterisk here points to name column (column of manifest file with package name). CrossPM uses it for building list with unique packages (i.e. by package name)
 
 <a name="Chapter_5_2_5"></a>***values*** - Lists or dicts of available values for some columns (if we need it).
 
 <a name="Chapter_5_2_6"></a>***options*** - Here we can define commandline options and environment variable names from which we will get some of columns values. We can define default values for those columns here too. Each option must be configured with this parameters:
 
-    cmdline - Command line option name with option's value.
-
-    env - Environment variable name with option's value. Used if command line option is not set.
-
-    default - Default option's value. Used if command line option and environment variable are not set.
+<dl>
+  <dd><i>cmdline</i> - Command line option name with option's value.</dd>
+  <dd><i>env</i> - Environment variable name with option's value. Used if command line option is not set.</dd>
+  <dd><i>default</i> - Default option's value. Used if command line option and environment variable are not set.</dd>
+</dl>
 
 <a name="Chapter_5_2_7"></a>***parsers*** - Rules for parsing columns, paths, properties, etc.
     
-    columns - Dictionary with column name as a key and template as a value. 
-    Example:
+<dl>
+  <dd><i>columns</i> - Dictionary with column name as a key and template as a value.
+  <dl>   
+  <dd>Example:
         
         version: "{int}.{int}.{int}[.{int}][-{str}]"
     
-    
+  </dd>
+  <dd>  
     means that version column contains three numeric parts divided by a dot, followed by numeric or string 
     or numeric and string parts with dividers or nothing at all.
-    
-    sort - List of column names in sorting order. Used for sorting packages if more than one version found 
-    for defined parameters. Asterisk can be one of values of a list representing all columns not mentioned here.
-    
-    index - Used for picking one element from sorted list. It's just a list index as in python.
-    
-    path - Path template for searching packages in repository. Here {} is column, [|] is variation. 
-    Example:
+  </dd>
+  </dl>
+  </dd>
+  <dd><i>sort</i> - List of column names in sorting order. Used for sorting packages if more than one version found 
+    for defined parameters. Asterisk can be one of values of a list representing all columns not mentioned here.</dd>
+  <dd><i>index</i> - Used for picking one element from sorted list. It's just a list index as in python.</dd>
+  <dd><i>path</i> - Path template for searching packages in repository. Here {} is column, [|] is variation.
+  <dl>
+  <dd>Example:
     
         path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]"
     
-    
-    these paths will be searched:
+  </dd>
+  <dd>these paths will be searched:
     
         https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.zip
         https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.tar.gz
         https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.zip
         https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.tar.gz
     
-    
-    properties - Extra properties. i.e. object properties in Artifactory.
+  </dd>
+  </dl>
+  </dd>
+  <dd><i>properties</i> - Extra properties. i.e. object properties in Artifactory.</dd>
+</dl>
 
 <a name="Chapter_5_2_8"></a>***defaults*** - Default values for columns not defined in "options".
 
 <a name="Chapter_5_2_9"></a>***solid*** - Set of rules pointing to packages which doesn't need to be unpacked.
     
-    ext - File name extension (i.e. ".tgz", ".tar.gz", or more real example ".deb").
+<dl>
+  <dd><i>ext</i> - File name extension (i.e. ".tgz", ".tar.gz", or more real example ".deb").</dd>
+</dl>
 
 <a name="Chapter_5_2_10"></a>***fails*** - Here we can define some rules for failing CrossPM jobs.
-    
-    unique - List of columns for generating unique index.
+
+<dl>
+  <dd><i>unique</i> - List of columns for generating unique index.</dd>
+</dl>
 
 <a name="Chapter_5_2_11"></a>***common*** - Common parameters for all or several of sources.
 
 <a name="Chapter_5_2_12"></a>***sources*** - Sources definition. Here we define parameters for repositories access.
 
-    type - Source type. Available types list depends on existing adapter modules.
-    
-    parser - Available parsers defined in parsers.
-    
-    server - Root URL of repository server.
-    
-    repo - Subpath to specific part of repository on server.
-    
-    auth_type - Authorization type. For example "simple".
-    
-    auth - Authorization data. For "simple" here we define login and password.
+<dl>
+  <dd><i>type</i> - Source type. Available types list depends on existing adapter modules.</dd>
+  <dd><i>parser</i> - Available parsers defined in parsers.</dd>
+  <dd><i>server</i> - Root URL of repository server.</dd>
+  <dd><i>repo</i> - Subpath to specific part of repository on server.</dd>
+  <dd><i>auth_type</i> - Authorization type. For example "simple".</dd>
+  <dd><i>auth</i> - Authorization data. For "simple" here we define login and password.</dd>
+</dl>
 
 <a name="Chapter_5_2_13"></a>***output*** - Report output format definition.
     
-    tree - columns and widths for tree output, printed in the end of CrossPM job.
+<dl>
+  <dd><i>tree - columns and widths for tree output, printed in the end of CrossPM job.</dd>
+</dl>
