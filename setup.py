@@ -38,7 +38,11 @@ try:
     index_begin = long_description.find('\n*Index:*')
     index_end = long_description.find('\nIntroduction')
     examples = long_description.find("\nYou'll see something")
-    links = long_description.find('\n.. |image')
+    links = min((long_description.find('\n.. |build'),
+                 long_description.find('\n.. |codacy'),
+                 long_description.find('\n.. |pypi'),
+                 long_description.find('\n.. |license'),
+                 ))
     if all((index_begin >= 0,
             index_end >= 0,
             examples >= 0,
