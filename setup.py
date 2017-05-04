@@ -12,6 +12,12 @@ except (IOError, ImportError, OSError):
     print("Pandoc not found. Long_description conversion failure.")
     with open('README.md', encoding="utf-8") as f:
         long_description = f.read()
+try:
+    with open('README.rst', 'w') as f:
+        f.write(long_description)
+except:
+    pass
+
 
 setup(
     name='crosspm',
