@@ -4,11 +4,20 @@
 from setuptools import setup
 from crosspm import config
 
+try:
+    import pypandoc
+    long_description = pypandoc.convert('README.md', 'rst')
+    long_description = long_description.replace("\r","") # Do not forget this line
+except (IOError, ImportError, OSError):
+    print("Pandoc not found. Long_description conversion failure.")
+    with open('README.md', encoding="utf-8") as f:
+        long_description = f.read()
+
 setup(
     name='crosspm',
     version=config.__version__,
     description='Cross Package Manager',
-    long_description=open('README.md').read(),
+    long_description=long_description,
     license='MIT',
     author='Alexander Kovalev',
     author_email='ak@alkov.pro',
@@ -61,7 +70,7 @@ setup(
         '': [
             '*.cmake',
             '../LICENSE',
-            '../README.md',
+            '../README.*',
         ],
     },
 )

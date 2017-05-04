@@ -20,7 +20,7 @@ Options:
     -l LOGFILE, --log=LOGFILE       File name for log output. Log level is '{log_default}' if set when verbose doesn't.
     -c FILE, --config=FILE          Path to configuration file.
     -o OPTIONS, --options OPTIONS   Extra options.
-    --deps-path=FILE                Path to file with locked dependencies [./{deps_default}]
+    --deps-path=FILE                Path to file with dependencies [./{deps_default}]
     --depslock-path=FILE            Path to file with locked dependencies [./{deps_lock_default}]
     --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                   Output file name (required if --out_format is not stdout)
