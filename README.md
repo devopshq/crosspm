@@ -3,7 +3,29 @@ CrossPM
 
 [![crosspm build status](https://travis-ci.org/devopshq/crosspm.svg?branch=master)](https://travis-ci.org/devopshq/crosspm) [![crosspm code quality](https://api.codacy.com/project/badge/Grade/1b610f6ba99443908f914de0880ed6cc)](https://www.codacy.com/app/tim55667757/crosspm/dashboard) [![crosspm on PyPI](https://img.shields.io/pypi/v/crosspm.svg)](https://pypi.python.org/pypi/crosspm) [![FuzzyClassificator license](https://img.shields.io/pypi/l/crosspm.svg)](https://github.com/devopshq/crosspm/blob/master/LICENSE)
 
-Introduction
+*Index:*
+- [Introduction](#Chapter_1)
+- [Documentation](#Chapter_2)
+- [Installation](#Chapter_3)
+- [Usage](#Chapter_4)
+- [Examples](#Chapter_5)
+    - [crosspm.yaml](#Chapter_5_1)
+    - [Config file description](#Chapter_5_2)
+        - [import](#Chapter_5_2_1)
+        - [cpm](#Chapter_5_2_2)
+        - [cache](#Chapter_5_2_3)
+        - [columns](#Chapter_5_2_4)
+        - [values](#Chapter_5_2_5)
+        - [options](#Chapter_5_2_6)
+        - [parsers](#Chapter_5_2_7)
+        - [defaults](#Chapter_5_2_8)
+        - [solid](#Chapter_5_2_9)
+        - [fails](#Chapter_5_2_10)
+        - [common](#Chapter_5_2_11)
+        - [sources](#Chapter_5_2_12)
+        - [output](#Chapter_5_2_13)
+        
+<a name="Chapter_1"></a> Introduction
 ------------
 
 CrossPM (Cross Package Manager) is a universal extensible package manager.
@@ -45,12 +67,12 @@ Configuration file format is YAML, as you could see from its filename, so you fr
 as long, as main configuration parameters remains on their levels :)
 
 
-Documentation
+<a name="Chapter_2"></a> Documentation
 -------------
 Actual version always here: http://devopshq.github.io/crosspm
 
 
-Installation
+<a name="Chapter_3"></a> Installation
 ------------
 To install CrossPM, simply:
 ```
@@ -58,7 +80,7 @@ To install CrossPM, simply:
 ```
 
 
-Usage
+<a name="Chapter_4"></a> Usage
 -----
 To see commandline parameters help, run:
 ```
@@ -95,11 +117,11 @@ You'll see something like this:
 ```
 
 
-Examples
+<a name="Chapter_5"></a> Examples
 --------
 We'll add some more examples soon. Here is one of configuration file examples for now.
 
-**crosspm.yaml**
+<a name="Chapter_5_1"></a> **crosspm.yaml**
 ```
 import:
 - cred.yaml
@@ -199,13 +221,13 @@ tree:
   - version: 0
 ```
 
-**Config file description**
+<a name="Chapter_5_2"></a> **Config file description**
 
 Let's keep in mind that any value we use in path, properties and columns description, called column in CrossPM.
 
-**import** - If defined, imports yaml config parts from other files. Must be the first parameter in config file.
+<a name="Chapter_5_2_1"></a> ***import*** - If defined, imports yaml config parts from other files. Must be the first parameter in config file.
 
-**cpm** - Main configuration such as manifest file name and cache path.
+<a name="Chapter_5_2_2"></a> ***cpm*** - Main configuration such as manifest file name and cache path.
     
     description - Short description of your configuration file.
     
@@ -217,7 +239,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     cache - Path for CrossPM temporary files, downloaded package archives and unpacked packages. 
             Ignored if cache folder is configured in top "cache" item.
 
-**cache** - Parameters for cache handling
+<a name="Chapter_5_2_3"></a> ***cache*** - Parameters for cache handling
     
     cmdline - Command line option name with path to cache folder.
     
@@ -233,11 +255,11 @@ Let's keep in mind that any value we use in path, properties and columns descrip
                Could be in b, Kb, Mb, Gb. Bytes (b) is a default.
         auto - Call cache check and clear before download.
 
-**columns** - Manifest file columns definition. Asterisk here points to name column (column of manifest file with package name). CrossPM uses it for building list with unique packages (i.e. by package name)
+<a name="Chapter_5_2_4"></a> ***columns*** - Manifest file columns definition. Asterisk here points to name column (column of manifest file with package name). CrossPM uses it for building list with unique packages (i.e. by package name)
 
-**values** - Lists or dicts of available values for some columns (if we need it).
+<a name="Chapter_5_2_5"></a> ***values*** - Lists or dicts of available values for some columns (if we need it).
 
-**options** - Here we can define commandline options and environment variable names from which we will get some of columns values. We can define default values for those columns here too. Each option must be configured with this parameters:
+<a name="Chapter_5_2_6"></a> ***options*** - Here we can define commandline options and environment variable names from which we will get some of columns values. We can define default values for those columns here too. Each option must be configured with this parameters:
 
     cmdline - Command line option name with option's value.
 
@@ -245,7 +267,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
 
     default - Default option's value. Used if command line option and environment variable are not set.
 
-**parsers** - Rules for parsing columns, paths, properties, etc.
+<a name="Chapter_5_2_7"></a> ***parsers*** - Rules for parsing columns, paths, properties, etc.
     
     columns - Dictionary with column name as a key and template as a value. 
     Example:
@@ -276,19 +298,19 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     
     properties - Extra properties. i.e. object properties in Artifactory.
 
-**defaults** - Default values for columns not defined in "options".
+<a name="Chapter_5_2_8"></a> ***defaults*** - Default values for columns not defined in "options".
 
-**solid** - Set of rules pointing to packages which doesn't need to be unpacked.
+<a name="Chapter_5_2_9"></a> ***solid*** - Set of rules pointing to packages which doesn't need to be unpacked.
     
     ext - File name extension (i.e. ".tgz", ".tar.gz", or more real example ".deb").
 
-**fails** - Here we can define some rules for failing CrossPM jobs.
+<a name="Chapter_5_2_10"></a> ***fails*** - Here we can define some rules for failing CrossPM jobs.
     
     unique - List of columns for generating unique index.
 
-**common** - Common parameters for all or several of sources.
+<a name="Chapter_5_2_11"></a> ***common*** - Common parameters for all or several of sources.
 
-**sources** - Sources definition. Here we define parameters for repositories access.
+<a name="Chapter_5_2_12"></a> ***sources*** - Sources definition. Here we define parameters for repositories access.
 
     type - Source type. Available types list depends on existing adapter modules.
     
@@ -302,6 +324,6 @@ Let's keep in mind that any value we use in path, properties and columns descrip
     
     auth - Authorization data. For "simple" here we define login and password.
 
-**output** - Report output format definition.
+<a name="Chapter_5_2_13"></a> ***output*** - Report output format definition.
     
     tree - columns and widths for tree output, printed in the end of CrossPM job.
