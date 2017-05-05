@@ -268,7 +268,7 @@ class Config:
             _is_yaml = False
         else:
             with open(_config_file_name) as f:
-                for i, line in enumerate(f):
+                for line in f:
                     line = line.strip()
                     if not line:
                         continue

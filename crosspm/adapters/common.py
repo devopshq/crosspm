@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import requests
-import os
-from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
 import logging
 

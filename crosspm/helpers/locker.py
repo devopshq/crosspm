@@ -4,7 +4,7 @@ import os
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.output import Output
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME, CROSSPM_DEPENDENCY_FILENAME
+from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
 
 
 class Locker(Downloader):
