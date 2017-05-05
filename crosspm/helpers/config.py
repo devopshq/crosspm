@@ -176,7 +176,8 @@ class Config:
                         return _file
         return ''
 
-    def find_cpmconfig(self, conf_name=''):
+    @staticmethod
+    def find_cpmconfig(conf_name=''):
         conf_path_add = ''
         try:
             _temp = __import__('cpmconfig.cpmconfig', globals(), locals(), ['App'], 0)
@@ -291,7 +292,8 @@ class Config:
 
         return result
 
-    def find_import_file(self, import_file_name=''):
+    @staticmethod
+    def find_import_file(import_file_name=''):
         res_file_name = ''
         if import_file_name:
             for config_path in [''] + DEFAULT_CONFIG_PATH:

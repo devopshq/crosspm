@@ -88,13 +88,13 @@ class Adapter(BaseAdapter):
                                 err_status = error.get('status', -1)
                                 err_msg = error.get('message', '')
                                 if err_status == 401:
-                                    msg = 'Authentication error[{}]{}'.format(err_status,
-                                                                              (': {}'.format(err_msg)) if err_msg else '')
+                                    msg = 'Authentication error[{}]{}'.format(
+                                        err_status, (': {}'.format(err_msg)) if err_msg else '')
                                 elif err_status == 404:
                                     msg = last_error
                                 else:
-                                    msg = 'Error[{}]{}'.format(err_status,
-                                                               (': {}'.format(err_msg)) if err_msg else '')
+                                    msg = 'Error[{}]{}'.format(
+                                        err_status, (': {}'.format(err_msg)) if err_msg else '')
                                 if last_error != msg:
                                     self._log.error(msg)
                                 last_error = msg
@@ -153,7 +153,8 @@ class Adapter(BaseAdapter):
 
         return _packages_found
 
-    def pkg_stat(self, package):
+    @staticmethod
+    def pkg_stat(package):
         _stat_attr = {'ctime': 'st_atime',
                       'mtime': 'st_mtime',
                       'size': 'st_size'}
@@ -198,12 +199,14 @@ class Adapter(BaseAdapter):
 
         return dest_path
 
-    def get_package_filename(self, package):
+    @staticmethod
+    def get_package_filename(package):
         if isinstance(package, ArtifactoryPath):
             return package.name
         return ''
 
-    def get_package_path(self, package):
+    @staticmethod
+    def get_package_path(package):
         if isinstance(package, ArtifactoryPath):
             return str(package)
         return ''

@@ -162,7 +162,8 @@ class Output:
         if 'value' not in self._config:
             self._config['value'] = ''
 
-    def get_var_name(self, pkg_name):
+    @staticmethod
+    def get_var_name(pkg_name):
         result = '{:upper.safe}'.format(OutFormat(pkg_name))
         return result
 

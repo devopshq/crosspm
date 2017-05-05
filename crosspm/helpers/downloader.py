@@ -59,7 +59,7 @@ class Downloader:
                                          _packages.get(x[self._config.name_column], None) is None]
                 elif isinstance(list_or_file_path, dict) and isinstance(list_or_file_path.get('raw', None), list):
                     list_or_file_path['raw'] = [x for x in list_or_file_path['raw'] if
-                                         _packages.get(x[self._config.name_column], None) is None]
+                                                _packages.get(x[self._config.name_column], None) is None]
 
         return _packages
 

@@ -199,7 +199,8 @@ class Adapter(BaseAdapter):
 
         return _packages_found
 
-    def pkg_stat(self, package):
+    @staticmethod
+    def pkg_stat(package):
         _stat_attr = {'ctime': 'st_atime',
                       'mtime': 'st_mtime',
                       'size': 'st_size'}
@@ -208,7 +209,7 @@ class Adapter(BaseAdapter):
         _stat_pkg = {
             k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if isinstance(v, datetime) else v
             for k, v in _stat_pkg.items()
-            }
+        }
         return _stat_pkg
 
     def download_package(self, package, dest_path):
@@ -244,12 +245,14 @@ class Adapter(BaseAdapter):
 
         return dest_path
 
-    def get_package_filename(self, package):
+    @staticmethod
+    def get_package_filename(package):
         if isinstance(package, ArtifactoryPath):
             return package.name
         return ''
 
-    def get_package_path(self, package):
+    @staticmethod
+    def get_package_path(package):
         if isinstance(package, ArtifactoryPath):
             return str(package)
         return ''
