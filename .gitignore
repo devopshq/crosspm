@@ -9,3 +9,6 @@ docs/_build/
 .cache
 .eggs
 README.rst
+/htmlcov
+.coverage
+coverage.xml
