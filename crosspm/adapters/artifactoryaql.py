@@ -148,7 +148,7 @@ class Adapter(BaseAdapter):
             _package = None
             if _packages:
                 _packages = parser.filter_one(_packages, _paths['params'], _params_found)
-                if type(_packages) is dict:
+                if isinstance(_packages, dict):
                     _packages = [_packages]
 
                 if len(_packages) == 1:
@@ -206,7 +206,7 @@ class Adapter(BaseAdapter):
         _stat_pkg = package.stat()
         _stat_pkg = {k: getattr(_stat_pkg, k, None) for k in _stat_attr.keys()}
         _stat_pkg = {
-            k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if type(v) is datetime else v
+            k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if isinstance(v, datetime) else v
             for k, v in _stat_pkg.items()
             }
         return _stat_pkg

@@ -73,7 +73,7 @@ class CrossPM:
                             argv=args,
                             version=version)
 
-        if type(self._args) is str:
+        if isinstance(self._args, str):
             if self._throw_exceptions:
                 print(app_name)
                 print(self._args)

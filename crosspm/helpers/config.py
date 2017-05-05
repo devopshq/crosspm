@@ -216,7 +216,7 @@ class Config:
             if cpm_file_deps:
                 DEFAULT_CONFIG_PATH.insert(ind, cpm_file_deps)
 
-            _def_conf_file = [DEFAULT_CONFIG_FILE] if type(DEFAULT_CONFIG_FILE) is str else DEFAULT_CONFIG_FILE
+            _def_conf_file = [DEFAULT_CONFIG_FILE] if isinstance(DEFAULT_CONFIG_FILE, str) else DEFAULT_CONFIG_FILE
             for config_path in DEFAULT_CONFIG_PATH:
                 config_path = config_path.strip().strip("'").strip('"')
                 config_path = os.path.realpath(os.path.expanduser(config_path))
@@ -340,9 +340,9 @@ class Config:
             data_imports = yaml.safe_load(yaml_imports)
             yaml_content_pre = ''
             if 'import' in data_imports:
-                if type(data_imports['import']) is str:
+                if isinstance(data_imports['import'], str):
                     data_imports['import'] = [data_imports['import']]
-                if type(data_imports['import']) in (list, tuple):
+                if isinstance(data_imports['import'], (list, tuple)):
                     for _import_file_name in data_imports['import']:
                         _import_file_name = self.find_import_file(_import_file_name)
                         if _import_file_name:
@@ -571,7 +571,7 @@ class Config:
             try:
                 _temp = __import__(_app_name, globals(), locals(), ['setup', 'Adapter'], 0)
                 _names = _temp.setup['name']
-                if type(_names) is str:
+                if isinstance(_names, str):
                     _names = [_names]
                 self._adapters.update({k: _temp.Adapter(self) for k in _names if k in types})
 
@@ -592,7 +592,7 @@ class Config:
         _remove = []
         for k, v in options.items():
             # if option type is str, leave the value intact
-            if type(options[k]) is not str:
+            if not isinstance(options[k], str):
                 # if option has cmdline name, try to fetch a value from command line by cmdline name
                 if 'cmdline' in v:
                     if v['cmdline'] in cmdline:
@@ -603,7 +603,7 @@ class Config:
                     options[k] = cmdline[k]
 
                 # if option is still not filled, try to get a value from environment by env name
-                if type(options[k]) is not str:
+                if not isinstance(options[k], str):
                     success = False
                     if 'env' in v:
                         _env = os.getenv(v['env'])
@@ -698,7 +698,7 @@ class Config:
 
         default = None
         for x in levels:
-            if type(level) is str:
+            if isinstance(level, str):
                 if x[0] == level.lower():
                     return x[1]
             elif x[2]:

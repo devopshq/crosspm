@@ -168,11 +168,11 @@ class Parser:
 
     def merge_with_mask(self, column, value):
         if column not in self._columns:
-            if type(value) in [list, tuple]:
+            if isinstance(value, (list, tuple)):
                 # TODO: Check for value is not None - if it is, raise "column value not set"
                 value = ''.join(value)
             return value  # nothing to parse
-        if type(value) not in [list, tuple]:
+        if not isinstance(value, (list, tuple)):
             return value  # nothing to parse
         _res = ''
         _res_tmp = ''
@@ -222,7 +222,7 @@ class Parser:
         if column not in self._columns:
             _res = True  # nothing to validate
             _res_value = value
-        elif type(param) not in [list, tuple]:
+        elif not isinstance(param, (list, tuple)):
             _res = False
         else:
             _res = True
@@ -256,7 +256,7 @@ class Parser:
 
         var1 = value
         var2 = text if text else '*'
-        if type(var1) is int:
+        if isinstance(var1, int):
             try:
                 var2 = int(var2)
                 if not _sign:
@@ -483,7 +483,7 @@ class Parser:
         _all_dirties = self.fill_rule(rule_name, params, return_params=True, return_defaults=True)
         # _all_defaults = []
         # if self._defaults:
-        #     if type(value) is dict:
+        #     if isinstance(value, dict):
         #         for _default in self.fill_rule(rule_name, self._defaults, return_params=False):
         #             _tmp = [x.strip() for x in _default.split('=')]
         #             _tmp = [x if len(x) > 0 else '*' for x in _tmp]
@@ -502,15 +502,15 @@ class Parser:
                 _dirty = [x.split(']') for x in _dirt['var'].split('[')]
                 _dirty = self.list_flatter(_dirty)
                 _variants = self.get_variants(_dirty, [])
-                if type(value) is str:
+                if isinstance(value, str):
                     _res_var = value in _variants
-                elif type(value) in (list, tuple):
+                elif isinstance(value, (list, tuple)):
                     _res_var = False
                     for _variant in _variants:
                         if _variant in value:
                             _res_var = True
                             break
-                elif type(value) is dict:
+                elif isinstance(value, dict):
                     _key = ''
                     if 'mask' in _dirt.get('default', {}):
                         _mask = _dirt['default'].get('mask', '')
@@ -527,9 +527,9 @@ class Parser:
                         for _key in _key_list:
                             if len(_tmp) > 1:
                                 _tmp_val = value[_key]
-                                if type(_tmp_val) is str:
+                                if isinstance(_tmp_val, str):
                                     _tmp_val = [_tmp_val]
-                                elif type(_tmp_val) not in [list, tuple, dict]:
+                                elif not isinstance(_tmp_val, (list, tuple, dict)):
                                     raise CrosspmException(
                                         CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
                                         'Parser rule for [{}] not able to process [{}] data type.'.format(
@@ -559,7 +559,7 @@ class Parser:
         _values = self._config.get_values(column_name)
         for _value in _values:
             if (value is None) or (self.values_match(_value, value, _values)):
-                if type(_values) is dict:
+                if isinstance(_values, dict):
                     _value = _values[_value]
                 yield _value
 
@@ -578,8 +578,8 @@ class Parser:
                 _sign = '=='
 
         var1, var2 = _value, value
-        if type(_values) is dict:
-            var2 = 0 if type(var1) is int else ''
+        if isinstance(_values, dict):
+            var2 = 0 if isinstance(var1, int) else ''
             for k, v in _values.items():
                 if value == v:
                     var2 = k
@@ -628,7 +628,7 @@ class Parser:
                 if _valued:
                     _columns += [[_col, [x for x in self.iter_matched_values(_col, params[_col])]]]
                 else:
-                    if type(params[_col]) not in [list, tuple]:
+                    if not isinstance(params[_col], (list, tuple)):
                         _tmp = [params[_col]]
                     else:
                         _tmp = [x for x in params[_col]]
@@ -726,7 +726,7 @@ class Parser:
         return paths
 
     def iter_packages_params(self, list_or_file_path):
-        if type(list_or_file_path) is str:
+        if isinstance(list_or_file_path, str):
             if not os.path.exists(list_or_file_path):
                 raise CrosspmException(
                     CROSSPM_ERRORCODE_FILE_DEPS_NOT_FOUND,
@@ -745,7 +745,7 @@ class Parser:
                         continue
 
                     yield self.get_package_params(i, line)
-        elif (type(list_or_file_path) is dict) and ('raw' in list_or_file_path):
+        elif (isinstance(list_or_file_path, dict)) and ('raw' in list_or_file_path):
             for _item in list_or_file_path['raw']:
                 _tmp_item = {k: self.parse_by_mask(k, v, False, True) for k, v in _item.items()}
                 yield _tmp_item
@@ -778,7 +778,7 @@ class Parser:
     def list_flatter(self, _src):
         _res = []
         for x in _src:
-            _res += self.list_flatter(x) if type(x) in [list, tuple] else [x]
+            _res += self.list_flatter(x) if isinstance(x, (list, tuple)) else [x]
         return _res
 
     @staticmethod
@@ -853,10 +853,10 @@ class Parser:
             for _atom_name in item['columns']:
                 if _atom_name in _atoms_found:
                     _rules = params[_atom_name]
-                    if type(_rules) not in [list, tuple]:
+                    if not isinstance(_rules, (list, tuple)):
                         _rules = [_rules]
                     _vars = _atoms_found[_atom_name]
-                    if type(_vars) not in [list, tuple]:
+                    if not isinstance(_vars, (list, tuple)):
                         _vars = [_vars]
                     i = -1
                     for _column in item['columns'][_atom_name]:

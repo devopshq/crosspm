@@ -44,7 +44,7 @@ class Downloader:
             list_or_file_path = self._depslock_path
 
         _packages = {}
-        if type(list_or_file_path) is str:
+        if isinstance(list_or_file_path, str):
             self._log.info('Reading dependencies ... [%s]', list_or_file_path)
         for i, _src in enumerate(self._config.sources()):
             if i > 0:

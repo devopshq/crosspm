@@ -20,7 +20,7 @@ class Package:
         self._params_found_raw = {}
         self._not_cached = True
         self._log = logging.getLogger('crosspm')
-        if type(pkg) is int:
+        if isinstance(pkg, int):
             if pkg == 0:
                 self._root = True
         self._name = name

@@ -167,7 +167,7 @@ class Adapter(BaseAdapter):
             _package = None
             if _packages:
                 _packages = parser.filter_one(_packages, _paths['params'], _params_found)
-                if type(_packages) is dict:
+                if isinstance(_packages, dict):
                     _packages = [_packages]
 
                 if len(_packages) == 1:

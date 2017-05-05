@@ -8,7 +8,7 @@ class Source:
         self._parser = parser
         if 'repo' not in data:
             data['repo'] = ''
-        if type(data['repo']) is str:
+        if isinstance(data['repo'], str):
             data['repo'] = [data['repo']]
         self.args = {k: v for k, v in data.items() if k not in ['type', 'parser']}
 
