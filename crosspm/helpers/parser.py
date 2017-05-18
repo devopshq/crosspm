@@ -88,6 +88,8 @@ class Parser:
     def parse_by_mask(self, column, value, types=False, ext_mask=False):
         if column not in self._columns:
             return value  # nothing to parse
+        if isinstance(value, list):
+            return value[:]
         _res = []
         # extMask = extMask and value == '*'
         orig_value = value
