@@ -49,7 +49,7 @@ disable_warnings()
 class Config:
     windows = WINDOWS
 
-    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path=''):
+    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path='', lock_on_success=False):
         self._log = logging.getLogger('crosspm')
         self._config_path_env = []
         self._sources = []
@@ -66,7 +66,9 @@ class Config:
         self.name_column = ''
         self.deps_file_name = ''
         self.deps_lock_file_name = ''
+        self.lock_on_success = lock_on_success
         self.crosspm_cache_root = ''
+        self.deps_path = ''
         self.depslock_path = ''
         self.init_env_config_path()
 
@@ -503,6 +505,16 @@ class Config:
             if 'dependencies-lock' not in crosspm:
                 self.deps_lock_file_name = self.deps_file_name
 
+        if not self.lock_on_success:
+            lock_on_success = crosspm.get('lock-on-success', False)
+            if isinstance(lock_on_success, str):
+                if lock_on_success.lower() in ['1', 'yes', '+', 'true']:
+                    self.lock_on_success = True
+            try:
+                self.lock_on_success = bool(lock_on_success)
+            except:
+                self.lock_on_success = False
+
         # Cache init
         self.crosspm_cache_root = crosspm.get('cache', '').strip().strip('"').strip("'")
         if not self.crosspm_cache_root:
@@ -594,7 +606,7 @@ class Config:
         _remove = []
         for k, v in options.items():
             # if option type is str, leave the value intact
-            if not isinstance(options[k], str):
+            if not isinstance(options[k], (str, bool)):
                 # if option has cmdline name, try to fetch a value from command line by cmdline name
                 if 'cmdline' in v:
                     if v['cmdline'] in cmdline:

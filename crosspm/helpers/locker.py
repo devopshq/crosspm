@@ -8,9 +8,11 @@ from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
 
 
 class Locker(Downloader):
-    def __init__(self, config):
+    def __init__(self, config, packages=None):
         self.do_load = False
         super(Locker, self).__init__(config, False)
+        if packages:
+            self._packages = packages
 
         if not getattr(config, 'deps_path', ''):
             config.deps_path = config.deps_file_name or CROSSPM_DEPENDENCY_FILENAME
@@ -30,14 +32,13 @@ class Locker(Downloader):
             #     'Dependencies and Lock files are same: "{}".'.format(deps_file_path),
             # )
 
-        self._log.info('Check dependencies ...')
+        if not self._packages:
+            self._log.info('Check dependencies ...')
+            self._root_package.find_dependencies(deps_file_path)
 
-        self._packages = {}
-        self._root_package.find_dependencies(deps_file_path)
-
-        self._log.info('')
-        self._log.info('Dependency tree:')
-        self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
+            self._log.info('')
+            self._log.info('Dependency tree:')
+            self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
 
         _not_found = any(_pkg is None for _pkg in self._packages.values())
 

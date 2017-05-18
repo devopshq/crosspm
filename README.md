@@ -114,6 +114,7 @@ You'll see something like this:
       -o OPTIONS, --options OPTIONS   Extra options.
       --deps-path=FILE                Path to file with locked dependencies [./dependencies.txt]
       --depslock-path=FILE            Path to file with locked dependencies [./dependencies.txt]
+      --lock-on-success               Save file with locked dependencies next to original one if download succeeds
       --out-format=TYPE               Output data format. Available formats:(['stdout', 'cmd', 'python', 'shell', 'json']) [default: stdout]
       --output=FILE                   Output file name (required if --out_format is not stdout)
       --no-fails                      Ignore fails config if possible.
@@ -130,84 +131,84 @@ import:
 - cred.yaml
 
 cpm:
-description: Simple example configuration
-dependencies: dependencies.txt
-dependencies-lock: dependencies.txt.lock
+  description: Simple example configuration
+  dependencies: dependencies.txt
+  dependencies-lock: dependencies.txt.lock
+  lock-on-success: true
+  
 cache:
   cmdline: cache
   env: CROSSPM_CACHE_ROOT
   default:
-
-cache:
-clear:
-  days: 10
-  size: 300 mb
-  auto: true
+  clear:
+    days: 10
+    size: 300 mb
+    auto: true
 
 columns: "*package, version, branch"
 
 values:
-quality:
-  1: banned
-  2: snapshot
-  3: integration
-  4: stable
-  5: release
+  quality:
+    1: banned
+    2: snapshot
+    3: integration
+    4: stable
+    5: release
 
 options:
-compiler:
-  cmdline: cl
-  env: CROSSPM_COMPILER
-  default: vc110
+  compiler:
+    cmdline: cl
+    env: CROSSPM_COMPILER
+    default: vc110
 
-arch:
-  cmdline: arch
-  env: CROSSPM_ARCH
-  default: x86
+  arch:
+    cmdline: arch
+    env: CROSSPM_ARCH
+    default: x86
 
-osname:
-  cmdline: os
-  env: CROSSPM_OS
-  default: win
+  osname:
+    cmdline: os
+    env: CROSSPM_OS
+    default: win
 
 parsers:
-common:
-  columns:
-    version: "{int}.{int}.{int}[.{int}][-{str}]"
-  sort:
-    - version
-    - '*'
-  index: -1
+  common:
+    columns:
+      version: "{int}.{int}.{int}[.{int}][-{str}]"
+    sort:
+      - version
+      - '*'
+    index: -1
 
-artifactory:
-  path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
-  properties: "some.org.quality = {quality}"
+  artifactory:
+    path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
+    properties: "some.org.quality = {quality}"
 
 defaults:
-branch: master
-quality: stable
+  branch: master
+  quality: stable
 
 solid:
-ext: *.deb
+  ext: *.deb
 
 fails:
-unique:
+  unique:
   - package
   - version
 
 common:
-server: https://repo.some.org/artifactory
-parser: artifactory
-type: jfrog-artifactory
-auth_type: simple
-auth:
+  server: https://repo.some.org/artifactory
+  parser: artifactory
+  type: jfrog-artifactory
+  auth_type: simple
+  auth:
   - username
   - password
 
 sources:
 - repo:
-    - libs-release.snapshot
-    - libs-release/extlibs
+  - libs-release.snapshot
+  - libs-release/extlibs
 
 - type: jfrog-artifactory
   parser: artifactory
@@ -215,11 +216,11 @@ sources:
   repo: project.snapshot/temp-packages
   auth_type: simple
   auth:
-    - username2
-    - password2
+  - username2
+  - password2
 
 output:
-tree:
+  tree:
   - package: 25
   - version: 0
 ```

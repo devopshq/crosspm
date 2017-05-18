@@ -22,6 +22,7 @@ Options:
     -o OPTIONS, --options OPTIONS   Extra options.
     --deps-path=FILE                Path to file with dependencies [./{deps_default}]
     --depslock-path=FILE            Path to file with locked dependencies [./{deps_lock_default}]
+    --lock-on-success               Save file with locked dependencies next to original one if download succeeds
     --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                   Output file name (required if --out_format is not stdout)
     --no-fails                      Ignore fails config if possible.
@@ -82,7 +83,7 @@ class CrossPM:
         self._ready = True
 
     def read_config(self):
-        _deps_path = ''
+        _deps_path = self._args['--deps-path']
         _depslock_path = self._args['--depslock-path']
         if self._args['lock']:
             if self._args['DEPS']:
@@ -90,7 +91,7 @@ class CrossPM:
             if self._args['DEPSLOCK']:
                 _depslock_path = self._args['DEPSLOCK']
         self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
-                              _deps_path)
+                              _deps_path, self._args['--lock-on-success'])
         self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
 
     def run(self):

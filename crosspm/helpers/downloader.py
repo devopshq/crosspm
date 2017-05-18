@@ -3,7 +3,7 @@ import os
 import logging
 from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
+from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME
 from crosspm.helpers.parser import Parser
 
 
@@ -30,11 +30,18 @@ class Downloader:
         # self.unpacked_path = os.path.realpath(os.path.join(self._cache_path, 'cache'))
         # self.temp_path = os.path.realpath(os.path.join(self._cache_path, 'tmp'))
 
+        if not config.deps_path:
+            config.deps_path = \
+                config.deps_file_name if config.deps_file_name else CROSSPM_DEPENDENCY_FILENAME
+        deps_path = config.deps_path.strip().strip('"').strip("'")
+        self._deps_path = os.path.realpath(os.path.expanduser(deps_path))
+
         if not config.depslock_path:
             config.depslock_path = \
                 config.deps_lock_file_name if config.deps_lock_file_name else CROSSPM_DEPENDENCY_LOCK_FILENAME
         depslock_path = config.depslock_path.strip().strip('"').strip("'")
         self._depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
+
         self.do_load = do_load
 
     # Get list of all packages needed to resolve all the dependencies.
@@ -42,6 +49,8 @@ class Downloader:
     def get_packages(self, list_or_file_path=None):
         if list_or_file_path is None:
             list_or_file_path = self._depslock_path
+            if not os.path.isfile(list_or_file_path):
+                list_or_file_path = self._deps_path
 
         _packages = {}
         if isinstance(list_or_file_path, str):
@@ -67,6 +76,9 @@ class Downloader:
     def download_packages(self, depslock_file_path=None):
         if depslock_file_path is None:
             depslock_file_path = self._depslock_path
+        if isinstance(depslock_file_path, str):
+            if not os.path.isfile(depslock_file_path):
+                depslock_file_path = self._deps_path
 
         self._log.info('Check dependencies ...')
         # print_stdout('Check dependencies ...')
@@ -95,6 +107,12 @@ class Downloader:
             sys.stdout.write('\n')
             sys.stdout.write('\n')
             sys.stdout.flush()
+
+            if self._config.lock_on_success:
+                from crosspm.helpers.locker import Locker
+                depslock_path = os.path.realpath(
+                    os.path.join(os.path.dirname(depslock_file_path), self._config.deps_lock_file_name))
+                Locker(self._config, self._root_package.packages).lock_packages(depslock_file_path, depslock_path)
 
         return self._packages
 
