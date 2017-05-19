@@ -238,6 +238,8 @@ Let's keep in mind that any value we use in path, properties and columns descrip
   <dd><i>dependencies</i> - Manifest file name (not path - just filename)</dd>
   <dd><i>dependencies-lock</i> - Manifest with locked dependencies (without masks and conditions) file name 
                                  (not path - just filename). Equals to "dependencies" if not set.</dd>
+  <dd><i>lock-on-success</i> - If set to true (or yes or 1) - dependencies lock file will be generated
+                               after successfull <b>download</b>. Same as command line flag --lock-on-success</dd>
   <dd><i>cache</i> - Path for CrossPM temporary files, downloaded package archives and unpacked packages. 
                      Ignored if cache folder is configured in top "cache" item.</dd>
 </dl>
