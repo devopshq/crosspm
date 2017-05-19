@@ -70,6 +70,7 @@ class Config:
         self.crosspm_cache_root = ''
         self.deps_path = ''
         self.depslock_path = ''
+        self.cache_config = {}
         self.init_env_config_path()
 
         cpm_conf_name = ''
@@ -120,7 +121,7 @@ class Config:
 
         self.no_fails = no_fails
         self.parse_config(config_data, cmdline)
-        self.cache = Cache(self, {})
+        self.cache = Cache(self, self.cache_config)
         # self._fails = {}
 
     def get_cpm_conf_name(self, deps_filename=''):
@@ -521,7 +522,7 @@ class Config:
             home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
             self.crosspm_cache_root = os.path.join(home_dir, '.crosspm')
         self.crosspm_cache_root = os.path.realpath(os.path.expanduser(self.crosspm_cache_root))
-        self.cache = cache_config
+        self.cache_config = cache_config
 
     def init_not_columns(self):
         # gather items from options
