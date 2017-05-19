@@ -112,8 +112,8 @@ You'll see something like this:
       -l LOGFILE, --log=LOGFILE       File name for log output. Log level is 'info' if set when verbose doesn't.
       -c FILE, --config=FILE          Path to configuration file.
       -o OPTIONS, --options OPTIONS   Extra options.
-      --deps-path=FILE                Path to file with locked dependencies [./dependencies.txt]
-      --depslock-path=FILE            Path to file with locked dependencies [./dependencies.txt]
+      --deps-path=FILE                Path to file with dependencies [./dependencies.txt]
+      --depslock-path=FILE            Path to file with locked dependencies [./dependencies.txt.lock]
       --lock-on-success               Save file with locked dependencies next to original one if download succeeds
       --out-format=TYPE               Output data format. Available formats:(['stdout', 'cmd', 'python', 'shell', 'json']) [default: stdout]
       --output=FILE                   Output file name (required if --out_format is not stdout)
@@ -239,7 +239,8 @@ Let's keep in mind that any value we use in path, properties and columns descrip
   <dd><i>dependencies-lock</i> - Manifest with locked dependencies (without masks and conditions) file name 
                                  (not path - just filename). Equals to "dependencies" if not set.</dd>
   <dd><i>lock-on-success</i> - If set to true (or yes or 1) - dependencies lock file will be generated
-                               after successfull <b>download</b>. Same as command line flag --lock-on-success</dd>
+                               after successfull <b>download</b>. Lock file will be saved near original dependencies
+                               file. Same behaviour could be triggered with a command line flag --lock-on-success</dd>
   <dd><i>cache</i> - Path for CrossPM temporary files, downloaded package archives and unpacked packages. 
                      Ignored if cache folder is configured in top "cache" item.</dd>
 </dl>
