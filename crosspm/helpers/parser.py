@@ -281,7 +281,7 @@ class Parser:
                 _res0 = [_value0]
                 if _col_name in self._rules_vars_extra[_rule_name][rule_number]:
                     _res0 += self._rules_vars_extra[_rule_name][rule_number][_col_name]
-                for _res1 in _res0:
+                for _res1 in sorted(_res0, key=lambda x: 0 - len(x)):
                     yield _res1
 
             def get_symbol_in_mask(_sym1, _val_mask):
@@ -375,7 +375,8 @@ class Parser:
                         else:
                             if _value is None:
                                 _match = False
-                                for _value_item in self._config.get_values(_subpart[0]):
+                                for _value_item in sorted(self._config.get_values(_subpart[0]),
+                                                          key=lambda x: 0 - len(x)):
                                     _atom = _path[:len(_value_item)]
                                     if fnmatch.fnmatch(_atom, _value_item):  # may be just comparing would be better
                                         _res_params[_subpart[0]] = _atom
