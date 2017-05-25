@@ -49,7 +49,8 @@ disable_warnings()
 class Config:
     windows = WINDOWS
 
-    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path='', lock_on_success=False):
+    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path='',
+                 lock_on_success=False, recursive=False):
         self._log = logging.getLogger('crosspm')
         self._config_path_env = []
         self._sources = []
@@ -67,6 +68,7 @@ class Config:
         self.deps_file_name = ''
         self.deps_lock_file_name = ''
         self.lock_on_success = lock_on_success
+        self.recursive = recursive
         self.crosspm_cache_root = ''
         self.deps_path = ''
         self.depslock_path = ''
