@@ -7,9 +7,7 @@ from datetime import datetime, timedelta
 import time
 
 
-class Cache(object):
-    _clear = {}
-
+class Cache:
     def __init__(self, config, cache_data):
         self._log = logging.getLogger('crosspm')
         self._config = config

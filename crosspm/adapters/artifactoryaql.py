@@ -3,10 +3,8 @@ import json
 import time
 import os
 import requests
-
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
-
 from crosspm.adapters.common import BaseAdapter
 from artifactory import ArtifactoryPath
 from crosspm.helpers.exceptions import *
@@ -25,14 +23,22 @@ setup = {
 class Adapter(BaseAdapter):
     def get_packages(self, source, parser, downloader, list_or_file_path):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
-        _art_auth = {}
+        _art_auth_etc = {}
         if 'auth' in source.args:
             if _auth_type == 'simple':
-                _art_auth['auth'] = tuple(source.args['auth'])
-            elif _auth_type == 'cert':
-                _art_auth['cert'] = os.path.realpath(os.path.expanduser(source.args['auth']))
+                _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
+                # elif _auth_type == 'cert':
+                #     _art_auth_etc['cert'] = os.path.realpath(os.path.expanduser(source.args['auth']))
+        if 'auth' not in _art_auth_etc:
+            msg = 'You have to set auth parameter for sources with artifactory-aql adapter'
+            # self._log.error(msg)
+            raise CrosspmException(
+                CROSSPM_ERRORCODE_ADAPTER_ERROR,
+                msg
+            )
+
         if 'verify' in source.args:
-            _art_auth['verify'] = source.args['verify'].lower in ['true', 'yes', '1']
+            _art_auth_etc['verify'] = source.args['verify'].lower in ['true', 'yes', '1']
 
         _pkg_name_col = self._config.name_column
         _packages_found = {}
@@ -41,103 +47,108 @@ class Adapter(BaseAdapter):
             _packages = []
             _params_found = {}
             _params_found_raw = {}
+            last_error = ''
             _pkg_name = _paths['params'][_pkg_name_col]
             if _pkg_name != _pkg_name_old:
                 _pkg_name_old = _pkg_name
                 self._log.info(
-                    '{}: {}'.format(_pkg_name, {k: v for k, v in _paths['params'].items() if k != _pkg_name_col}))
-            last_error = ''
-            for _path in _paths['paths']:
-                _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
-                try:
-                    _artifactory_server = _paths['params']['server']
-                    _search_repo = _paths['params']['repo']
-
-                    # Get AQL path pattern, with fixed part path, without artifactory url and repository name
-                    _aql_path_pattern = _path_fixed[len(_artifactory_server) + 1 + len(_search_repo) + 1:]
-                    if _path_pattern:
-                        _aql_path_pattern = _aql_path_pattern + "/" + _path_pattern
-
-                    _aql_query_url = '{}/api/search/aql'.format(_artifactory_server)
-                    _aql_query_dict = {
-                        "repo": {
-                            "$eq": _search_repo,
-                        },
-                        "path": {
-                            "$match": _aql_path_pattern,
-                        },
-                        "name": {
-                            "$match": _file_name_pattern,
-                        },
-                    }
-                    _aql_query_text = "items.find({query_dict})".format(query_dict=json.dumps(_aql_query_dict))
-
-                    r = requests.post(_aql_query_url, verify=False,
-                                      auth=HTTPBasicAuth(*_art_auth['auth']),
-                                      data=_aql_query_text,
-                                      )
-                    r.raise_for_status()
-
-                    _found_paths = r.json()
-                    for _found in _found_paths['results']:
-                        _repo_path = "{artifactory}/{repo}/{path}/{file_name}".format(
-                            artifactory=_artifactory_server,
-                            repo=_found['repo'],
-                            path=_found['path'],
-                            file_name=_found['name'])
-                        _repo_path = ArtifactoryPath(_repo_path, **_art_auth)
-
-                        _mark = 'found'
-                        _matched, _params, _params_raw = parser.validate_path(str(_repo_path), _paths['params'])
-                        if _matched:
-                            _params_found[_repo_path] = {k: v for k, v in _params.items()}
-                            _params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
-                            _mark = 'match'
-
-                            # TODO: _params_raw
-                            if parser.has_rule('properties'):
-                                _valid, _params = parser.validate(_repo_path.properties, 'properties', _paths['params'],
-                                                                  return_params=True)
-                            else:
-                                _valid, _params = True, {}
-                            if _valid:
-                                _mark = 'valid'
-                                _packages += [_repo_path]
-                                _params_found[_repo_path].update({k: v for k, v in _params.items()})
-                                _params_found[_repo_path]['filename'] = str(_repo_path.name)
-                        self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
-                except RuntimeError as e:
+                    '{}: {}'.format(_pkg_name,
+                                    {k: v for k, v in _paths['params'].items() if
+                                     k not in (_pkg_name_col, 'repo')}))
+            for _sub_paths in _paths['paths']:
+                self._log.info('repo: {}'.format(_sub_paths['repo']))
+                for _path in _sub_paths['paths']:
+                    _tmp_params = dict(_paths['params'])
+                    _tmp_params['repo'] = _sub_paths['repo']
+                    _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
                     try:
-                        err = json.loads(e.args[0])
-                    except:
-                        err = {}
-                    if isinstance(err, dict):
-                        # Check errors
-                        # :e.args[0]: {
-                        #                 "errors" : [ {
-                        #                     "status" : 404,
-                        #                     "message" : "Not Found"
-                        #                  } ]
-                        #             }
-                        for error in err.get('errors', []):
-                            err_status = error.get('status', -1)
-                            err_msg = error.get('message', '')
-                            if err_status == 401:
-                                msg = 'Authentication error[{}]{}'.format(err_status,
-                                                                          (': {}'.format(err_msg)) if err_msg else '')
-                            elif err_status == 404:
-                                msg = last_error
-                            else:
-                                msg = 'Error[{}]{}'.format(err_status,
-                                                           (': {}'.format(err_msg)) if err_msg else '')
-                            if last_error != msg:
-                                self._log.error(msg)
-                            last_error = msg
+                        _artifactory_server = _tmp_params['server']
+                        _search_repo = _tmp_params['repo']
+
+                        # Get AQL path pattern, with fixed part path, without artifactory url and repository name
+                        _aql_path_pattern = _path_fixed[len(_artifactory_server) + 1 + len(_search_repo) + 1:]
+                        if _path_pattern:
+                            _aql_path_pattern = _aql_path_pattern + "/" + _path_pattern
+
+                        _aql_query_url = '{}/api/search/aql'.format(_artifactory_server)
+                        _aql_query_dict = {
+                            "repo": {
+                                "$eq": _search_repo,
+                            },
+                            "path": {
+                                "$match": _aql_path_pattern,
+                            },
+                            "name": {
+                                "$match": _file_name_pattern,
+                            },
+                        }
+                        _art_auth_etc['data'] = 'items.find({query_dict}).include("*", "property")'.format(
+                            query_dict=json.dumps(_aql_query_dict))
+                        r = requests.post(_aql_query_url, **_art_auth_etc)
+                        r.raise_for_status()
+
+                        _found_paths = r.json()
+                        for _found in _found_paths['results']:
+                            _repo_path = "{artifactory}/{repo}/{path}/{file_name}".format(
+                                artifactory=_artifactory_server,
+                                repo=_found['repo'],
+                                path=_found['path'],
+                                file_name=_found['name'])
+                            _repo_path = ArtifactoryPath(_repo_path, **_art_auth_etc)
+
+                            _mark = 'found'
+                            _matched, _params, _params_raw = parser.validate_path(str(_repo_path), _tmp_params)
+                            if _matched:
+                                _params_found[_repo_path] = {k: v for k, v in _params.items()}
+                                _params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
+                                _mark = 'match'
+
+                                # TODO: _params_raw
+                                if parser.has_rule('properties'):
+                                    _found_properties = {x['key']: x.get('value', '') for x in _found['properties']}
+                                    _valid, _params = parser.validate(_found_properties, 'properties', _tmp_params,
+                                                                      return_params=True)
+                                else:
+                                    _valid, _params = True, {}
+                                if _valid:
+                                    _mark = 'valid'
+                                    _packages += [_repo_path]
+                                    _params_found[_repo_path].update({k: v for k, v in _params.items()})
+                                    _params_found[_repo_path]['filename'] = str(_repo_path.name)
+                            self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
+                    except RuntimeError as e:
+                        try:
+                            err = json.loads(e.args[0])
+                        except:
+                            err = {}
+                        if isinstance(err, dict):
+                            # Check errors
+                            # :e.args[0]: {
+                            #                 "errors" : [ {
+                            #                     "status" : 404,
+                            #                     "message" : "Not Found"
+                            #                  } ]
+                            #             }
+                            for error in err.get('errors', []):
+                                err_status = error.get('status', -1)
+                                err_msg = error.get('message', '')
+                                if err_status == 401:
+                                    msg = 'Authentication error[{}]{}'.format(err_status,
+                                                                              (': {}'.format(
+                                                                                  err_msg)) if err_msg else '')
+                                elif err_status == 404:
+                                    msg = last_error
+                                else:
+                                    msg = 'Error[{}]{}'.format(err_status,
+                                                               (': {}'.format(err_msg)) if err_msg else '')
+                                if last_error != msg:
+                                    self._log.error(msg)
+                                last_error = msg
 
             _package = None
             if _packages:
                 _packages = parser.filter_one(_packages, _paths['params'], _params_found)
-                if type(_packages) is dict:
+                if isinstance(_packages, dict):
                     _packages = [_packages]
 
                 if len(_packages) == 1:
@@ -188,16 +199,17 @@ class Adapter(BaseAdapter):
 
         return _packages_found
 
-    def pkg_stat(self, package):
+    @staticmethod
+    def pkg_stat(package):
         _stat_attr = {'ctime': 'st_atime',
                       'mtime': 'st_mtime',
                       'size': 'st_size'}
         _stat_pkg = package.stat()
         _stat_pkg = {k: getattr(_stat_pkg, k, None) for k in _stat_attr.keys()}
         _stat_pkg = {
-            k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if type(v) is datetime else v
+            k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if isinstance(v, datetime) else v
             for k, v in _stat_pkg.items()
-            }
+        }
         return _stat_pkg
 
     def download_package(self, package, dest_path):
@@ -233,12 +245,14 @@ class Adapter(BaseAdapter):
 
         return dest_path
 
-    def get_package_filename(self, package):
+    @staticmethod
+    def get_package_filename(package):
         if isinstance(package, ArtifactoryPath):
             return package.name
         return ''
 
-    def get_package_path(self, package):
+    @staticmethod
+    def get_package_path(package):
         if isinstance(package, ArtifactoryPath):
             return str(package)
         return ''

@@ -4,15 +4,15 @@ import os
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.output import Output
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME, CROSSPM_DEPENDENCY_FILENAME
+from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
 
 
 class Locker(Downloader):
-    _deps_path = ''
-    do_load = False
-
-    def __init__(self, config):
-        super(Locker, self).__init__(config, False)
+    def __init__(self, config, packages=None):
+        # TODO: revise logic to allow recursive search without downloading
+        super(Locker, self).__init__(config, do_load=False or config.recursive)
+        if packages:
+            self._packages = packages
 
         if not getattr(config, 'deps_path', ''):
             config.deps_path = config.deps_file_name or CROSSPM_DEPENDENCY_FILENAME
@@ -32,36 +32,40 @@ class Locker(Downloader):
             #     'Dependencies and Lock files are same: "{}".'.format(deps_file_path),
             # )
 
-        self._log.info('Check dependencies ...')
+        if not self._packages:
+            self._log.info('Check dependencies ...')
+            self._root_package.find_dependencies(deps_file_path)
 
-        self._packages = {}
-        self._root_package.find_dependencies(deps_file_path)
-
-        self._log.info('')
-        self._log.info('Dependency tree:')
-        self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
+            self._log.info('')
+            self._log.info('Dependency tree:')
+            self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
+            if not self._config.recursive:
+                self._packages = self._root_package.packages
 
         _not_found = any(_pkg is None for _pkg in self._packages.values())
 
         if not _not_found:
             self._log.info('Writing lock file [{}]'.format(depslock_file_path))
             text = ''
-            packages = []
+            packages = {}
             columns = self._config.get_columns()
             widths = {}
-            for _pkg in self._packages.values():
+            for _pkg_name in self._packages:
+                _pkg = self._packages[_pkg_name]
                 _params = _pkg.get_params(columns, merged=True, raw=True)
-                packages.append(_params)
-                comment = 1
-                for _col in columns:
-                    widths[_col] = max(widths.get(_col, len(_col)), len(str(_params.get(_col, '')))) + comment
-                    comment = 0
+                if _pkg_name not in packages:
+                    packages[_pkg_name] = _params
+                    comment = 1
+                    for _col in columns:
+                        widths[_col] = max(widths.get(_col, len(_col)), len(str(_params.get(_col, '')))) + comment
+                        comment = 0
             comment = 1
             for _col in columns:
                 text += '{}{} '.format(_col, ' ' * (widths[_col] - len(_col) - comment))
                 comment = 0
             text = '#{}\n'.format(text.strip())
-            for _pkg in packages:
+            for _pkg_name in sorted(packages, key=lambda x: str(x).lower()):
+                _pkg = packages[_pkg_name]
                 line = ''
                 for _col in columns:
                     line += '{}{} '.format(_pkg[_col], ' ' * (widths[_col] - len(str(_pkg[_col]))))

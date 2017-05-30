@@ -5,26 +5,24 @@ import os
 from crosspm.helpers.exceptions import *
 
 
-class Parser(object):
-    # _name = ''
-    # _rules = {}
-    # _config = None
-    _rules_vars = {}
-    _rules_vars_extra = {}
-    _columns = {}
-    _col_types = []
-    _sort = []
-    _index = -1
-
+class Parser:
     def __init__(self, name, data, config):
+        self._rules_vars = {}
+        self._rules_vars_extra = {}
+        self._columns = {}
+        self._defaults = {}
+        self._defaults_masked = {}
+        self._col_types = []
         self._name = name
-        self._sort = data.get('sort', self._sort)
-        self._index = data.get('index', self._index)
-        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort']}
+        self._sort = data.get('sort', [])
+        self._index = data.get('index', -1)
+        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults']}
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
         self._config = config
         self.init_rules_vars()
+        if 'defaults' in data:
+            self.init_defaults(data['defaults'])
 
     def get_vars(self):
         _vars = []
@@ -32,6 +30,29 @@ class Parser(object):
             _vars += [item for sublist in _rule_vars for item in sublist if item not in _vars]
             # _vars += [x for x in _rule_vars if x not in _vars]
         return _vars
+
+    def init_defaults(self, defaults):
+        if isinstance(defaults, dict):
+            self._defaults = {k: v for k, v in defaults.items()}
+            self._defaults_masked = {}
+            for _rules_name, _rules in self._rules.items():
+                if _rules_name == 'path':
+                    continue
+                self._defaults_masked[_rules_name] = []
+                for _rule in _rules:
+                    _rule_tmp = _rule
+                    for _name in [x for x in re.findall('{.*?}', _rule_tmp)]:
+                        _name_replace = _name[1:-1].split('|')[0]
+                        _rule_tmp.replace(_name, _name_replace)
+                        if _name_replace not in self._defaults:
+                            self._defaults[_name_replace] = ''
+                    _tmp = [x.strip() for x in _rule_tmp.split('=')]
+                    _mask = re.sub('{.*?}', '*', _tmp[0])
+                    _val = ''
+                    _key = _tmp[0].format(**self._defaults)
+                    if len(_tmp) > 1:
+                        _val = _tmp[1].format(**self._defaults)
+                    self._defaults_masked[_rules_name].append({'mask': _mask, 'key': _key, 'value': _val})
 
     def init_rules_vars(self):
         self._rules_vars = {}
@@ -67,6 +88,8 @@ class Parser(object):
     def parse_by_mask(self, column, value, types=False, ext_mask=False):
         if column not in self._columns:
             return value  # nothing to parse
+        if isinstance(value, list):
+            return value[:]
         _res = []
         # extMask = extMask and value == '*'
         orig_value = value
@@ -147,11 +170,11 @@ class Parser(object):
 
     def merge_with_mask(self, column, value):
         if column not in self._columns:
-            if type(value) in [list, tuple]:
+            if isinstance(value, (list, tuple)):
                 # TODO: Check for value is not None - if it is, raise "column value not set"
                 value = ''.join(value)
             return value  # nothing to parse
-        if type(value) not in [list, tuple]:
+        if not isinstance(value, (list, tuple)):
             return value  # nothing to parse
         _res = ''
         _res_tmp = ''
@@ -201,7 +224,7 @@ class Parser(object):
         if column not in self._columns:
             _res = True  # nothing to validate
             _res_value = value
-        elif type(param) not in [list, tuple]:
+        elif not isinstance(param, (list, tuple)):
             _res = False
         else:
             _res = True
@@ -235,7 +258,7 @@ class Parser(object):
 
         var1 = value
         var2 = text if text else '*'
-        if type(var1) is int:
+        if isinstance(var1, int):
             try:
                 var2 = int(var2)
                 if not _sign:
@@ -258,7 +281,7 @@ class Parser(object):
                 _res0 = [_value0]
                 if _col_name in self._rules_vars_extra[_rule_name][rule_number]:
                     _res0 += self._rules_vars_extra[_rule_name][rule_number][_col_name]
-                for _res1 in _res0:
+                for _res1 in sorted(_res0, key=lambda x: 0 - len(x)):
                     yield _res1
 
             def get_symbol_in_mask(_sym1, _val_mask):
@@ -352,7 +375,8 @@ class Parser(object):
                         else:
                             if _value is None:
                                 _match = False
-                                for _value_item in self._config.get_values(_subpart[0]):
+                                for _value_item in sorted(self._config.get_values(_subpart[0]),
+                                                          key=lambda x: 0 - len(x)):
                                     _atom = _path[:len(_value_item)]
                                     if fnmatch.fnmatch(_atom, _value_item):  # may be just comparing would be better
                                         _res_params[_subpart[0]] = _atom
@@ -459,7 +483,19 @@ class Parser(object):
         _res = True
         _res_params = {}
         # _dirty = self._rules[rule_name].format(**params)
-        _all_dirties = self.fill_rule(rule_name, params, return_params=True)
+        _all_dirties = self.fill_rule(rule_name, params, return_params=True, return_defaults=True)
+        # _all_defaults = []
+        # if self._defaults:
+        #     if isinstance(value, dict):
+        #         for _default in self.fill_rule(rule_name, self._defaults, return_params=False):
+        #             _tmp = [x.strip() for x in _default.split('=')]
+        #             _tmp = [x if len(x) > 0 else '*' for x in _tmp]
+        #             for _key in fnmatch.filter(value.keys(), _tmp[0]):
+        #                 if len(_tmp) > 1:
+        #                     _tmp_val = value[_key]
+        #             if _tmp[0] not in value:
+        #                 value[_tmp[0]] = _tmp[1]
+
         for _dirties in _all_dirties:
             _res_sub = False
             _res_sub_params = {}
@@ -469,24 +505,34 @@ class Parser(object):
                 _dirty = [x.split(']') for x in _dirt['var'].split('[')]
                 _dirty = self.list_flatter(_dirty)
                 _variants = self.get_variants(_dirty, [])
-                if type(value) is str:
+                if isinstance(value, str):
                     _res_var = value in _variants
-                elif type(value) in (list, tuple):
+                elif isinstance(value, (list, tuple)):
                     _res_var = False
                     for _variant in _variants:
                         if _variant in value:
                             _res_var = True
                             break
-                elif type(value) is dict:
+                elif isinstance(value, dict):
+                    _key = ''
+                    if 'mask' in _dirt.get('default', {}):
+                        _mask = _dirt['default'].get('mask', '')
+                        if len(fnmatch.filter(value.keys(), _mask)) == 0:
+                            _key = _dirt['default'].get('key', '')
+                            value[_key] = [_dirt['default'].get('value', '')]
+
                     for _variant in _variants:
                         _tmp = [x.strip() for x in _variant.split('=')]
                         _tmp = [x if len(x) > 0 else '*' for x in _tmp]
-                        for _key in fnmatch.filter(value.keys(), _tmp[0]):
+                        _key_list = fnmatch.filter(value.keys(), _tmp[0])
+                        if len(_key_list) == 0 and '*' in _key:
+                            _key_list = [_key]
+                        for _key in _key_list:
                             if len(_tmp) > 1:
                                 _tmp_val = value[_key]
-                                if type(_tmp_val) is str:
+                                if isinstance(_tmp_val, str):
                                     _tmp_val = [_tmp_val]
-                                elif type(_tmp_val) not in [list, tuple, dict]:
+                                elif not isinstance(_tmp_val, (list, tuple, dict)):
                                     raise CrosspmException(
                                         CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
                                         'Parser rule for [{}] not able to process [{}] data type.'.format(
@@ -516,7 +562,7 @@ class Parser(object):
         _values = self._config.get_values(column_name)
         for _value in _values:
             if (value is None) or (self.values_match(_value, value, _values)):
-                if type(_values) is dict:
+                if isinstance(_values, dict):
                     _value = _values[_value]
                 yield _value
 
@@ -535,8 +581,8 @@ class Parser(object):
                 _sign = '=='
 
         var1, var2 = _value, value
-        if type(_values) is dict:
-            var2 = 0 if type(var1) is int else ''
+        if isinstance(_values, dict):
+            var2 = 0 if isinstance(var1, int) else ''
             for k, v in _values.items():
                 if value == v:
                     var2 = k
@@ -560,7 +606,7 @@ class Parser(object):
 
         return _match
 
-    def fill_rule(self, rule_name, params, return_params=False):
+    def fill_rule(self, rule_name, params, return_params=False, return_defaults=False):
         def fill_rule_inner(_cols, _params_inner, _pars=None):
             if _pars is None:
                 _pars = {}
@@ -578,12 +624,14 @@ class Parser(object):
         for z in range(len(self._rules_vars[rule_name])):
             _res_part = []
             _params = {k: v for k, v in params.items()}
+            _default = ''
+            _mask = ''
             _columns = []
             for _col, _valued in self._config.iter_valued_columns2(self._rules_vars[rule_name][z]):
                 if _valued:
                     _columns += [[_col, [x for x in self.iter_matched_values(_col, params[_col])]]]
                 else:
-                    if type(params[_col]) not in [list, tuple]:
+                    if not isinstance(params[_col], (list, tuple)):
                         _tmp = [params[_col]]
                     else:
                         _tmp = [x for x in params[_col]]
@@ -600,15 +648,29 @@ class Parser(object):
             for _par in fill_rule_inner(_columns, []):
                 _params.update(_par)
                 _var = self._rules[rule_name][z].format(**_params)
-                if return_params:
-                    _res_part += [{'var': _var, 'params': {k: v for k, v in _par.items()}}]
+                if return_params or return_defaults:
+                    _tmp_res_part = {'var': _var}
+                    if return_params:
+                        _tmp_res_part['params'] = {k: v for k, v in _par.items()}
+                    if return_defaults and rule_name in self._defaults_masked:
+                        _tmp_res_part['default'] = self._defaults_masked[rule_name][z]
+                    else:
+                        _tmp_res_part['default'] = {}
+                    _res_part += [_tmp_res_part]
                 else:
                     _res_part += [_var]
 
             if len(_res_part) == 0:
                 _var = self._rules[rule_name][z].format(**_params)
-                if return_params:
-                    _res_part += [{'var': _var, 'params': {}}]
+                if return_params or return_defaults:
+                    _tmp_res_part = {'var': _var}
+                    if return_params:
+                        _tmp_res_part['params'] = {}
+                    if return_defaults and rule_name in self._defaults_masked:
+                        _tmp_res_part['default'] = self._defaults_masked[rule_name][z]
+                    else:
+                        _tmp_res_part['default'] = {}
+                    _res_part += [_tmp_res_part]
                 else:
                     _res_part += [_var]
             _res += [_res_part]
@@ -626,8 +688,12 @@ class Parser(object):
             return None
         _paths = []
         for _params in self.iter_packages_params(list_or_file_path):
+            _params['server'] = source.args['server']
+            _sub_paths = {
+                'params': {k: v for k, v in _params.items() if k != 'repo'},
+                'paths': [],
+            }
             for _repo in source.args['repo']:
-                _params['server'] = source.args['server']
                 _params['repo'] = _repo
                 # _dirty = self._rules['path'].format(**_params)
                 _all_dirties = self.fill_rule('path', _params)
@@ -638,9 +704,10 @@ class Parser(object):
                         # TODO: Use split_with_regexp() instead
                         _dirty = [x.split(']') for x in _dirty.split('[')]
                         _dirty = self.list_flatter(_dirty)
-                        _paths += [{'paths': self.get_variants(_dirty, []),
-                                    'params': {k: v for k, v in _params.items()},
-                                    }]
+                        _sub_paths['paths'] += [{'paths': self.get_variants(_dirty, []),
+                                                 'repo': _repo,
+                                                 }]
+            _paths += [_sub_paths]
         return _paths
 
     def get_variants(self, dirty, paths):
@@ -662,7 +729,7 @@ class Parser(object):
         return paths
 
     def iter_packages_params(self, list_or_file_path):
-        if type(list_or_file_path) is str:
+        if isinstance(list_or_file_path, str):
             if not os.path.exists(list_or_file_path):
                 raise CrosspmException(
                     CROSSPM_ERRORCODE_FILE_DEPS_NOT_FOUND,
@@ -673,11 +740,15 @@ class Parser(object):
                 for i, line in enumerate(f):
                     line = line.strip()
 
+                    #  if i == 0 and line.startswith(''.join(map(chr,(1087,187,1111)))):
+                    if i == 0 and line.startswith(chr(1087) + chr(187) + chr(1111)):  # TODO: why?
+                        line = line[3:]
+
                     if not line or line.startswith(('#', '[',)):
                         continue
 
                     yield self.get_package_params(i, line)
-        elif (type(list_or_file_path) is dict) and ('raw' in list_or_file_path):
+        elif (isinstance(list_or_file_path, dict)) and ('raw' in list_or_file_path):
             for _item in list_or_file_path['raw']:
                 _tmp_item = {k: self.parse_by_mask(k, v, False, True) for k, v in _item.items()}
                 yield _tmp_item
@@ -710,7 +781,7 @@ class Parser(object):
     def list_flatter(self, _src):
         _res = []
         for x in _src:
-            _res += self.list_flatter(x) if type(x) in [list, tuple] else [x]
+            _res += self.list_flatter(x) if isinstance(x, (list, tuple)) else [x]
         return _res
 
     @staticmethod
@@ -785,10 +856,10 @@ class Parser(object):
             for _atom_name in item['columns']:
                 if _atom_name in _atoms_found:
                     _rules = params[_atom_name]
-                    if type(_rules) not in [list, tuple]:
+                    if not isinstance(_rules, (list, tuple)):
                         _rules = [_rules]
                     _vars = _atoms_found[_atom_name]
-                    if type(_vars) not in [list, tuple]:
+                    if not isinstance(_vars, (list, tuple)):
                         _vars = [_vars]
                     i = -1
                     for _column in item['columns'][_atom_name]:

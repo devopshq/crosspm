@@ -8,3 +8,7 @@ docs/_build/
 /tests_old/
 .cache
 .eggs
+README.rst
+/htmlcov
+.coverage
+coverage.xml

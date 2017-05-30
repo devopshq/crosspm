@@ -13,11 +13,11 @@ def assert_warn(arg1, arg2):
                 fn = item.function
                 ln = item.lineno
                 break
-        # Old python support
-        if sys.version_info >= (3, 5):
-            found = item.function == 'assert_warn'
-        else:
-            found = True
+            # Old python support
+            if sys.version_info >= (3, 5):
+                found = item.function == 'assert_warn'
+            else:
+                found = True
 
         if found:
             txt = 'function: [{}] line: {}'.format(fn, ln)
