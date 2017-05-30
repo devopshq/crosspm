@@ -118,6 +118,7 @@ You'll see something like this:
       --out-format=TYPE               Output data format. Available formats:(['stdout', 'cmd', 'python', 'shell', 'json']) [default: stdout]
       --output=FILE                   Output file name (required if --out_format is not stdout)
       --no-fails                      Ignore fails config if possible.
+      --recursive                     Process all packages recursively to find and lock all dependencies
 ```
 
 
