@@ -21,7 +21,7 @@ if travis:
         version.append('{}{}'.format('dev' if branch == 'develop' else branch, build_number))
 else:
     if len(version) < 4:
-        version.append('local')
+        version.append('dev0')
 
 version = '.'.join(version)
 if travis:
