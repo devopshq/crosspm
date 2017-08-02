@@ -626,7 +626,14 @@ class Parser(object):
             return None
         _paths = []
         for _params in self.iter_packages_params(list_or_file_path):
-            for _repo in source.args['repo']:
+            if _params['repo'] is None or _params['repo'] == '*':
+                repo_list = source.args['repo']
+            elif _params['repo'] not in source.args['repo']:
+                continue
+            else:
+                repo_list = [_params['repo']]
+
+            for _repo in repo_list:
                 _params['server'] = source.args['server']
                 _params['repo'] = _repo
                 # _dirty = self._rules['path'].format(**_params)
