@@ -152,3 +152,9 @@ class TestParser(BaseParserTest):
 
         assert path_fixed == _path_fixed
         assert path_pattern == _path_pattern
+
+    def test_has_rule(self):
+        parser = self._parsers.get('artifactory', None)
+
+        assert parser.has_rule('path') is True
+        assert parser.has_rule('properties') is False
