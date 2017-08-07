@@ -46,30 +46,33 @@ CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
 disable_warnings()
 
 
-class Config(object):
-    _config_path_env = []
-    _sources = []
-    _adapters = {}
-    _parsers = {}
-    _defaults = {}
-    _columns = []
-    _not_columns = {}
-    _options = {}
-    _values = {}
-    _output = {}
-    _solid = {}
-    _fails = {}
-    cache = None
-    no_fails = False
-    name_column = ''
-    deps_file_name = ''
-    deps_lock_file_name = ''
+class Config:
     windows = WINDOWS
-    crosspm_cache_root = ''
-    depslock_path = ''
 
-    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path=''):
+    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path='',
+                 lock_on_success=False, recursive=False):
         self._log = logging.getLogger('crosspm')
+        self._config_path_env = []
+        self._sources = []
+        self._adapters = {}
+        self._parsers = {}
+        self._defaults = {}
+        self._columns = []
+        self._not_columns = {}
+        self._options = {}
+        self._values = {}
+        self._output = {}
+        self._solid = {}
+        self._fails = {}
+        self.name_column = ''
+        self.deps_file_name = ''
+        self.deps_lock_file_name = ''
+        self.lock_on_success = lock_on_success
+        self.recursive = recursive
+        self.crosspm_cache_root = ''
+        self.deps_path = ''
+        self.depslock_path = ''
+        self.cache_config = {}
         self.init_env_config_path()
 
         cpm_conf_name = ''
@@ -120,7 +123,7 @@ class Config(object):
 
         self.no_fails = no_fails
         self.parse_config(config_data, cmdline)
-        self.cache = Cache(self, self.cache)
+        self.cache = Cache(self, self.cache_config)
         # self._fails = {}
 
     def get_cpm_conf_name(self, deps_filename=''):
@@ -178,7 +181,8 @@ class Config(object):
                         return _file
         return ''
 
-    def find_cpmconfig(self, conf_name=''):
+    @staticmethod
+    def find_cpmconfig(conf_name=''):
         conf_path_add = ''
         try:
             _temp = __import__('cpmconfig.cpmconfig', globals(), locals(), ['App'], 0)
@@ -218,7 +222,7 @@ class Config(object):
             if cpm_file_deps:
                 DEFAULT_CONFIG_PATH.insert(ind, cpm_file_deps)
 
-            _def_conf_file = [DEFAULT_CONFIG_FILE] if type(DEFAULT_CONFIG_FILE) is str else DEFAULT_CONFIG_FILE
+            _def_conf_file = [DEFAULT_CONFIG_FILE] if isinstance(DEFAULT_CONFIG_FILE, str) else DEFAULT_CONFIG_FILE
             for config_path in DEFAULT_CONFIG_PATH:
                 config_path = config_path.strip().strip("'").strip('"')
                 config_path = os.path.realpath(os.path.expanduser(config_path))
@@ -270,7 +274,7 @@ class Config(object):
             _is_yaml = False
         else:
             with open(_config_file_name) as f:
-                for i, line in enumerate(f):
+                for line in f:
                     line = line.strip()
                     if not line:
                         continue
@@ -293,7 +297,8 @@ class Config(object):
 
         return result
 
-    def find_import_file(self, import_file_name=''):
+    @staticmethod
+    def find_import_file(import_file_name=''):
         res_file_name = ''
         if import_file_name:
             for config_path in [''] + DEFAULT_CONFIG_PATH:
@@ -342,9 +347,9 @@ class Config(object):
             data_imports = yaml.safe_load(yaml_imports)
             yaml_content_pre = ''
             if 'import' in data_imports:
-                if type(data_imports['import']) is str:
+                if isinstance(data_imports['import'], str):
                     data_imports['import'] = [data_imports['import']]
-                if type(data_imports['import']) in (list, tuple):
+                if isinstance(data_imports['import'], (list, tuple)):
                     for _import_file_name in data_imports['import']:
                         _import_file_name = self.find_import_file(_import_file_name)
                         if _import_file_name:
@@ -503,13 +508,23 @@ class Config(object):
             if 'dependencies-lock' not in crosspm:
                 self.deps_lock_file_name = self.deps_file_name
 
+        if not self.lock_on_success:
+            lock_on_success = crosspm.get('lock-on-success', False)
+            if isinstance(lock_on_success, str):
+                if lock_on_success.lower() in ['1', 'yes', '+', 'true']:
+                    self.lock_on_success = True
+            try:
+                self.lock_on_success = bool(lock_on_success)
+            except:
+                self.lock_on_success = False
+
         # Cache init
         self.crosspm_cache_root = crosspm.get('cache', '').strip().strip('"').strip("'")
         if not self.crosspm_cache_root:
             home_dir = os.getenv('APPDATA') if WINDOWS else os.getenv('HOME')
             self.crosspm_cache_root = os.path.join(home_dir, '.crosspm')
         self.crosspm_cache_root = os.path.realpath(os.path.expanduser(self.crosspm_cache_root))
-        self.cache = cache_config
+        self.cache_config = cache_config
 
     def init_not_columns(self):
         # gather items from options
@@ -573,7 +588,7 @@ class Config(object):
             try:
                 _temp = __import__(_app_name, globals(), locals(), ['setup', 'Adapter'], 0)
                 _names = _temp.setup['name']
-                if type(_names) is str:
+                if isinstance(_names, str):
                     _names = [_names]
                 self._adapters.update({k: _temp.Adapter(self) for k in _names if k in types})
 
@@ -594,7 +609,7 @@ class Config(object):
         _remove = []
         for k, v in options.items():
             # if option type is str, leave the value intact
-            if type(options[k]) is not str:
+            if not isinstance(options[k], (str, bool)):
                 # if option has cmdline name, try to fetch a value from command line by cmdline name
                 if 'cmdline' in v:
                     if v['cmdline'] in cmdline:
@@ -605,7 +620,7 @@ class Config(object):
                     options[k] = cmdline[k]
 
                 # if option is still not filled, try to get a value from environment by env name
-                if type(options[k]) is not str:
+                if not isinstance(options[k], str):
                     success = False
                     if 'env' in v:
                         _env = os.getenv(v['env'])
@@ -700,7 +715,7 @@ class Config(object):
 
         default = None
         for x in levels:
-            if type(level) is str:
+            if isinstance(level, str):
                 if x[0] == level.lower():
                     return x[1]
             elif x[2]:

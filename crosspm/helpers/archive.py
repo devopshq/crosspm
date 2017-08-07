@@ -8,7 +8,7 @@ import zipfile
 from crosspm.helpers.exceptions import *
 
 
-class Archive(object):
+class Archive:
     @staticmethod
     def create(archive_name, src_dir_path):
         archive_name = os.path.realpath(archive_name)

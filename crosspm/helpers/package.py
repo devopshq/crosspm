@@ -8,21 +8,19 @@ from crosspm.helpers.archive import Archive
 from crosspm.helpers.exceptions import *
 
 
-class Package(object):
-    _packed_path = ''
-    _unpacked_path = ''
-    packages = {}
-    _raw = []
-    _root = False
-    _params_found = {}
-    _params_found_raw = {}
-    stat = None
-    _not_cached = True
-
+class Package:
     def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, params_found_raw=None,
                  stat=None):
+        self._packed_path = ''
+        self._unpacked_path = ''
+        self.packages = {}
+        self._raw = []
+        self._root = False
+        self._params_found = {}
+        self._params_found_raw = {}
+        self._not_cached = True
         self._log = logging.getLogger('crosspm')
-        if type(pkg) is int:
+        if isinstance(pkg, int):
             if pkg == 0:
                 self._root = True
         self._name = name
@@ -128,7 +126,8 @@ class Package(object):
                 _sign = '-'
         _left = '{}{}'.format(' ' * 4 * level, _sign)
         do_print(_left)
-        for _pkg_name, _pkg in self.packages.items():
+        for _pkg_name in sorted(self.packages, key=lambda x: str(x).lower()):
+            _pkg = self.packages[_pkg_name]
             if not _pkg:
                 _left = '{}-'.format(' ' * 4 * (level + 1))
                 self._log.info('{}{}'.format(_left, _pkg_name))

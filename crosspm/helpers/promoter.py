@@ -8,6 +8,7 @@ import requests
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
 from crosspm.helpers.exceptions import *
 
+
 # log = logging.getLogger(__name__)
 
 

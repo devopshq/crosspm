@@ -15,7 +15,7 @@ _output_format_map = {}
 ) = range(3)
 
 
-class OutFormat(object):
+class OutFormat:
     def __init__(self, value, esc_path=False):
         self._value = value
         self._esc_path = esc_path
@@ -58,7 +58,7 @@ def register_output_format(name):
     return check_decorator
 
 
-class Output(object):
+class Output:
     _config = {
         'root': {'PACKAGES_ROOT'},
         # 'key': 'package',
@@ -162,12 +162,12 @@ class Output(object):
         if 'value' not in self._config:
             self._config['value'] = ''
 
-    def get_var_name(self, pkg_name):
+    @staticmethod
+    def get_var_name(pkg_name):
         result = '{:upper.safe}'.format(OutFormat(pkg_name))
         return result
 
     def write_to_file(self, text, out_file_path):
-        # out_file_path = os.path.realpath(os.path.expanduser(out_file_path))
         out_dir_path = os.path.dirname(out_file_path)
 
         if not os.path.exists(out_dir_path):
@@ -200,9 +200,6 @@ class Output(object):
 
         if result:
             out_file_path = os.path.realpath(os.path.expanduser(params['output']))
-            # out_dir = os.path.dirname(out_file_path)
-            # if not os.path.exists(out_dir):
-            #     os.makedirs(out_dir)
             self.write_to_file(result, out_file_path)
             self._log.info(
                 'Write packages info to file [%s]\ncontent:\n\n%s',
@@ -221,7 +218,9 @@ class Output(object):
     @register_output_format('stdout')
     def output_type_stdout(self, packages):
         self._config['type'] = PLAIN
-        for k, v in self.output_type_module(packages).items():
+        _packages = self.output_type_module(packages)
+        for k in sorted(_packages, key=lambda x: str(x).lower()):
+            v = _packages[k]
             sys.stdout.write('{}: {}\n'.format(self.get_var_name(k), v))
             sys.stdout.flush()
         return None
@@ -230,7 +229,9 @@ class Output(object):
     def output_type_shell(self, packages):
         self._config['type'] = PLAIN
         result = '\n'
-        for k, v in self.output_type_module(packages).items():
+        _packages = self.output_type_module(packages)
+        for k in sorted(_packages, key=lambda x: str(x).lower()):
+            v = _packages[k]
             result += "{}='{}'\n".format(self.get_var_name(k), v)
         result += '\n'
         return result
@@ -239,7 +240,9 @@ class Output(object):
     def output_type_cmd(self, packages):
         self._config['type'] = PLAIN
         result = '\n'
-        for k, v in self.output_type_module(packages).items():
+        _packages = self.output_type_module(packages)
+        for k in sorted(_packages, key=lambda x: str(x).lower()):
+            v = _packages[k]
             result += "set {}={}\n".format(self.get_var_name(k), v)
         result += '\n'
         return result
@@ -247,7 +250,8 @@ class Output(object):
     # @register_output_format('module')
     def output_type_module(self, packages, esc_path=False):
         result_list = []
-        for _pkg in packages.values():
+        for _pkg_name in sorted(packages, key=lambda x: str(x).lower()):
+            _pkg = packages[_pkg_name]
             if _pkg:
                 _pkg_params = _pkg.get_params(self._columns, True)
                 _res_item = {}
@@ -296,10 +300,18 @@ class Output(object):
                 _res = "'{}'".format(str(_v))
             return _res
 
+        def items_iter(_dict_or_list):
+            if isinstance(_dict_or_list, dict):
+                for k in sorted(_dict_or_list, key=lambda x: str(x).lower()):
+                    yield k
+            else:
+                for k in _dict_or_list:
+                    yield k
+
         result = '# -*- coding: utf-8 -*-\n\n'
         res = ''
         dict_or_list = self.output_type_module(packages, True)
-        for item in dict_or_list:
+        for item in items_iter(dict_or_list):
             if self._config['type'] == LIST:
                 res += '    {\n'
                 for k, v in item.items():
