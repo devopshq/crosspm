@@ -181,3 +181,8 @@ class TestParser(BaseParserTest):
         assert parser.validate_atom('feature-netcore-probes', '*') is True
         assert parser.validate_atom('1.2', '>=1.3') is False
 
+    def test_values_match(self):
+        parser = self._parsers.get('artifactory', None)
+
+        assert parser.values_match('1.3', '1.3') is True
+        assert parser.values_match('2.0', '1.3') is False
