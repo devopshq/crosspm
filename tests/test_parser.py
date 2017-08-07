@@ -158,3 +158,22 @@ class TestParser(BaseParserTest):
 
         assert parser.has_rule('path') is True
         assert parser.has_rule('properties') is False
+
+    # def test_get_full_package_name(self):
+    #     parser = self._parsers.get('artifactory', None)
+    #
+    #     package = Package('test_package', None, None, None, None, parser=parser)
+    #     name = parser.get_full_package_name(package)
+    #
+    #     assert name == "test_package"
+
+    def test_list_flatter(self):
+        parser = self._parsers.get('common', None)
+
+        src = [['https://repo.example.com/artifactory/cybsi.snapshot/cybsi/*/*.*.*/[any|any]/[any|any]/cybsi/cybsi.*.*.*[.zip|.tar.gz|.nupkg]']]
+        result = ['https://repo.example.com/artifactory/cybsi.snapshot/cybsi/*/*.*.*/[any|any]/[any|any]/cybsi/cybsi.*.*.*[.zip|.tar.gz|.nupkg]']
+
+        assert parser.list_flatter(src) == result
+
+
+
