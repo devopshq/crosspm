@@ -175,5 +175,9 @@ class TestParser(BaseParserTest):
 
         assert parser.list_flatter(src) == result
 
+    def test_validate_atom(self):
+        parser = self._parsers.get('artifactory', None)
 
+        assert parser.validate_atom('feature-netcore-probes', '*') is True
+        assert parser.validate_atom('1.2', '>=1.3') is False
 
