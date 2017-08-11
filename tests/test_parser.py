@@ -186,3 +186,10 @@ class TestParser(BaseParserTest):
 
         assert parser.values_match('1.3', '1.3') is True
         assert parser.values_match('2.0', '1.3') is False
+
+    def test_iter_matched_values(self):
+        parser = self._parsers.get('artifactory', None)
+
+        column_name = 'version'
+        value = ['*', '*', '*', None]
+        assert parser.iter_matched_values('1.3', '1.3') is True
