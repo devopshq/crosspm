@@ -65,16 +65,9 @@ class Package:
         return self._packed_path
 
     def get_file(self, file_name, temp_path=None):
-        if not temp_path:
-            temp_path = self._downloader.temp_path
-        unp_exists, _ = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
-
-        if unp_exists:
-            _dest_file = os.path.join(self._unpacked_path, file_name)
-            _dest_file = _dest_file if os.path.isfile(_dest_file) else None
-        else:
-            temp_path = os.path.realpath(os.path.join(temp_path, self._name))
-            _dest_file = Archive.extract_file(self._packed_path, temp_path, file_name)
+        self.unpack()
+        _dest_file = os.path.join(self._unpacked_path, file_name)
+        _dest_file = _dest_file if os.path.isfile(_dest_file) else None
 
         return _dest_file
 
@@ -82,7 +75,7 @@ class Package:
         self._raw = [x for x in self._parser.iter_packages_params(depslock_file_path)]
         self.packages = self._downloader.get_packages({'raw': self._raw})
 
-    def unpack(self, dest_path='', force=False):
+    def unpack(self, force=False):
         if self._downloader.solid(self):
             self._unpacked_path = self._packed_path
         else:
