@@ -3,8 +3,6 @@ import re
 import fnmatch
 import os
 from crosspm.helpers.exceptions import *
-import copy
-import itertools
 
 
 class Parser:
@@ -683,42 +681,6 @@ class Parser:
         for k, v in self._config.iter_valued_columns2(params.keys()):
             if not v:
                 result[k] = self.merge_with_mask(k, params[k])
-        return result
-
-    def get_params_with_extra(self, rule_name, params):
-        """
-        Get params with extra, like 'any'
-        :param rule_name: 'path'
-        :param params: default params
-        :return: list of combination params
-        """
-        # HACK for prefer-local
-        result = []
-        extra_params = self._rules_vars_extra.get(rule_name, {})[0]
-        _tmp_params = copy.deepcopy(params)
-        _fixed_params = {}
-
-        # Save params with list type - this type not changed
-        for key, value in _tmp_params.items():
-            if isinstance(value, list):
-                _fixed_params[key] = value
-        _tmp_params = {k: v for k, v in _tmp_params.items() if k not in _fixed_params}
-
-        # extend with extra_vars - like 'any'
-        for key, value in _tmp_params.items():
-            if not isinstance(value, list) and key:
-                _tmp_params[key] = list([value])
-            if key in extra_params:
-                _tmp_params[key].extend(extra_params[key])
-
-        # get combinations
-        keys = sorted(_tmp_params)
-        combinations = itertools.product(*(_tmp_params[x] for x in keys))
-        for comb in combinations:
-            _dict = dict(zip(keys, comb))
-            _dict.update(_fixed_params)
-            result.append(_dict)
-
         return result
 
     def get_paths(self, list_or_file_path, source):
