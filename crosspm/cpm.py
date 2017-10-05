@@ -27,7 +27,6 @@ Options:
     --output=FILE                   Output file name (required if --out_format is not stdout)
     --no-fails                      Ignore fails config if possible.
     --recursive                     Process all packages recursively to find and lock all dependencies  
-    --prefer-local                  Do not search package if exist in cache
 
 """
 
@@ -93,8 +92,7 @@ class CrossPM:
             if self._args['DEPSLOCK']:
                 _depslock_path = self._args['DEPSLOCK']
         self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
-                              _deps_path, self._args['--lock-on-success'], self._args['--recursive'],
-                              self._args['--prefer-local'])
+                              _deps_path, self._args['--lock-on-success'], self._args['--recursive'])
         self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
 
     def run(self):
