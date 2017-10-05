@@ -137,6 +137,12 @@ cpm:
   dependencies-lock: dependencies.txt.lock
   lock-on-success: true
   
+  # search in local cache before query repo. 
+  # Work only with:
+  # - FIXED package version, without mask
+  # - Fixed extenstion
+  prefer-local: True 
+  
 cache:
   cmdline: cache
   env: CROSSPM_CACHE_ROOT

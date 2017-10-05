@@ -10,7 +10,7 @@ from crosspm.helpers.exceptions import *
 
 class Package:
     def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, params_found_raw=None,
-                 stat=None):
+                 stat=None, in_cache=False):
         self._packed_path = ''
         self._unpacked_path = ''
         self.packages = {}
@@ -29,6 +29,7 @@ class Package:
         self._adapter = adapter
         self._parser = parser
         self._downloader = downloader
+        self._in_cache=in_cache
         if params_found:
             self._params_found = params_found
         if params_found_raw:
@@ -41,7 +42,8 @@ class Package:
         :param force: Force download even if it seems file already exists
         :return: Full path with filename of downloaded package file.
         """
-        exists, dest_path = self._downloader.cache.exists_packed(package=self, pkg_path=self._packed_path)
+        exists, dest_path = self._downloader.cache.exists_packed(package=self, pkg_path=self._packed_path,
+                                                                 check_stat=not self._in_cache)
         if exists and not self._packed_path:
             self._packed_path = dest_path
 
@@ -65,9 +67,14 @@ class Package:
     def get_file(self, file_name, temp_path=None):
         if not temp_path:
             temp_path = self._downloader.temp_path
-        temp_path = os.path.realpath(os.path.join(temp_path, self._name))
+        unp_exists, _ = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
 
-        _dest_file = Archive.extract_file(self._packed_path, temp_path, file_name)
+        if unp_exists:
+            _dest_file = os.path.join(self._unpacked_path, file_name)
+            _dest_file = _dest_file if os.path.isfile(_dest_file) else None
+        else:
+            temp_path = os.path.realpath(os.path.join(temp_path, self._name))
+            _dest_file = Archive.extract_file(self._packed_path, temp_path, file_name)
 
         return _dest_file
 

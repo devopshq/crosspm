@@ -131,7 +131,16 @@ class Downloader:
                 params1 = self._packages[pkg_name].get_params(param_list)
                 params2 = package.get_params(param_list)
                 for x in param_list:
-                    if str(params1[x]) != str(params2[x]):
+                    # START HACK for cached archive
+                    param1 = params1[x]
+                    param2 = params2[x]
+                    if isinstance(param1, list):
+                        param1 = [str(x) for x in param1]
+                    if isinstance(param2, list):
+                        param2 = [str(x) for x in param2]
+                    # END
+
+                    if str(param1) != str(param2):
                         raise CrosspmException(
                             CROSSPM_ERRORCODE_MULTIPLE_DEPS,
                             'Multiple versions of package "{}" found in dependencies.'.format(pkg_name),
