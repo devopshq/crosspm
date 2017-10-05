@@ -15,8 +15,10 @@ class Cache:
         if not os.path.exists(self._cache_path):
             os.makedirs(self._cache_path)
 
-        self.packed_path = os.path.realpath(os.path.join(self._cache_path, 'archive'))
-        self.unpacked_path = os.path.realpath(os.path.join(self._cache_path, 'cache'))
+        self.path = {
+            'packed': os.path.realpath(os.path.join(self._cache_path, 'archive')),
+            'unpacked': os.path.realpath(os.path.join(self._cache_path, 'cache')),
+        }
         self.temp_path = os.path.realpath(os.path.join(self._cache_path, 'tmp'))
 
         self._clear = cache_data.get('clear', {})
@@ -130,8 +132,8 @@ class Cache:
             return res
 
         total = {
-            'packed': get_dir(self.packed_path),
-            'unpacked': get_dir(self.unpacked_path),
+            'packed': get_dir(self.path['packed']),
+            'unpacked': get_dir(self.path['unpacked']),
             'temp': get_dir(self.temp_path),
             'other': get_dir(self._cache_path, False),
         }
@@ -281,30 +283,31 @@ class Cache:
         self._log.info('    oldest: {}'.format(datetime.fromtimestamp(oldest)))
 
     def path_packed(self, package=None, params=None):
-        if params:
-            res = self._storage['packed'].format(**params)
-        elif package:
-            res = self._storage['packed'].format(**(package.get_params(merged=True)))
-        else:
-            res = ''
-        res = os.path.realpath(os.path.join(self.packed_path, res))
-        return res
+        return self.path_any('packed', package, params)
 
     def path_unpacked(self, package=None, params=None):
+        return self.path_any('unpacked', package, params)
+
+    def path_any(self, name, package=None, params=None):
         if params:
-            res = self._storage['unpacked'].format(**params)
+            tmp_params = {}
+            for k, v in params.items():
+                if isinstance(v, list):
+                    v = ".".join([x for x in v if x is not None and x != ''])
+                tmp_params[k] = v
+            res = self._storage[name].format(**tmp_params)
         elif package:
-            res = self._storage['unpacked'].format(**(package.get_params(merged=True)))
+            res = self._storage[name].format(**(package.get_params(merged=True)))
         else:
             res = ''
-        res = os.path.realpath(os.path.join(self.unpacked_path, res))
+        res = os.path.realpath(os.path.join(self.path[name], res))
         return res
 
-    def exists_packed(self, package=None, params=None, pkg_path=''):
+    def exists_packed(self, package=None, params=None, pkg_path='', check_stat=True):
         # Check if file exists and size and time match
         path = self.path_packed(package, params) if not pkg_path else pkg_path
         res = os.path.exists(path)
-        if res and package:
+        if res and package and check_stat:
             _stat_attr = {'ctime': 'st_atime',
                           'mtime': 'st_mtime',
                           'size': 'st_size'}

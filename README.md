@@ -137,6 +137,14 @@ cpm:
   dependencies-lock: dependencies.txt.lock
   lock-on-success: true
   
+  # search in local cache before query repo. 
+  # Work only with:
+  # - FIXED package version, without mask
+  # - FIXED extenstion
+  # - download-mode only (in lock it do not work)
+  # - only in artifactory-aql adapters
+  prefer-local: True 
+  
 cache:
   cmdline: cache
   env: CROSSPM_CACHE_ROOT
