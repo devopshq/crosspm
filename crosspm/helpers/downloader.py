@@ -93,7 +93,7 @@ class Downloader:
         _not_found = any(_pkg is None for _pkg in self._packages.values())
 
         if not _not_found and self.do_load:
-            self._log.info('Downloading ...')
+            self._log.info('Unpack ...')
 
             total = len(self._packages)
             for i, _pkg in enumerate(self._packages.values()):
