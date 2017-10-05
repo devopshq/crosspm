@@ -229,11 +229,11 @@ class Adapter(BaseAdapter):
                 if downloader.do_load:
                     _package.download()
 
-                    _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.cache.temp_path)
+                    _deps_file = _package.get_file(self._config.deps_lock_file_name)
                     if _deps_file:
                         _package.find_dependencies(_deps_file)
                     elif self._config.deps_file_name:
-                        _deps_file = _package.get_file(self._config.deps_file_name, downloader.cache.temp_path)
+                        _deps_file = _package.get_file(self._config.deps_file_name)
                         if _deps_file and os.path.isfile(_deps_file):
                             _package.find_dependencies(_deps_file)
 

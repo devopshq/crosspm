@@ -140,7 +140,9 @@ cpm:
   # search in local cache before query repo. 
   # Work only with:
   # - FIXED package version, without mask
-  # - Fixed extenstion
+  # - FIXED extenstion
+  # - download-mode only (in lock it do not work)
+  # - only in artifactory-aql adapters
   prefer-local: True 
   
 cache:

@@ -51,7 +51,12 @@ class Package:
 
         if force or not exists:
             # _packed_path = self._packed_path
-            self._packed_path = self._adapter.download_package(self._pkg, dest_path)
+            dest_path_tmp = dest_path + ".tmp"
+            if os.path.exists(dest_path_tmp):
+                os.remove(dest_path_tmp)
+            self._adapter.download_package(self._pkg, dest_path_tmp)
+            os.rename(dest_path_tmp, dest_path)
+            self._packed_path = dest_path
             # if not _packed_path:
             self._not_cached = True
         else:
@@ -64,7 +69,7 @@ class Package:
 
         return self._packed_path
 
-    def get_file(self, file_name, temp_path=None):
+    def get_file(self, file_name):
         self.unpack()
         _dest_file = os.path.join(self._unpacked_path, file_name)
         _dest_file = _dest_file if os.path.isfile(_dest_file) else None
