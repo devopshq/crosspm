@@ -123,8 +123,8 @@ setup(
         'docopt',
         'pyyaml',
         'dohq-artifactory',
-        'pyopenssl>=16.2.0',
-        'cryptography>=1.7',
+        # 'pyopenssl>=16.2.0',
+        # 'cryptography>=1.7',
     ],
     package_data={
         '': [
