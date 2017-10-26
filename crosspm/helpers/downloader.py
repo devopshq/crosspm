@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import logging
+from collections import OrderedDict
 from crosspm.helpers.package import Package
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME
@@ -14,7 +15,7 @@ def update_progress(msg, progress):
 
 class Downloader:
     def __init__(self, config, do_load=True):
-        self._packages = {}
+        self._packages = OrderedDict()
         self._log = logging.getLogger('crosspm')
         self._config = config
         self.cache = config.cache
@@ -52,7 +53,7 @@ class Downloader:
             if not os.path.isfile(list_or_file_path):
                 list_or_file_path = self._deps_path
 
-        _packages = {}
+        _packages = OrderedDict()
         if isinstance(list_or_file_path, str):
             self._log.info('Reading dependencies ... [%s]', list_or_file_path)
         for i, _src in enumerate(self._config.sources()):
@@ -83,7 +84,7 @@ class Downloader:
         self._log.info('Check dependencies ...')
         # print_stdout('Check dependencies ...')
 
-        self._packages = {}
+        self._packages = OrderedDict()
         self._root_package.find_dependencies(depslock_file_path)
 
         self._log.info('')
