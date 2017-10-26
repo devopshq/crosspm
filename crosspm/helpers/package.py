@@ -24,6 +24,8 @@ class Package:
             if pkg == 0:
                 self._root = True
         self._name = name
+        self.package_name = name
+        self.duplicated = False
         self._pkg = pkg
         self._params = params
         self._adapter = adapter
@@ -123,7 +125,9 @@ class Package:
 
         _sign = ' '
         if not self._root:
-            if self._unpacked_path:
+            if self.duplicated:
+                _sign = '!'
+            elif self._unpacked_path:
                 _sign = '+'
             elif self._packed_path:
                 _sign = '>'

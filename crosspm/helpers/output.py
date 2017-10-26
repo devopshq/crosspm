@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import json
 import logging
 import os
 import re
-import json
+
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
 
@@ -219,7 +220,7 @@ class Output:
     def output_type_stdout(self, packages):
         self._config['type'] = PLAIN
         _packages = self.output_type_module(packages)
-        for k in sorted(_packages, key=lambda x: str(x).lower()):
+        for k in _packages:
             v = _packages[k]
             sys.stdout.write('{}: {}\n'.format(self.get_var_name(k), v))
             sys.stdout.flush()
@@ -230,7 +231,7 @@ class Output:
         self._config['type'] = PLAIN
         result = '\n'
         _packages = self.output_type_module(packages)
-        for k in sorted(_packages, key=lambda x: str(x).lower()):
+        for k in _packages:
             v = _packages[k]
             result += "{}='{}'\n".format(self.get_var_name(k), v)
         result += '\n'
@@ -241,7 +242,7 @@ class Output:
         self._config['type'] = PLAIN
         result = '\n'
         _packages = self.output_type_module(packages)
-        for k in sorted(_packages, key=lambda x: str(x).lower()):
+        for k in _packages:
             v = _packages[k]
             result += "set {}={}\n".format(self.get_var_name(k), v)
         result += '\n'
