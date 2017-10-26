@@ -62,7 +62,7 @@ class Downloader:
                 self._log.info('Next source ...')
             _found_packages = _src.get_packages(self, list_or_file_path)
             _packages.update(
-                {k: v for k, v in _found_packages.items() if _packages.get(k, None) is None})
+                OrderedDict([(k, v) for k, v in _found_packages.items() if _packages.get(k, None) is None]))
             if not self._config.no_fails:
                 if isinstance(list_or_file_path, (list, tuple)):
                     list_or_file_path = [x for x in list_or_file_path if
