@@ -261,7 +261,7 @@ class Output:
             list_ = []
             for _pkg_name in packages_:
                 _pkg = packages_[_pkg_name]
-                if _pkg.packages:
+                if _pkg and _pkg.packages:
                     list_.extend(create_ordered_list(_pkg.packages))
                 if _pkg:
                     _pkg_params = _pkg.get_params(self._columns, True)

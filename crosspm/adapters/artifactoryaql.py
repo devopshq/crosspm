@@ -238,6 +238,13 @@ class Adapter(BaseAdapter):
                         if _deps_file and os.path.isfile(_deps_file):
                             _package.find_dependencies(_deps_file)
 
+        # HACK for not found packages
+        _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
+        _packages_found_names = [x.package_name for x in _packages_found.values()]
+        for package in _package_names:
+            if package not in _packages_found_names:
+                _packages_found[package] = None
+
         return _packages_found
 
     @staticmethod

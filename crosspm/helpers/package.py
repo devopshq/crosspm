@@ -171,6 +171,19 @@ class Package:
         self._name = self._parser.get_full_package_name(self)
         return self._name
 
+    def get_none_packages(self):
+        """
+        Get packages with None (not founded), recursively
+        """
+        not_found = set()
+        for package_name, package in self.packages.items():
+            if package is None:
+                not_found.add(package_name)
+            else:
+                if package.packages:
+                    not_found = not_found | package.get_none_packages()
+        return not_found
+
     def ext(self, check_ext):
         if self._pkg:
             if not isinstance(check_ext, (list, tuple)):

@@ -125,7 +125,7 @@ class Downloader:
         return self._packages
 
     def get_not_found_packages(self):
-        return self._package_names - set([x.package_name for x in self._packages.values() if x])
+        return self._root_package.get_none_packages()
 
     def add_package(self, pkg_name, package):
         self._package_names.add(pkg_name)
