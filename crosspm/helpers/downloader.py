@@ -17,6 +17,7 @@ def update_progress(msg, progress):
 class Downloader:
     def __init__(self, config, do_load=True):
         self._packages = OrderedDict()
+        self._package_names = set()
         self._log = logging.getLogger('crosspm')
         self._config = config
         self.cache = config.cache
@@ -123,20 +124,28 @@ class Downloader:
 
         return self._packages
 
+    def get_not_found_packages(self):
+        return self._package_names - set([x.package_name for x in self._packages.values() if x])
+
     def add_package(self, pkg_name, package):
+        self._package_names.add(pkg_name)
         _added = False
         if package is not None:
             pkg_name = package.set_full_unique_name()
+
         if pkg_name in self._packages:
             if self._packages[pkg_name] is None:
                 _added = True
         else:
             _added = True
 
+        if package is None and pkg_name in self._package_names:
+            _added = False
+
         if _added:
             self._packages[pkg_name] = package
 
-        return _added, self._packages[pkg_name]
+        return _added, self._packages.get(pkg_name, None)
 
     def set_duplicated_flag(self):
         """

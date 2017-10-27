@@ -221,7 +221,7 @@ class Output:
     def output_type_stdout(self, packages):
         self._config['type'] = PLAIN
         _packages = self.output_type_module(packages)
-        for k in reversed(_packages):
+        for k in _packages:
             v = _packages[k]
             sys.stdout.write('{}: {}\n'.format(self.get_var_name(k), v))
             sys.stdout.flush()
@@ -232,7 +232,7 @@ class Output:
         self._config['type'] = PLAIN
         result = '\n'
         _packages = self.output_type_module(packages)
-        for k in reversed(_packages):
+        for k in _packages:
             v = _packages[k]
             result += "{}='{}'\n".format(self.get_var_name(k), v)
         result += '\n'
@@ -243,37 +243,49 @@ class Output:
         self._config['type'] = PLAIN
         result = '\n'
         _packages = self.output_type_module(packages)
-        for k in reversed(_packages):
+        for k in _packages:
             v = _packages[k]
             result += "set {}={}\n".format(self.get_var_name(k), v)
         result += '\n'
         return result
 
-    # @register_output_format('module')
     def output_type_module(self, packages, esc_path=False):
-        result_list = []
-        for _pkg_name in packages:
-            _pkg = packages[_pkg_name]
-            if _pkg:
-                _pkg_params = _pkg.get_params(self._columns, True)
-                _res_item = {}
-                for item in self._config['columns']:
-                    name = item['name'].format(OutFormat(item['column']))
-                    value = _pkg_params.get(item['column'], '')
-                    if not isinstance(value, (list, dict, tuple)):
-                        try:
-                            value = item['value'].format(
-                                OutFormat(value, (item['column'] == 'path') if esc_path else False))
-                        except:
-                            value = ''
-                    # TODO: implement this:
-                    # if not value:
-                    #     try:
-                    #         value = item['value'].format(OutFormat(_pkg.get_params('', True)))
-                    #     except:
-                    #         pass
-                    _res_item[name] = value
-                result_list.append(_res_item)
+        """
+        Create out with child first position
+        """
+
+        def create_ordered_list(packages_):
+            """
+            Recursive for package.packages
+            """
+            list_ = []
+            for _pkg_name in packages_:
+                _pkg = packages_[_pkg_name]
+                if _pkg.packages:
+                    list_.extend(create_ordered_list(_pkg.packages))
+                if _pkg:
+                    _pkg_params = _pkg.get_params(self._columns, True)
+                    _res_item = {}
+                    for item in self._config['columns']:
+                        name = item['name'].format(OutFormat(item['column']))
+                        value = _pkg_params.get(item['column'], '')
+                        if not isinstance(value, (list, dict, tuple)):
+                            try:
+                                value = item['value'].format(
+                                    OutFormat(value, (item['column'] == 'path') if esc_path else False))
+                            except:
+                                value = ''
+                        # TODO: implement this:
+                        # if not value:
+                        #     try:
+                        #         value = item['value'].format(OutFormat(_pkg.get_params('', True)))
+                        #     except:
+                        #         pass
+                        _res_item[name] = value
+                    list_.append(_res_item)
+            return list_
+
+        result_list = create_ordered_list(packages,)
 
         if self._config['type'] == LIST:
             return result_list
