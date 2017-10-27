@@ -49,7 +49,7 @@ class Downloader:
 
     # Get list of all packages needed to resolve all the dependencies.
     # List of Package class instances.
-    def get_packages(self, list_or_file_path=None):
+    def get_dependency_packages(self, list_or_file_path=None):
         if list_or_file_path is None:
             list_or_file_path = self._depslock_path
             if not os.path.isfile(list_or_file_path):

@@ -80,7 +80,7 @@ class Package:
 
     def find_dependencies(self, depslock_file_path):
         self._raw = [x for x in self._parser.iter_packages_params(depslock_file_path)]
-        self.packages = self._downloader.get_packages({'raw': self._raw})
+        self.packages = self._downloader.get_dependency_packages({'raw': self._raw})
 
     def unpack(self, force=False):
         if self._downloader.solid(self):
