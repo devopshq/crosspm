@@ -3,6 +3,7 @@ import copy
 import json
 import os
 import time
+from collections import OrderedDict
 from datetime import datetime
 
 import requests
@@ -49,7 +50,7 @@ class Adapter(BaseAdapter):
             _art_auth_etc['verify'] = False
 
         _pkg_name_col = self._config.name_column
-        _packages_found = {}
+        _packages_found = OrderedDict()
         _pkg_name_old = ""
         _packed_exist = False
         _packed_cache_params = None

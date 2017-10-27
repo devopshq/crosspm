@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+import fnmatch
 import logging
 import os
-import fnmatch
-
 import shutil
+from collections import OrderedDict
+
 from crosspm.helpers.archive import Archive
-from crosspm.helpers.exceptions import *
 
 
 class Package:
@@ -13,7 +13,7 @@ class Package:
                  stat=None, in_cache=False):
         self._packed_path = ''
         self._unpacked_path = ''
-        self.packages = {}
+        self.packages = OrderedDict()
         self._raw = []
         self._root = False
         self._params_found = {}
@@ -24,12 +24,14 @@ class Package:
             if pkg == 0:
                 self._root = True
         self._name = name
+        self.package_name = name
+        self.duplicated = False
         self._pkg = pkg
         self._params = params
         self._adapter = adapter
         self._parser = parser
         self._downloader = downloader
-        self._in_cache=in_cache
+        self._in_cache = in_cache
         if params_found:
             self._params_found = params_found
         if params_found_raw:
@@ -123,7 +125,9 @@ class Package:
 
         _sign = ' '
         if not self._root:
-            if self._unpacked_path:
+            if self.duplicated:
+                _sign = '!'
+            elif self._unpacked_path:
                 _sign = '+'
             elif self._packed_path:
                 _sign = '>'
@@ -131,7 +135,7 @@ class Package:
                 _sign = '-'
         _left = '{}{}'.format(' ' * 4 * level, _sign)
         do_print(_left)
-        for _pkg_name in sorted(self.packages, key=lambda x: str(x).lower()):
+        for _pkg_name in self.packages:
             _pkg = self.packages[_pkg_name]
             if not _pkg:
                 _left = '{}-'.format(' ' * 4 * (level + 1))
