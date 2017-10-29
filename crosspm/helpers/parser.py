@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import copy
-import fnmatch
-import itertools
-import os
 import re
-
+import fnmatch
+import os
 from crosspm.helpers.exceptions import *
+import copy
+import itertools
 
 
 class Parser:
@@ -983,11 +982,13 @@ class Parser:
         return result
 
     def get_full_package_name(self, package):
-        param_list = [x for x in self._config.get_fails('unique', {})]
-        if self._config.name_column not in param_list:
-            param_list.insert(0, self._config.name_column)
-        params = package.get_params(param_list)
-        pkg_name = '/'.join(self.merge_with_mask(x, params[x]) for x in param_list)
+        pkg_name = package.get_name_and_path(True)
+        if self._config.no_fails:
+            param_list = [x for x in self._config.get_fails('unique', {})]
+            if self._config.name_column not in param_list:
+                param_list.insert(0, self._config.name_column)
+            params = package.get_params(param_list)
+            pkg_name = '/'.join(self.merge_with_mask(x, params[x]) for x in param_list)
 
         return pkg_name
 

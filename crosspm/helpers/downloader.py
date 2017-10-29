@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-import logging
 import os
-from collections import OrderedDict, defaultdict
-
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME
-from crosspm.helpers.exceptions import *
+import logging
 from crosspm.helpers.package import Package
+from crosspm.helpers.exceptions import *
+from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME
 from crosspm.helpers.parser import Parser
 
 
@@ -16,8 +14,7 @@ def update_progress(msg, progress):
 
 class Downloader:
     def __init__(self, config, do_load=True):
-        self._packages = OrderedDict()
-        self._package_names = set()
+        self._packages = {}
         self._log = logging.getLogger('crosspm')
         self._config = config
         self.cache = config.cache
@@ -49,13 +46,13 @@ class Downloader:
 
     # Get list of all packages needed to resolve all the dependencies.
     # List of Package class instances.
-    def get_dependency_packages(self, list_or_file_path=None):
+    def get_packages(self, list_or_file_path=None):
         if list_or_file_path is None:
             list_or_file_path = self._depslock_path
             if not os.path.isfile(list_or_file_path):
                 list_or_file_path = self._deps_path
 
-        _packages = OrderedDict()
+        _packages = {}
         if isinstance(list_or_file_path, str):
             self._log.info('Reading dependencies ... [%s]', list_or_file_path)
         for i, _src in enumerate(self._config.sources()):
@@ -64,7 +61,7 @@ class Downloader:
                 self._log.info('Next source ...')
             _found_packages = _src.get_packages(self, list_or_file_path)
             _packages.update(
-                OrderedDict([(k, v) for k, v in _found_packages.items() if _packages.get(k, None) is None]))
+                {k: v for k, v in _found_packages.items() if _packages.get(k, None) is None})
             if not self._config.no_fails:
                 if isinstance(list_or_file_path, (list, tuple)):
                     list_or_file_path = [x for x in list_or_file_path if
@@ -86,14 +83,12 @@ class Downloader:
         self._log.info('Check dependencies ...')
         # print_stdout('Check dependencies ...')
 
-        self._packages = OrderedDict()
+        self._packages = {}
         self._root_package.find_dependencies(depslock_file_path)
 
         self._log.info('')
-        self.set_duplicated_flag()
         self._log.info('Dependency tree:')
         self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
-        self.check_unique(self._config.no_fails)
 
         _not_found = any(_pkg is None for _pkg in self._packages.values())
 
@@ -124,44 +119,17 @@ class Downloader:
 
         return self._packages
 
-    def get_not_found_packages(self):
-        return self._root_package.get_none_packages()
-
     def add_package(self, pkg_name, package):
-        self._package_names.add(pkg_name)
         _added = False
-        if package is not None:
+        if self._config.no_fails and package is not None:
             pkg_name = package.set_full_unique_name()
-
         if pkg_name in self._packages:
             if self._packages[pkg_name] is None:
                 _added = True
-        else:
-            _added = True
-
-        if package is None and pkg_name in self._package_names:
-            _added = False
-
-        if _added:
-            self._packages[pkg_name] = package
-
-        return _added, self._packages.get(pkg_name, None)
-
-    def set_duplicated_flag(self):
-        """
-        For all package set flag duplicated, if it's not unique package
-        :return:
-        """
-        package_by_name = defaultdict(list)
-
-        for package1 in self._packages.values():
-            if package1 is None:
-                continue
-            pkg_name = package1.package_name
-            param_list = self._config.get_fails('unique', {})
-            params1 = package1.get_params(param_list)
-            for package2 in package_by_name[pkg_name]:
-                params2 = package2.get_params(param_list)
+            elif (package is not None) and (not self._config.no_fails):
+                param_list = self._config.get_fails('unique', {})
+                params1 = self._packages[pkg_name].get_params(param_list)
+                params2 = package.get_params(param_list)
                 for x in param_list:
                     # START HACK for cached archive
                     param1 = params1[x]
@@ -173,23 +141,16 @@ class Downloader:
                     # END
 
                     if str(param1) != str(param2):
-                        package1.duplicated = True
-                        package2.duplicated = True
-            package_by_name[pkg_name].append(package1)
+                        raise CrosspmException(
+                            CROSSPM_ERRORCODE_MULTIPLE_DEPS,
+                            'Multiple versions of package "{}" found in dependencies.'.format(pkg_name),
+                        )
+        else:
+            _added = True
+        if _added:
+            self._packages[pkg_name] = package
 
-    def check_unique(self, no_fails):
-        if no_fails:
-            return
-        not_unique = set(x.package_name for x in self._packages.values() if x and x.duplicated)
-        if not_unique:
-            raise CrosspmException(
-                CROSSPM_ERRORCODE_MULTIPLE_DEPS,
-                'Multiple versions of package "{}" found in dependencies.\nSee dependency tree in log (package with exclamation mark "!")'.format(
-                    ', '.join(not_unique)),
-            )
+        return _added, self._packages[pkg_name]
 
     def get_raw_packages(self):
-        return self._root_package.packages
-
-    def get_tree_packages(self):
         return self._root_package.packages

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-import fnmatch
 import logging
 import os
-import shutil
-from collections import OrderedDict
+import fnmatch
 
+import shutil
 from crosspm.helpers.archive import Archive
+from crosspm.helpers.exceptions import *
 
 
 class Package:
@@ -13,7 +13,7 @@ class Package:
                  stat=None, in_cache=False):
         self._packed_path = ''
         self._unpacked_path = ''
-        self.packages = OrderedDict()
+        self.packages = {}
         self._raw = []
         self._root = False
         self._params_found = {}
@@ -24,14 +24,12 @@ class Package:
             if pkg == 0:
                 self._root = True
         self._name = name
-        self.package_name = name
-        self.duplicated = False
         self._pkg = pkg
         self._params = params
         self._adapter = adapter
         self._parser = parser
         self._downloader = downloader
-        self._in_cache = in_cache
+        self._in_cache=in_cache
         if params_found:
             self._params_found = params_found
         if params_found_raw:
@@ -80,7 +78,7 @@ class Package:
 
     def find_dependencies(self, depslock_file_path):
         self._raw = [x for x in self._parser.iter_packages_params(depslock_file_path)]
-        self.packages = self._downloader.get_dependency_packages({'raw': self._raw})
+        self.packages = self._downloader.get_packages({'raw': self._raw})
 
     def unpack(self, force=False):
         if self._downloader.solid(self):
@@ -125,9 +123,7 @@ class Package:
 
         _sign = ' '
         if not self._root:
-            if self.duplicated:
-                _sign = '!'
-            elif self._unpacked_path:
+            if self._unpacked_path:
                 _sign = '+'
             elif self._packed_path:
                 _sign = '>'
@@ -135,7 +131,7 @@ class Package:
                 _sign = '-'
         _left = '{}{}'.format(' ' * 4 * level, _sign)
         do_print(_left)
-        for _pkg_name in self.packages:
+        for _pkg_name in sorted(self.packages, key=lambda x: str(x).lower()):
             _pkg = self.packages[_pkg_name]
             if not _pkg:
                 _left = '{}-'.format(' ' * 4 * (level + 1))
@@ -170,19 +166,6 @@ class Package:
     def set_full_unique_name(self):
         self._name = self._parser.get_full_package_name(self)
         return self._name
-
-    def get_none_packages(self):
-        """
-        Get packages with None (not founded), recursively
-        """
-        not_found = set()
-        for package_name, package in self.packages.items():
-            if package is None:
-                not_found.add(package_name)
-            else:
-                if package.packages:
-                    not_found = not_found | package.get_none_packages()
-        return not_found
 
     def ext(self, check_ext):
         if self._pkg:
