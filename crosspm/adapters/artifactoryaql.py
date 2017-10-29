@@ -3,7 +3,6 @@ import copy
 import json
 import os
 import time
-from collections import OrderedDict
 from datetime import datetime
 
 import requests
@@ -50,7 +49,7 @@ class Adapter(BaseAdapter):
             _art_auth_etc['verify'] = False
 
         _pkg_name_col = self._config.name_column
-        _packages_found = OrderedDict()
+        _packages_found = {}
         _pkg_name_old = ""
         _packed_exist = False
         _packed_cache_params = None
@@ -237,13 +236,6 @@ class Adapter(BaseAdapter):
                         _deps_file = _package.get_file(self._config.deps_file_name)
                         if _deps_file and os.path.isfile(_deps_file):
                             _package.find_dependencies(_deps_file)
-
-        # HACK for not found packages
-        _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
-        _packages_found_names = [x.package_name for x in _packages_found.values()]
-        for package in _package_names:
-            if package not in _packages_found_names:
-                _packages_found[package] = None
 
         return _packages_found
 
