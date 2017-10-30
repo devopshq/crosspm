@@ -177,7 +177,7 @@ class Downloader:
             )
 
     def get_raw_packages(self):
-        return self._root_package.packages
+        return self._root_package.all_packages
 
     def get_tree_packages(self):
         return self._root_package.packages

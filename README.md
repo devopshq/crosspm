@@ -11,6 +11,7 @@ CrossPM
 - [Documentation](#Chapter_2)
 - [Installation](#Chapter_3)
 - [Usage](#Chapter_4)
+    - [Python](#Chapter_41)
 - [Examples](#Chapter_5)
     - [crosspm.yaml](#Chapter_5_1)
     - [Config file description](#Chapter_5_2)
@@ -121,6 +122,23 @@ You'll see something like this:
       --recursive                     Process all packages recursively to find and lock all dependencies
 ```
 
+<a name="Chapter_41"></a>Python
+You can use CrossPM in python-code:
+```python
+from crosspm import CrossPM
+config_name = 'myconfig.yaml'
+dependencies = 'dependencies.txt.lock'
+argv = 'download -c "{}" --depslock-path="{}" --no-fails'.format(config_name, dependencies)
+
+# run download and get result
+# crosspm_raw_packages - LIST of all downloaded packages (with duplicate)
+err, crosspm_raw_packages = CrossPM(argv, return_result='raw').run()
+
+# crosspm_tree_packages - LIST of first-level packages, with child in package.packages variable
+err, crosspm_tree_packages = CrossPM(argv, return_result='tree').run()
+
+
+```
 
 <a name="Chapter_5"></a>Examples
 --------
