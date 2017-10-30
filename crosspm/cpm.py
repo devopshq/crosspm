@@ -234,14 +234,8 @@ class CrossPM:
         if do_load:
             self._config.cache.auto_clear()
         cpm_downloader = Downloader(self._config, do_load)
-        packages = cpm_downloader.download_packages()
+        cpm_downloader.download_packages()
 
-        _not_found = cpm_downloader.get_not_found_packages()
-        if _not_found:
-            raise CrosspmException(
-                CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
-                'Some package(s) not found: {}'.format(', '.join(_not_found))
-            )
         if do_load:
             if self._return_result:
                 if str(self._return_result).lower() == 'raw':

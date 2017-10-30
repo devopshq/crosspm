@@ -16,8 +16,6 @@ def update_progress(msg, progress):
 
 class Downloader:
     def __init__(self, config, do_load=True):
-        self._packages = OrderedDict()
-        self._package_names = set()
         self._log = logging.getLogger('crosspm')
         self._config = config
         self.cache = config.cache
@@ -84,9 +82,7 @@ class Downloader:
                 depslock_file_path = self._deps_path
 
         self._log.info('Check dependencies ...')
-        # print_stdout('Check dependencies ...')
 
-        self._packages = OrderedDict()
         self._root_package.find_dependencies(depslock_file_path)
 
         self._log.info('')
@@ -95,13 +91,19 @@ class Downloader:
         self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
         self.check_unique(self._config.no_fails)
 
-        _not_found = any(_pkg is None for _pkg in self._packages.values())
+        _not_found = self.get_not_found_packages()
+        if _not_found:
+            raise CrosspmException(
+                CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
+                'Some package(s) not found: {}'.format(', '.join(_not_found))
+            )
 
-        if not _not_found and self.do_load:
+        # if not _not_found and self.do_load:
+        if self.do_load:
             self._log.info('Unpack ...')
 
-            total = len(self._packages)
-            for i, _pkg in enumerate(self._packages.values()):
+            total = len(self._root_package.all_packages)
+            for i, _pkg in enumerate(self._root_package.all_packages):
                 update_progress('Download/Unpack:', float(i) / float(total) * 100.0)
                 if _pkg.download():  # self.packed_path):
                     _pkg.unpack()  # self.unpacked_path)
@@ -119,33 +121,19 @@ class Downloader:
                     os.path.join(os.path.dirname(depslock_file_path), self._config.deps_lock_file_name))
                 Locker(
                     self._config,
-                    self._packages if self._config.recursive else self._root_package.packages,
+                    self._root_package.all_packages if self._config.recursive else self._root_package.packages,
                 ).lock_packages(depslock_file_path, depslock_path)
 
-        return self._packages
+        return self._root_package.all_packages
 
     def get_not_found_packages(self):
         return self._root_package.get_none_packages()
 
     def add_package(self, pkg_name, package):
-        self._package_names.add(pkg_name)
         _added = False
         if package is not None:
-            pkg_name = package.set_full_unique_name()
-
-        if pkg_name in self._packages:
-            if self._packages[pkg_name] is None:
-                _added = True
-        else:
             _added = True
-
-        if package is None and pkg_name in self._package_names:
-            _added = False
-
-        if _added:
-            self._packages[pkg_name] = package
-
-        return _added, self._packages.get(pkg_name, None)
+        return _added, package
 
     def set_duplicated_flag(self):
         """
@@ -154,7 +142,7 @@ class Downloader:
         """
         package_by_name = defaultdict(list)
 
-        for package1 in self._packages.values():
+        for package1 in self._root_package.all_packages:
             if package1 is None:
                 continue
             pkg_name = package1.package_name
@@ -180,7 +168,7 @@ class Downloader:
     def check_unique(self, no_fails):
         if no_fails:
             return
-        not_unique = set(x.package_name for x in self._packages.values() if x and x.duplicated)
+        not_unique = set(x.package_name for x in self._root_package.all_packages if x and x.duplicated)
         if not_unique:
             raise CrosspmException(
                 CROSSPM_ERRORCODE_MULTIPLE_DEPS,

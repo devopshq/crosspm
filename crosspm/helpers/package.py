@@ -184,6 +184,15 @@ class Package:
                     not_found = not_found | package.get_none_packages()
         return not_found
 
+    @property
+    def all_packages(self):
+        packages = []
+        for package in self.packages.values():
+            if package:
+                packages.extend(package.all_packages)
+        packages.extend(self.packages.values())
+        return packages
+
     def ext(self, check_ext):
         if self._pkg:
             if not isinstance(check_ext, (list, tuple)):
