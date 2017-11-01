@@ -8,9 +8,11 @@ CrossPM
 
 *Index:*
 - [Introduction](#Chapter_1)
+    - [Changelog](#Chapter_11)
 - [Documentation](#Chapter_2)
 - [Installation](#Chapter_3)
 - [Usage](#Chapter_4)
+    - [Python](#Chapter_41)
 - [Examples](#Chapter_5)
     - [crosspm.yaml](#Chapter_5_1)
     - [Config file description](#Chapter_5_2)
@@ -69,6 +71,9 @@ and manifest file with the list of packages you need to download.
 Configuration file format is YAML, as you could see from its filename, so you free to use yaml hints and tricks,
 as long, as main configuration parameters remains on their levels :)
 
+<a name="Chapter_12"></a>Changelog
+------------
+[Changelog](CHANGELOG.md)
 
 <a name="Chapter_2"></a>Documentation
 -------------
@@ -121,6 +126,8 @@ You'll see something like this:
       --recursive                     Process all packages recursively to find and lock all dependencies
 ```
 
+<a name="Chapter_41"></a>Python
+You can use CrossPM in python-code. [Read more](docs/USAGE-PYTHON.md)
 
 <a name="Chapter_5"></a>Examples
 --------
