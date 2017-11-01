@@ -234,23 +234,23 @@ class CrossPM:
         if do_load:
             self._config.cache.auto_clear()
         cpm_downloader = Downloader(self._config, do_load)
-        # cpm_downloader = Downloader(self._config, params.pop('depslock_path'), do_load)
         packages = cpm_downloader.download_packages()
 
-        _not_found = any(_pkg is None for _pkg in packages.values())
+        _not_found = cpm_downloader.get_not_found_packages()
         if _not_found:
             raise CrosspmException(
                 CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
-                'Some package(s) not found.'
+                'Some package(s) not found: {}'.format(', '.join(_not_found))
             )
         if do_load:
             if self._return_result:
                 if str(self._return_result).lower() == 'raw':
                     return cpm_downloader.get_raw_packages()
                 else:
-                    return self._output.output_type_module(packages)
+                    return self._output.output_type_module(cpm_downloader.get_raw_packages())
             else:
-                self._output.write(params, packages)
+                # self._output.write(params, packages)
+                self._output.write(params, cpm_downloader.get_raw_packages())
         return ''
 
     def lock(self):

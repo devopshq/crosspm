@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
 
-from crosspm.helpers.exceptions import *
+from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.output import Output
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
+from collections import OrderedDict
 
 
 class Locker(Downloader):
@@ -47,7 +47,7 @@ class Locker(Downloader):
         if not _not_found:
             self._log.info('Writing lock file [{}]'.format(depslock_file_path))
             text = ''
-            packages = {}
+            packages = OrderedDict()
             columns = self._config.get_columns()
             widths = {}
             for _pkg_name in self._packages:
