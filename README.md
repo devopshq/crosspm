@@ -8,6 +8,7 @@ CrossPM
 
 *Index:*
 - [Introduction](#Chapter_1)
+    - [Changelog](#Chapter_11)
 - [Documentation](#Chapter_2)
 - [Installation](#Chapter_3)
 - [Usage](#Chapter_4)
@@ -70,6 +71,9 @@ and manifest file with the list of packages you need to download.
 Configuration file format is YAML, as you could see from its filename, so you free to use yaml hints and tricks,
 as long, as main configuration parameters remains on their levels :)
 
+<a name="Chapter_12"></a>Changelog
+------------
+[Changelog](CHANGELOG.md)
 
 <a name="Chapter_2"></a>Documentation
 -------------
