@@ -239,14 +239,14 @@ class CrossPM:
         if do_load:
             if self._return_result:
                 if str(self._return_result).lower() == 'raw':
-                    return cpm_downloader.get_tree_packages()
-                if str(self._return_result).lower() == 'tree':
                     return cpm_downloader.get_raw_packages()
+                if str(self._return_result).lower() == 'tree':
+                    return cpm_downloader.get_tree_packages()
                 else:
-                    return self._output.output_type_module(cpm_downloader.get_raw_packages())
+                    return self._output.output_type_module(cpm_downloader.get_tree_packages())
             else:
                 # self._output.write(params, packages)
-                self._output.write(params, cpm_downloader.get_raw_packages())
+                self._output.write(params, cpm_downloader.get_tree_packages())
         return ''
 
     def lock(self):
