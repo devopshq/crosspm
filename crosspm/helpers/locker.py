@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 import os
+from collections import OrderedDict
 
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.output import Output
-from collections import OrderedDict
 
 
 class Locker(Downloader):
     def __init__(self, config, packages=None):
         # TODO: revise logic to allow recursive search without downloading
         super(Locker, self).__init__(config, do_load=False or config.recursive)
-        if packages:
-            self._packages = packages
+        self._packages = packages if packages else None
 
         if not getattr(config, 'deps_path', ''):
             config.deps_path = config.deps_file_name or CROSSPM_DEPENDENCY_FILENAME
