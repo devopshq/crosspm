@@ -27,6 +27,7 @@ Options:
     --output=FILE                   Output file name (required if --out_format is not stdout)
     --no-fails                      Ignore fails config if possible.
     --recursive                     Process all packages recursively to find and lock all dependencies  
+    --prefer-local                  Do not search package if exist in cache
 
 """
 
@@ -92,7 +93,8 @@ class CrossPM:
             if self._args['DEPSLOCK']:
                 _depslock_path = self._args['DEPSLOCK']
         self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
-                              _deps_path, self._args['--lock-on-success'], self._args['--recursive'])
+                              _deps_path, self._args['--lock-on-success'], self._args['--recursive'],
+                              self._args['--prefer-local'])
         self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
 
     def run(self):
@@ -232,23 +234,19 @@ class CrossPM:
         if do_load:
             self._config.cache.auto_clear()
         cpm_downloader = Downloader(self._config, do_load)
-        # cpm_downloader = Downloader(self._config, params.pop('depslock_path'), do_load)
-        packages = cpm_downloader.download_packages()
+        cpm_downloader.download_packages()
 
-        _not_found = any(_pkg is None for _pkg in packages.values())
-        if _not_found:
-            raise CrosspmException(
-                CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
-                'Some package(s) not found.'
-            )
         if do_load:
             if self._return_result:
                 if str(self._return_result).lower() == 'raw':
                     return cpm_downloader.get_raw_packages()
+                if str(self._return_result).lower() == 'tree':
+                    return cpm_downloader.get_tree_packages()
                 else:
-                    return self._output.output_type_module(packages)
+                    return self._output.output_type_module(cpm_downloader.get_tree_packages())
             else:
-                self._output.write(params, packages)
+                # self._output.write(params, packages)
+                self._output.write(params, cpm_downloader.get_tree_packages())
         return ''
 
     def lock(self):

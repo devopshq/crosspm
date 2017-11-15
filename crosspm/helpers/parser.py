@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-import re
+import copy
 import fnmatch
+import itertools
 import os
+import re
+
 from crosspm.helpers.exceptions import *
 
 
@@ -684,6 +687,42 @@ class Parser:
                 result[k] = self.merge_with_mask(k, params[k])
         return result
 
+    def get_params_with_extra(self, rule_name, params):
+        """
+        Get params with extra, like 'any'
+        :param rule_name: 'path'
+        :param params: default params
+        :return: list of combination params
+        """
+        # HACK for prefer-local
+        result = []
+        extra_params = self._rules_vars_extra.get(rule_name, {})[0]
+        _tmp_params = copy.deepcopy(params)
+        _fixed_params = {}
+
+        # Save params with list type - this type not changed
+        for key, value in _tmp_params.items():
+            if isinstance(value, list):
+                _fixed_params[key] = value
+        _tmp_params = {k: v for k, v in _tmp_params.items() if k not in _fixed_params}
+
+        # extend with extra_vars - like 'any'
+        for key, value in _tmp_params.items():
+            if not isinstance(value, list) and key:
+                _tmp_params[key] = list([value])
+            if key in extra_params:
+                _tmp_params[key].extend(extra_params[key])
+
+        # get combinations
+        keys = sorted(_tmp_params)
+        combinations = itertools.product(*(_tmp_params[x] for x in keys))
+        for comb in combinations:
+            _dict = dict(zip(keys, comb))
+            _dict.update(_fixed_params)
+            result.append(_dict)
+
+        return result
+
     def get_paths(self, list_or_file_path, source):
         if 'path' not in self._rules:
             return None
@@ -945,13 +984,11 @@ class Parser:
         return result
 
     def get_full_package_name(self, package):
-        pkg_name = package.get_name_and_path(True)
-        if self._config.no_fails:
-            param_list = [x for x in self._config.get_fails('unique', {})]
-            if self._config.name_column not in param_list:
-                param_list.insert(0, self._config.name_column)
-            params = package.get_params(param_list)
-            pkg_name = '/'.join(self.merge_with_mask(x, params[x]) for x in param_list)
+        param_list = [x for x in self._config.get_fails('unique', {})]
+        if self._config.name_column not in param_list:
+            param_list.insert(0, self._config.name_column)
+        params = package.get_params(param_list)
+        pkg_name = '/'.join(self.merge_with_mask(x, params[x]) for x in param_list)
 
         return pkg_name
 

@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
+import copy
 import json
-import time
 import os
-import requests
-from requests.auth import HTTPBasicAuth
+import time
+from collections import OrderedDict
 from datetime import datetime
-from crosspm.adapters.common import BaseAdapter
+
+import requests
 from artifactory import ArtifactoryPath
+from requests.auth import HTTPBasicAuth
+
+from crosspm.adapters.common import BaseAdapter
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.package import Package
 
@@ -19,6 +23,8 @@ setup = {
     ],
 }
 
+session = requests.Session()
+
 
 class Adapter(BaseAdapter):
     def get_packages(self, source, parser, downloader, list_or_file_path):
@@ -27,6 +33,7 @@ class Adapter(BaseAdapter):
         if 'auth' in source.args:
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
+                session.auth = _art_auth_etc['auth']
                 # elif _auth_type == 'cert':
                 #     _art_auth_etc['cert'] = os.path.realpath(os.path.expanduser(source.args['auth']))
         if 'auth' not in _art_auth_etc:
@@ -39,11 +46,17 @@ class Adapter(BaseAdapter):
 
         if 'verify' in source.args:
             _art_auth_etc['verify'] = source.args['verify'].lower in ['true', 'yes', '1']
+        else:
+            _art_auth_etc['verify'] = False
 
         _pkg_name_col = self._config.name_column
-        _packages_found = {}
+        _packages_found = OrderedDict()
         _pkg_name_old = ""
+        _packed_exist = False
+        _packed_cache_params = None
+
         for _paths in parser.get_paths(list_or_file_path, source):
+
             _packages = []
             _params_found = {}
             _params_found_raw = {}
@@ -56,10 +69,25 @@ class Adapter(BaseAdapter):
                                     {k: v for k, v in _paths['params'].items() if
                                      k not in (_pkg_name_col, 'repo')}))
             for _sub_paths in _paths['paths']:
+                _tmp_params = dict(_paths['params'])
                 self._log.info('repo: {}'.format(_sub_paths['repo']))
                 for _path in _sub_paths['paths']:
-                    _tmp_params = dict(_paths['params'])
                     _tmp_params['repo'] = _sub_paths['repo']
+                    # ------ START ----
+                    # HACK for prefer-local
+                    if self._config.prefer_local:
+                        params = parser.get_params_with_extra('path', _paths['params'])
+                        for param in params:
+                            param['repo'] = _tmp_params['repo']
+                            _path_packed = downloader.cache.path_packed(None, param)
+                            _packed_exist = os.path.isfile(_path_packed) and self._config.prefer_local
+                            if _packed_exist:
+                                self._log.info("Skip searching, use package cache in path {}".format(_path_packed))
+                                _packed_cache_params = param
+                                break  # break check local cache
+                    if _packed_exist:
+                        break  # break connect to artifactory
+                        # ------ END  ----
                     _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
                     try:
                         _artifactory_server = _tmp_params['server']
@@ -82,9 +110,10 @@ class Adapter(BaseAdapter):
                                 "$match": _file_name_pattern,
                             },
                         }
-                        _art_auth_etc['data'] = 'items.find({query_dict}).include("*", "property")'.format(
+                        query = 'items.find({query_dict}).include("*", "property")'.format(
                             query_dict=json.dumps(_aql_query_dict))
-                        r = requests.post(_aql_query_url, **_art_auth_etc)
+                        session.auth = _art_auth_etc['auth']
+                        r = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
                         r.raise_for_status()
 
                         _found_paths = r.json()
@@ -146,8 +175,20 @@ class Adapter(BaseAdapter):
                                 last_error = msg
 
             _package = None
+
+            # HACK for prefer-local
+            if _packed_exist:
+                # HACK - Normalize params for cached archive
+                for key, value in _packed_cache_params.items():
+                    if isinstance(value, list):
+                        value = ['' if x is None else x for x in value]
+                        _packed_cache_params[key] = value
+                _package = Package(_pkg_name, None, _paths['params'], downloader, self, parser,
+                                   _packed_cache_params, list_or_file_path['raw'], {}, in_cache=True)
+            # END HACK
             if _packages:
-                _packages = parser.filter_one(_packages, _paths['params'], _params_found)
+                _tmp = copy.deepcopy(_params_found)
+                _packages = parser.filter_one(_packages, _paths['params'], _tmp)
                 if isinstance(_packages, dict):
                     _packages = [_packages]
 
@@ -189,13 +230,20 @@ class Adapter(BaseAdapter):
                 if downloader.do_load:
                     _package.download()
 
-                    _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.cache.temp_path)
+                    _deps_file = _package.get_file(self._config.deps_lock_file_name)
                     if _deps_file:
                         _package.find_dependencies(_deps_file)
                     elif self._config.deps_file_name:
-                        _deps_file = _package.get_file(self._config.deps_file_name, downloader.cache.temp_path)
+                        _deps_file = _package.get_file(self._config.deps_file_name)
                         if _deps_file and os.path.isfile(_deps_file):
                             _package.find_dependencies(_deps_file)
+
+        # HACK for not found packages
+        _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
+        _packages_found_names = [x.package_name for x in _packages_found.values()]
+        for package in _package_names:
+            if package not in _packages_found_names:
+                _packages_found[package] = None
 
         return _packages_found
 
@@ -209,7 +257,7 @@ class Adapter(BaseAdapter):
         _stat_pkg = {
             k: time.mktime(v.timetuple()) + float(v.microsecond) / 1000000.0 if isinstance(v, datetime) else v
             for k, v in _stat_pkg.items()
-        }
+            }
         return _stat_pkg
 
     def download_package(self, package, dest_path):
@@ -223,7 +271,8 @@ class Adapter(BaseAdapter):
         try:
             _stat_pkg = self.pkg_stat(package)
             # with package.open() as _src:
-            _src = requests.get(str(package), auth=package.auth, verify=package.verify, stream=True)
+            session.auth = package.auth
+            _src = session.get(str(package), verify=package.verify, stream=True)
             _src.raise_for_status()
 
             with open(dest_path, 'wb+') as _dest:
