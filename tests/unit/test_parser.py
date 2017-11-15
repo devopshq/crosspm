@@ -141,56 +141,64 @@ class TestParser(BaseParserTest):
         assert path_pattern == _path_pattern
         assert file_name_pattern == _file_name_pattern
 
-    @pytest.mark.artifactoryaql
-    def test__get_params_with_extra(self):
+    def test_split_fixed_pattern(self):
         parser = self._parsers.get('common', None)
 
-        vars_extra = {'path': [
-            {
-                'compiler': ['any'],
-                'arch': ['any'],
-            }
-        ]}
-        params = {
-            'arch': 'x86',
-            'compiler': 'vc140',
-            'osname': 'win',
-            'version': [1, 2, 3]
-        }
+        path = "https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz"
+        path_fixed = "https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/"
+        path_pattern = "*.*.*/vc110/x86/win/boost.*.*.*.tar.gz"
 
-        expected_result = [
-            {
-                'arch': 'x86',
-                'compiler': 'vc140',
-                'osname': 'win',
-                'version': [1, 2, 3]
-            },
-            {
-                'arch': 'any',
-                'compiler': 'vc140',
-                'osname': 'win',
-                'version': [1, 2, 3]
-            },
-            {
-                'arch': 'x86',
-                'compiler': 'any',
-                'osname': 'win',
-                'version': [1, 2, 3]
-            },
-            {
-                'arch': 'any',
-                'compiler': 'any',
-                'osname': 'win',
-                'version': [1, 2, 3]
-            },
+        _path_fixed, _path_pattern = parser.split_fixed_pattern(path)
 
-        ]
-        parser._rules_vars_extra = vars_extra
-        result = parser.get_params_with_extra('path', params)
+        assert path_fixed == _path_fixed
+        assert path_pattern == _path_pattern
 
-        for res in result:
-            assert res in expected_result, "Result contain MORE element then expected"
+    def test_has_rule(self):
+        parser = self._parsers.get('artifactory', None)
 
-        for res in expected_result:
-            assert res in result, "Result contain LESS element then expected"
+        assert parser.has_rule('path') is True
+        assert parser.has_rule('properties') is False
 
+    # def test_get_full_package_name(self):
+    #     parser = self._parsers.get('artifactory', None)
+    #
+    #     package = Package('test_package', None, None, None, None, parser=parser)
+    #     name = parser.get_full_package_name(package)
+    #
+    #     assert name == "test_package"
+
+    def test_list_flatter(self):
+        parser = self._parsers.get('common', None)
+
+        src = [['https://repo.example.com/artifactory/cybsi.snapshot/cybsi/*/*.*.*/[any|any]/[any|any]/cybsi/cybsi.*.*.*[.zip|.tar.gz|.nupkg]']]
+        result = ['https://repo.example.com/artifactory/cybsi.snapshot/cybsi/*/*.*.*/[any|any]/[any|any]/cybsi/cybsi.*.*.*[.zip|.tar.gz|.nupkg]']
+
+        assert parser.list_flatter(src) == result
+
+    def test_validate_atom(self):
+        parser = self._parsers.get('artifactory', None)
+
+        assert parser.validate_atom('feature-netcore-probes', '*') is True
+        assert parser.validate_atom('1.2', '>=1.3') is False
+
+    def test_values_match(self):
+        parser = self._parsers.get('artifactory', None)
+
+        assert parser.values_match('1.3', '1.3') is True
+        assert parser.values_match('2.0', '1.3') is False
+
+    # def test_iter_matched_values(self):
+    #     """
+    #     module parser have no method get_values(column_name) (see line 566 in parser)
+    #     so we should use mock object I think
+    #     """
+    #     parser = self._parsers.get('artifactory', None)
+    #
+    #     column_name = 'version'
+    #     value = ['1', '2', '3', None]
+    #
+    #     ## debug
+    #     #res = parser.iter_matched_values(column_name, value)
+    #     #print(res)
+    #
+    #     assert parser.iter_matched_values('1.3', '1.3') is True
