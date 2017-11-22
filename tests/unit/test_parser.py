@@ -202,3 +202,57 @@ class TestParser(BaseParserTest):
     #     #print(res)
     #
     #     assert parser.iter_matched_values('1.3', '1.3') is True
+
+    @pytest.mark.artifactoryaql
+    def test__get_params_with_extra(self):
+        parser = self._parsers.get('common', None)
+
+        vars_extra = {'path': [
+            {
+                'compiler': ['any'],
+                'arch': ['any'],
+            }
+        ]}
+
+        params = {
+            'arch': 'x86',
+            'compiler': 'vc140',
+            'osname': 'win',
+            'version': [1, 2, 3]
+        }
+
+        expected_result = [
+            {
+                'arch': 'x86',
+                'compiler': 'vc140',
+                'osname': 'win',
+                'version': [1, 2, 3]
+            },
+            {
+                'arch': 'any',
+                'compiler': 'vc140',
+                'osname': 'win',
+                'version': [1, 2, 3]
+            },
+            {
+                'arch': 'x86',
+                'compiler': 'any',
+                'osname': 'win',
+                'version': [1, 2, 3]
+            },
+            {
+                'arch': 'any',
+                'compiler': 'any',
+                'osname': 'win',
+                'version': [1, 2, 3]
+            },
+
+        ]
+        parser._rules_vars_extra = vars_extra
+        result = parser.get_params_with_extra('path', params)
+
+        for res in result:
+            assert res in expected_result, "Result contain MORE element then expected"
+
+        for res in expected_result:
+            assert res in result, "Result contain LESS element then expected"
