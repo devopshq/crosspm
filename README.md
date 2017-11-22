@@ -199,7 +199,6 @@ parsers:
   artifactory:
     path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
     properties: "some.org.quality = {quality}"
-
 defaults:
   branch: master
   quality: stable

@@ -55,13 +55,16 @@ class CrossPM:
     def __init__(self, args=None, throw_exceptions=None, return_result=False):
         self._config = None
         self._output = None
-        self._throw_exceptions = True
-        self._return_result = False
-        if throw_exceptions is not None:
+        self._return_result = return_result
+
+        if throw_exceptions is None:
+            # legacy behavior
+            if self._return_result:
+                self._throw_exceptions = False
+            else:
+                self._throw_exceptions = True
+        else:
             self._throw_exceptions = throw_exceptions
-        elif args is not None:
-            self._throw_exceptions = False
-            self._return_result = return_result
 
         self._log = logging.getLogger('crosspm')
         self._args = docopt('{}\n{}'.format(app_name,
@@ -122,33 +125,28 @@ class CrossPM:
             errorcode, msg = CROSSPM_ERRORCODE_WRONG_ARGS, self._args
         return errorcode, msg
 
+    def exit(self, code, msg):
+        self._log.critical(msg)
+        if self._throw_exceptions:
+            sys.exit(code)
+        else:
+            return code, msg
+
     def do_run(self, func, *args, **kwargs):
         try:
             res = func(*args, **kwargs)
         except CrosspmExceptionWrongArgs as e:
-            if self._throw_exceptions:
-                print(__doc__)
-                self._log.critical(e.msg)
-                sys.exit(e.error_code)
-            else:
-                return e.error_code, e.msg
+            print(__doc__)
+            return self.exit(e.error_code, e.msg)
 
         except CrosspmException as e:
-            if self._throw_exceptions:
-                print_stdout('')
-                self._log.critical(e.msg)
-                sys.exit(e.error_code)
-            else:
-                return e.error_code, e.msg
+            print_stdout('')
+            return self.exit(e.error_code, e.msg)
 
         except Exception as e:
-            if self._throw_exceptions:
-                print_stdout('')
-                self._log.exception(e)
-                self._log.critical('Unknown error occurred!')
-                sys.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR)
-            else:
-                return CROSSPM_ERRORCODE_UNKNOWN_ERROR, 'Unknown error occurred!'
+            print_stdout('')
+            self._log.exception(e)
+            return self.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR, 'Unknown error occurred!')
         return 0, res
 
     def check_common_args(self):
