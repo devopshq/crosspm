@@ -6,28 +6,11 @@ CrossPM
 [![pypi](https://img.shields.io/pypi/v/crosspm.svg)](https://pypi.python.org/pypi/crosspm)
 [![license](https://img.shields.io/pypi/l/crosspm.svg)](https://github.com/devopshq/crosspm/blob/master/LICENSE)
 
-- [Documentation](#Chapter_2)
-- [Installation](#Chapter_3)
-- [Usage](#Chapter_4)
-    - [Python](#Chapter_41)
-- [Examples](#Chapter_5)
-    - [crosspm.yaml](#Chapter_5_1)
-    - [Config file description](#Chapter_5_2)
-        - [import](#Chapter_5_2_1)
-        - [cpm](#Chapter_5_2_2)
-        - [cache](#Chapter_5_2_3)
-        - [columns](#Chapter_5_2_4)
-        - [values](#Chapter_5_2_5)
-        - [options](#Chapter_5_2_6)
-        - [parsers](#Chapter_5_2_7)
-        - [defaults](#Chapter_5_2_8)
-        - [solid](#Chapter_5_2_9)
-        - [fails](#Chapter_5_2_10)
-        - [common](#Chapter_5_2_11)
-        - [sources](#Chapter_5_2_12)
-        - [output](#Chapter_5_2_13)
-        
-<a name="Chapter_1"></a>Introduction
+Documentation
+-------------
+Actual version always here: http://devopshq.github.io/crosspm
+
+Introduction
 ------------
 
 CrossPM (Cross Package Manager) is a universal extensible package manager.
@@ -68,7 +51,4 @@ and manifest file with the list of packages you need to download.
 Configuration file format is YAML, as you could see from its filename, so you free to use yaml hints and tricks,
 as long, as main configuration parameters remains on their levels :)
 
-<a name="Chapter_2"></a>Documentation
--------------
-Actual version always here: http://devopshq.github.io/crosspm
 
