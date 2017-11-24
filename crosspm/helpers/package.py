@@ -23,8 +23,8 @@ class Package:
         if isinstance(pkg, int):
             if pkg == 0:
                 self._root = True
-        self._name = name
-        self.package_name = name
+        self.name = name
+        self.package_name = name  # unique name (* column)
         self.duplicated = False
         self._pkg = pkg
         self._params = params
@@ -145,14 +145,9 @@ class Package:
         if self._root:
             self._log.info('')
 
-    def get_name_and_path(self, name_only=False):
-        if name_only:
-            return self._name
-        return self._name, self._unpacked_path
-
     def get_params(self, param_list=None, get_path=False, merged=False, raw=False):
         if param_list and isinstance(param_list, str):
-            result = {param_list: self._name}
+            result = {param_list: self.name}
         elif param_list and isinstance(param_list, (list, tuple)):
             result = {k: v for k, v in self._params_found.items() if k in param_list}
             result.update({k: v for k, v in self._params.items() if (k in param_list and k not in result)})
@@ -168,8 +163,8 @@ class Package:
         return result
 
     def set_full_unique_name(self):
-        self._name = self._parser.get_full_package_name(self)
-        return self._name
+        self.name = self._parser.get_full_package_name(self)
+        return self.name
 
     def get_none_packages(self):
         """
