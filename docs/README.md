@@ -73,7 +73,7 @@ as long, as main configuration parameters remains on their levels :)
 
 <a name="Chapter_12"></a>Changelog
 ------------
-[Changelog](CHANGELOG.md)
+[Changelog](https://github.com/devopshq/crosspm/blob/master/CHANGELOG.md)
 
 <a name="Chapter_2"></a>Documentation
 -------------
