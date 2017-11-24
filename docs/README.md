@@ -6,7 +6,7 @@ Cross Package Manager (CrossPM)
 [![pypi](https://img.shields.io/pypi/v/crosspm.svg)](https://pypi.python.org/pypi/crosspm)
 [![license](https://img.shields.io/pypi/l/crosspm.svg)](https://github.com/devopshq/crosspm/blob/master/LICENSE)
 
-        
+
 Introduction
 ------------
 
@@ -47,11 +47,6 @@ and manifest file with the list of packages you need to download.
 
 Configuration file format is YAML, as you could see from its filename, so you free to use yaml hints and tricks,
 as long, as main configuration parameters remains on their levels :)
-
-Changelog
-------------
-[Changelog](https://github.com/devopshq/crosspm/blob/master/CHANGELOG.md)
-
 
 Installation
 ------------
@@ -102,3 +97,4 @@ Other pages
 --------
 - [About config yaml-file](CONFIG)
 - [How to use CrossPM in Python as module](USAGE-PYTHON)
+- [Changelog](https://github.com/devopshq/crosspm/blob/master/CHANGELOG.md)

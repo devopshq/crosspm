@@ -1,7 +1,6 @@
 CrossPM Config
 =======
-Examples
---------
+
 We'll add some more examples soon. Here is one of configuration file examples for now.
 
  **crosspm.yaml**
@@ -182,9 +181,7 @@ Let's keep in mind that any value we use in path, properties and columns descrip
   <dd><i>index</i> - Used for picking one element from sorted list. It's just a list index as in python.</dd>
   <dd><i>path</i> - Path template for searching packages in repository. Here {} is column, [|] is variation.
   <dl>
-  <dd>Example:
-    
-        path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]"
+  <dd>Example: <b>path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]"</b>
     
   </dd>
   <dd>these paths will be searched:
