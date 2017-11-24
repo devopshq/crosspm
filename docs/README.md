@@ -127,7 +127,7 @@ You'll see something like this:
 ```
 
 <a name="Chapter_41"></a>Python
-You can use CrossPM in python-code. [Read more](docs/USAGE-PYTHON.md)
+You can use CrossPM in python-code. [Read more](USAGE-PYTHON)
 
 <a name="Chapter_5"></a>Examples
 --------
