@@ -98,3 +98,7 @@ Other pages
 - [About config yaml-file](CONFIG)
 - [How to use CrossPM in Python as module](USAGE-PYTHON)
 - [Changelog](https://github.com/devopshq/crosspm/blob/master/CHANGELOG.md)
+
+Other pages (RU)
+--------
+- [FAQ](FAQ)
