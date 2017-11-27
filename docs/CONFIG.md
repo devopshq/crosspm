@@ -1,5 +1,8 @@
 CrossPM Config
 =======
+See also:
+- [Environment variables (RU)](Environment-variables)
+
 
 We'll add some more examples soon. Here is one of configuration file examples for now.
 

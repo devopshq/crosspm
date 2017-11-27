@@ -96,9 +96,7 @@ You'll see something like this:
 Other pages
 --------
 - [About config yaml-file](CONFIG)
+    - [Environment variables (RU)](Environment-variables)
 - [How to use CrossPM in Python as module](USAGE-PYTHON)
+- [FAQ (RU)](FAQ)
 - [Changelog](https://github.com/devopshq/crosspm/blob/master/CHANGELOG.md)
-
-Other pages (RU)
---------
-- [FAQ](FAQ)
