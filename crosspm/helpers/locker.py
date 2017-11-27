@@ -42,13 +42,8 @@ class Locker(Downloader):
             if not self._config.recursive:
                 self._packages = self._root_package.packages
 
-        _not_found = self.get_not_found_packages()
-
-        if _not_found:
-            raise CrosspmException(
-                CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
-                'Some package(s) not found: {}'.format(', '.join(_not_found))
-            )
+        self.check_unique(self._config.no_fails)
+        self.check_nof_found()
 
         self._log.info('Writing lock file [{}]'.format(depslock_file_path))
         text = ''
