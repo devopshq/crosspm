@@ -228,15 +228,34 @@ class Adapter(BaseAdapter):
 
             if _added and (_package is not None):
                 if downloader.do_load:
-                    _package.download()
+                    # _package.download()
 
-                    _deps_file = _package.get_file(self._config.deps_lock_file_name)
+                    # UNCOMMENT
+                    # _deps_file = _package.get_file(self._config.deps_lock_file_name)
+
+                    # region HACK
+                    _package.init_path()
+                    _deps_file = _package.get_file_path(self._config.deps_lock_file_name)
+                    pkg = _package._pkg
+                    dep_path = "{}!/{}".format(pkg, self._config.deps_lock_file_name)
+                    art_dep = ArtifactoryPath(dep_path, **_art_auth_etc)
+                    try:
+                        self.prepare_dirs(_deps_file)
+                        with art_dep.open() as fd:
+                            with open(_deps_file, "wb") as out:
+                                out.write(fd.read())
+                    except RuntimeError as e:
+                        if str(e) == "404":
+                            _deps_file = None
+                        # endregion
+
                     if _deps_file:
                         _package.find_dependencies(_deps_file)
-                    elif self._config.deps_file_name:
-                        _deps_file = _package.get_file(self._config.deps_file_name)
-                        if _deps_file and os.path.isfile(_deps_file):
-                            _package.find_dependencies(_deps_file)
+                    # UNCOMMENT
+                    # elif self._config.deps_file_name:
+                    #     _deps_file = _package.get_file(self._config.deps_file_name)
+                    #     if _deps_file and os.path.isfile(_deps_file):
+                    #         _package.find_dependencies(_deps_file)
 
         # HACK for not found packages
         _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
@@ -261,12 +280,7 @@ class Adapter(BaseAdapter):
         return _stat_pkg
 
     def download_package(self, package, dest_path):
-        dest_dir = os.path.dirname(dest_path)
-
-        if not os.path.exists(dest_dir):
-            os.makedirs(dest_dir)
-        elif os.path.exists(dest_path):
-            os.remove(dest_path)
+        self.prepare_dirs(dest_path)
 
         try:
             _stat_pkg = self.pkg_stat(package)
@@ -293,6 +307,13 @@ class Adapter(BaseAdapter):
             raise CrosspmException(code, msg) from e
 
         return dest_path
+
+    def prepare_dirs(self, dest_path):
+        dest_dir = os.path.dirname(dest_path)
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+        elif os.path.exists(dest_path):
+            os.remove(dest_path)
 
     @staticmethod
     def get_package_filename(package):

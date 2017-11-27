@@ -36,6 +36,7 @@ class Locker(Downloader):
             self._log.info('Check dependencies ...')
             self._root_package.find_dependencies(deps_file_path)
 
+            self.set_duplicated_flag()
             self._log.info('')
             self._log.info('Dependency tree:')
             self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
