@@ -95,8 +95,10 @@ You'll see something like this:
 
 Other pages
 --------
-- [About config yaml-file](CONFIG)
-    - [Environment variables (RU)](Environment-variables)
-- [How to use CrossPM in Python as module](USAGE-PYTHON)
+- [Usage (RU)](usage/USAGE)
+    - [CrossPM in Python as module](usage/USAGE-PYTHON)
+    - [CrossPM in Cmake](usage/USAGE-CMAKE)
+- [About config yaml-file](config/CONFIG)
+    - [Environment variables (RU)](config/Environment-variables)
 - [FAQ (RU)](FAQ)
 - [Changelog](https://github.com/devopshq/crosspm/blob/master/CHANGELOG.md)
