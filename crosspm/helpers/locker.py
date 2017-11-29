@@ -51,7 +51,7 @@ class Locker(Downloader):
         packages = OrderedDict()
         columns = self._config.get_columns()
         widths = {}
-        for _pkg in self.get_raw_packages():
+        for _pkg in self.get_tree_packages().values():
             _pkg_name = _pkg.package_name
             _params = _pkg.get_params(columns, merged=True, raw=False)
             if _pkg_name not in packages:
