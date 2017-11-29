@@ -23,8 +23,8 @@ class Package:
         if isinstance(pkg, int):
             if pkg == 0:
                 self._root = True
-        self._name = name
-        self.package_name = name
+        self.name = name
+        self.package_name = name  # unique name (* column)
         self.duplicated = False
         self._pkg = pkg
         self._params = params
@@ -38,6 +38,10 @@ class Package:
             self._params_found_raw = params_found_raw
         self.stat = stat
 
+    def init_path(self):
+        unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
+        self._unpacked_path = unp_path
+
     def download(self, force=False):
         """
         Download file containing this package.
@@ -48,7 +52,6 @@ class Package:
                                                                  check_stat=not self._in_cache)
         if exists and not self._packed_path:
             self._packed_path = dest_path
-
         unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
 
         if force or not exists:
@@ -73,9 +76,13 @@ class Package:
 
     def get_file(self, file_name):
         self.unpack()
-        _dest_file = os.path.join(self._unpacked_path, file_name)
+        _dest_file = self.get_file_path(file_name)
         _dest_file = _dest_file if os.path.isfile(_dest_file) else None
 
+        return _dest_file
+
+    def get_file_path(self, file_name):
+        _dest_file = os.path.join(self._unpacked_path, file_name)
         return _dest_file
 
     def find_dependencies(self, depslock_file_path):
@@ -145,14 +152,9 @@ class Package:
         if self._root:
             self._log.info('')
 
-    def get_name_and_path(self, name_only=False):
-        if name_only:
-            return self._name
-        return self._name, self._unpacked_path
-
     def get_params(self, param_list=None, get_path=False, merged=False, raw=False):
         if param_list and isinstance(param_list, str):
-            result = {param_list: self._name}
+            result = {param_list: self.name}
         elif param_list and isinstance(param_list, (list, tuple)):
             result = {k: v for k, v in self._params_found.items() if k in param_list}
             result.update({k: v for k, v in self._params.items() if (k in param_list and k not in result)})
@@ -168,8 +170,8 @@ class Package:
         return result
 
     def set_full_unique_name(self):
-        self._name = self._parser.get_full_package_name(self)
-        return self._name
+        self.name = self._parser.get_full_package_name(self)
+        return self.name
 
     def get_none_packages(self):
         """

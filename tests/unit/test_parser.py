@@ -1,8 +1,33 @@
 # -*- coding: utf-8 -*-
 import pytest
 import yaml
-from . import BaseParserTest, assert_warn
+
 from crosspm.helpers.parser import Parser
+
+
+class BaseParserTest:
+    _parsers = {}
+
+    def init_parser(self, parsers):
+        if 'common' not in parsers:
+            parsers['common'] = {}
+        for k, v in parsers.items():
+            if k not in self._parsers:
+                v.update({_k: _v for _k, _v in parsers['common'].items() if _k not in v})
+                self._parsers[k] = Parser(k, v, self)
+            else:
+                return False
+                # code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
+                # msg = 'Config file contains multiple definitions of the same parser: [{}]'.format(k)
+                # self._log.exception(msg)
+                # raise CrosspmException(code, msg)
+        if len(self._parsers) == 0:
+            return False
+            # code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
+            # msg = 'Config file does not contain parsers! Unable to process any further.'
+            # self._log.exception(msg)
+            # raise CrosspmException(code, msg)
+        return True
 
 
 class TestParser(BaseParserTest):
@@ -51,11 +76,7 @@ class TestParser(BaseParserTest):
             ['1', '2', '3', '4', 'feature']
 
         # TODO: Make this test pass
-        assert_warn(
-            parser.parse_by_mask('version', '1.2.3-feature', False, True),
-            "=="
-            "['1', '2', '3', None, 'feature']"
-        )
+        # assert parser.parse_by_mask('version', '1.2.3-feature', False, True) == ['1', '2', '3', None, 'feature']
 
     def test__parse_by_mask__version_with_types(self):
         parser = self._parsers.get('artifactory', None)
@@ -72,11 +93,9 @@ class TestParser(BaseParserTest):
             [('1', 'int'), ('2', 'int'), ('3', 'int'), ('4', 'int'), ('feature', 'str')]
 
         # TODO: Make this test pass
-        assert_warn(
-            parser.parse_by_mask('version', '1.2.3-feature', True, True),
-            "=="
-            "[('1', 'int'), ('2', 'int'), ('3', 'int'), (None, 'int'), ('feature', 'str')]"
-        )
+        # assert \
+        #     parser.parse_by_mask('version', '1.2.3-feature', True, True) == \
+        #     [('1', 'int'), ('2', 'int'), ('3', 'int'), (None, 'int'), ('feature', 'str')]
 
     def test__merge_with_mask(self):
         pass
@@ -170,8 +189,10 @@ class TestParser(BaseParserTest):
     def test_list_flatter(self):
         parser = self._parsers.get('common', None)
 
-        src = [['https://repo.example.com/artifactory/cybsi.snapshot/cybsi/*/*.*.*/[any|any]/[any|any]/cybsi/cybsi.*.*.*[.zip|.tar.gz|.nupkg]']]
-        result = ['https://repo.example.com/artifactory/cybsi.snapshot/cybsi/*/*.*.*/[any|any]/[any|any]/cybsi/cybsi.*.*.*[.zip|.tar.gz|.nupkg]']
+        src = [[
+            'https://repo.example.com/artifactory/cybsi.snapshot/cybsi/*/*.*.*/[any|any]/[any|any]/cybsi/cybsi.*.*.*[.zip|.tar.gz|.nupkg]']]
+        result = [
+            'https://repo.example.com/artifactory/cybsi.snapshot/cybsi/*/*.*.*/[any|any]/[any|any]/cybsi/cybsi.*.*.*[.zip|.tar.gz|.nupkg]']
 
         assert parser.list_flatter(src) == result
 

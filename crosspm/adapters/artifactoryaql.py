@@ -220,7 +220,7 @@ class Adapter(BaseAdapter):
             else:
                 _added = False
             if _package is not None:
-                _pkg_name = _package.get_name_and_path(True)
+                _pkg_name = _package.name
             if _added or (_package is not None):
                 if (_package is not None) or (not self._config.no_fails):
                     if (_package is not None) or (_packages_found.get(_pkg_name, None) is None):
@@ -229,7 +229,6 @@ class Adapter(BaseAdapter):
             if _added and (_package is not None):
                 if downloader.do_load:
                     _package.download()
-
                     _deps_file = _package.get_file(self._config.deps_lock_file_name)
                     if _deps_file:
                         _package.find_dependencies(_deps_file)
@@ -261,12 +260,7 @@ class Adapter(BaseAdapter):
         return _stat_pkg
 
     def download_package(self, package, dest_path):
-        dest_dir = os.path.dirname(dest_path)
-
-        if not os.path.exists(dest_dir):
-            os.makedirs(dest_dir)
-        elif os.path.exists(dest_path):
-            os.remove(dest_path)
+        self.prepare_dirs(dest_path)
 
         try:
             _stat_pkg = self.pkg_stat(package)
@@ -293,6 +287,13 @@ class Adapter(BaseAdapter):
             raise CrosspmException(code, msg) from e
 
         return dest_path
+
+    def prepare_dirs(self, dest_path):
+        dest_dir = os.path.dirname(dest_path)
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+        elif os.path.exists(dest_path):
+            os.remove(dest_path)
 
     @staticmethod
     def get_package_filename(package):

@@ -89,16 +89,10 @@ class Downloader:
         self.set_duplicated_flag()
         self._log.info('Dependency tree:')
         self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
+
         self.check_unique(self._config.no_fails)
+        self.check_nof_found()
 
-        _not_found = self.get_not_found_packages()
-        if _not_found:
-            raise CrosspmException(
-                CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
-                'Some package(s) not found: {}'.format(', '.join(_not_found))
-            )
-
-        # if not _not_found and self.do_load:
         if self.do_load:
             self._log.info('Unpack ...')
 
@@ -125,6 +119,14 @@ class Downloader:
                 ).lock_packages(depslock_file_path, depslock_path)
 
         return self._root_package.all_packages
+
+    def check_nof_found(self):
+        _not_found = self.get_not_found_packages()
+        if _not_found:
+            raise CrosspmException(
+                CROSSPM_ERRORCODE_PACKAGE_NOT_FOUND,
+                'Some package(s) not found: {}'.format(', '.join(_not_found))
+            )
 
     def get_not_found_packages(self):
         return self._root_package.get_none_packages()
