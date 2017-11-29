@@ -38,6 +38,10 @@ class Package:
             self._params_found_raw = params_found_raw
         self.stat = stat
 
+    def init_path(self):
+        unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
+        self._unpacked_path = unp_path
+
     def download(self, force=False):
         """
         Download file containing this package.
@@ -48,7 +52,6 @@ class Package:
                                                                  check_stat=not self._in_cache)
         if exists and not self._packed_path:
             self._packed_path = dest_path
-
         unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self._unpacked_path)
 
         if force or not exists:
@@ -73,9 +76,13 @@ class Package:
 
     def get_file(self, file_name):
         self.unpack()
-        _dest_file = os.path.join(self._unpacked_path, file_name)
+        _dest_file = self.get_file_path(file_name)
         _dest_file = _dest_file if os.path.isfile(_dest_file) else None
 
+        return _dest_file
+
+    def get_file_path(self, file_name):
+        _dest_file = os.path.join(self._unpacked_path, file_name)
         return _dest_file
 
     def find_dependencies(self, depslock_file_path):

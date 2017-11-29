@@ -36,6 +36,7 @@ class Locker(Downloader):
             self._log.info('Check dependencies ...')
             self._root_package.find_dependencies(deps_file_path)
 
+            self.set_duplicated_flag()
             self._log.info('')
             self._log.info('Dependency tree:')
             self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
@@ -50,7 +51,7 @@ class Locker(Downloader):
         packages = OrderedDict()
         columns = self._config.get_columns()
         widths = {}
-        for _pkg in self.get_raw_packages():
+        for _pkg in self.get_tree_packages().values():
             _pkg_name = _pkg.package_name
             _params = _pkg.get_params(columns, merged=True, raw=False)
             if _pkg_name not in packages:
