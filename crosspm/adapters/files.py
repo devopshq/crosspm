@@ -199,7 +199,7 @@ class Adapter(BaseAdapter):
             else:
                 _added = False
             if _package is not None:
-                _pkg_name = _package.get_name_and_path(True)
+                _pkg_name = _package.name
             if _added or (_package is not None):
                 if (_package is not None) or (not self._config.no_fails):
                     if (_package is not None) or (_packages_found.get(_pkg_name, None) is None):
