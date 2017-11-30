@@ -81,17 +81,7 @@ class Downloader:
             if not os.path.isfile(depslock_file_path):
                 depslock_file_path = self._deps_path
 
-        self._log.info('Check dependencies ...')
-
-        self._root_package.find_dependencies(depslock_file_path)
-
-        self._log.info('')
-        self.set_duplicated_flag()
-        self._log.info('Dependency tree:')
-        self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
-
-        self.check_unique(self._config.no_fails)
-        self.check_nof_found()
+        self.search_dependencies(depslock_file_path)
 
         if self.do_load:
             self._log.info('Unpack ...')
@@ -115,12 +105,21 @@ class Downloader:
                     os.path.join(os.path.dirname(depslock_file_path), self._config.deps_lock_file_name))
                 Locker(
                     self._config,
-                    self._root_package.all_packages if self._config.recursive else self._root_package.packages,
-                ).lock_packages(depslock_file_path, depslock_path)
+                ).lock_packages(depslock_file_path, depslock_path, search_before=False)
 
         return self._root_package.all_packages
 
-    def check_nof_found(self):
+    def search_dependencies(self, depslock_file_path):
+        self._log.info('Check dependencies ...')
+        self._root_package.find_dependencies(depslock_file_path)
+        self._log.info('')
+        self.set_duplicated_flag()
+        self._log.info('Dependency tree:')
+        self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
+        self.check_unique(self._config.no_fails)
+        self.check_not_found()
+
+    def check_not_found(self):
         _not_found = self.get_not_found_packages()
         if _not_found:
             raise CrosspmException(
@@ -179,7 +178,15 @@ class Downloader:
             )
 
     def get_raw_packages(self):
+        """
+        Get all packages
+        :return: list of all packages
+        """
         return self._root_package.all_packages
 
     def get_tree_packages(self):
+        """
+        Get all packages, with hierarchy
+        :return: list of first level packages, with child
+        """
         return self._root_package.packages
