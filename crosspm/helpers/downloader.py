@@ -23,14 +23,6 @@ class Downloader:
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
                                      Parser('common', {}, config))
 
-        # self._cache_path = config.crosspm_cache_root
-        # if not os.path.exists(self._cache_path):
-        #     os.makedirs(self._cache_path)
-
-        # self.packed_path = os.path.realpath(os.path.join(self._cache_path, 'archive'))
-        # self.unpacked_path = os.path.realpath(os.path.join(self._cache_path, 'cache'))
-        # self.temp_path = os.path.realpath(os.path.join(self._cache_path, 'tmp'))
-
         if not config.deps_path:
             config.deps_path = \
                 config.deps_file_name if config.deps_file_name else CROSSPM_DEPENDENCY_FILENAME
@@ -103,9 +95,7 @@ class Downloader:
                 from crosspm.helpers.locker import Locker
                 depslock_path = os.path.realpath(
                     os.path.join(os.path.dirname(depslock_file_path), self._config.deps_lock_file_name))
-                Locker(
-                    self._config,
-                ).lock_packages(depslock_file_path, depslock_path, search_before=False)
+                Locker(self._config).lock_packages(depslock_file_path, depslock_path, search_before=False)
 
         return self._root_package.all_packages
 

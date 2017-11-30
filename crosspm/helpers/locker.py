@@ -59,9 +59,6 @@ class Locker(Downloader):
                 line += '{}{} '.format(_pkg[_col], ' ' * (widths[_col] - len(str(_pkg[_col]))))
             text += '{}\n'.format(line.strip())
 
-        # if _pkg.download(self.packed_path):
-        #         _pkg.unpack(self.unpacked_path)
-
         Output().write_to_file(text, depslock_file_path)
         self._log.info('Done!')
 
