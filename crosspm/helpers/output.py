@@ -9,7 +9,8 @@ from collections import OrderedDict
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
 
-_output_format_map = {}
+_output_format_map = {}  # Contain map for output format, load from decorator
+
 (
     PLAIN,
     DICT,
@@ -49,6 +50,10 @@ class OutFormat:
 
 
 def register_output_format(name):
+    """
+    Load output format function to dictionary (decorator with this function name)
+    """
+
     def check_decorator(fn):
         _output_format_map[name] = fn
 
@@ -252,6 +257,7 @@ class Output:
 
     @register_output_format('lock')
     def output_type_lock(self, packages):
+        """ Text to lock file """
         self._output_config['type'] = PLAIN
         text = ''
         tmp_packages = OrderedDict()
