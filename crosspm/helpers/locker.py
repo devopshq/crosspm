@@ -41,6 +41,6 @@ class Locker(Downloader):
             'out_format': 'lock',
             'output': depslock_file_path,
         }
-        Output(config=self._config).write(output_params, self._root_package.packages)
+        Output(config=self._config).write_output(output_params, self._root_package.packages)
         self._log.info('Done!')
         return self._root_package.packages

@@ -196,7 +196,7 @@ class Output:
     def get_output_types():
         return list(_output_format_map.keys())
 
-    def write(self, params, packages):
+    def write_output(self, params, packages):
         if params['out_format'] not in _output_format_map:
             raise CrosspmException(
                 CROSSPM_ERRORCODE_UNKNOWN_OUT_TYPE,
