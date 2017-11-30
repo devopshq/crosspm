@@ -13,7 +13,7 @@ _output_format_map = {}
 (
     PLAIN,
     DICT,
-    LIST,
+    LIST
 ) = range(3)
 
 
@@ -61,7 +61,7 @@ def register_output_format(name):
 
 
 class Output:
-    _config = {
+    _output_config = {
         'root': {'PACKAGES_ROOT'},
         # 'key': 'package',
         'value': 'path',
@@ -81,16 +81,17 @@ class Output:
 
     def __init__(self, data=None, name_column='', config=None):
         self._log = logging.getLogger('crosspm')
+        self._config = config
         if name_column:
             self._name_column = name_column
-            self._config['key'] = name_column
+            self._output_config['key'] = name_column
         if data and isinstance(data, dict):
-            self._config = data
+            self._output_config = data
         # self.init_config()
-        if 'columns' not in self._config:
-            self._config['columns'] = []
+        if 'columns' not in self._output_config:
+            self._output_config['columns'] = []
 
-        if len(self._config['columns']) == 0:
+        if len(self._output_config['columns']) == 0:
             # TODO: implement this:
             # if config.no_fails:
             #     param_list = [x for x in config.get_fails('unique', {})]
@@ -100,7 +101,7 @@ class Output:
             # else:
             pkg_name = '{:upper}_ROOT'
 
-            self._config['columns'] = [
+            self._output_config['columns'] = [
                 {
                     'column': self._name_column,
                     'value': pkg_name,
@@ -112,27 +113,27 @@ class Output:
             ]
 
         self.init_config()
-        if 'columns' not in self._config:
-            self._config['columns'] = []
+        if 'columns' not in self._output_config:
+            self._output_config['columns'] = []
 
     def init_config(self):
-        root = self._config.get('root', '')
+        root = self._output_config.get('root', '')
         if isinstance(root, str):
-            self._config['type'] = PLAIN
+            self._output_config['type'] = PLAIN
         elif isinstance(root, (dict, set)):
-            self._config['type'] = DICT
+            self._output_config['type'] = DICT
             root = [x for x in root]
-            self._config['root'] = root[0] if len(root) > 0 else ''
+            self._output_config['root'] = root[0] if len(root) > 0 else ''
         elif isinstance(root, (list, tuple)):
-            self._config['type'] = LIST
-            self._config['root'] = root[0] if len(root) > 0 else ''
+            self._output_config['type'] = LIST
+            self._output_config['root'] = root[0] if len(root) > 0 else ''
 
-        key = self._config.get('key', '')
+        key = self._output_config.get('key', '')
         key0 = None
 
-        if 'columns' in self._config:
+        if 'columns' in self._output_config:
             self._columns = []
-            for item in self._config['columns']:
+            for item in self._output_config['columns']:
                 if not item.get('value', ''):
                     item['value'] = '{}'
                 if not item.get('name', ''):
@@ -153,7 +154,7 @@ class Output:
 
         if key0:
             key = key0
-        self._config['key'] = key
+        self._output_config['key'] = key
 
         if self._columns:
             if self._name_column and self._name_column not in self._columns:
@@ -161,8 +162,8 @@ class Output:
         else:
             if not self._name_column:
                 self._name_column = 'package'
-        if 'value' not in self._config:
-            self._config['value'] = ''
+        if 'value' not in self._output_config:
+            self._output_config['value'] = ''
 
     @staticmethod
     def get_var_name(pkg_name):
@@ -210,7 +211,7 @@ class Output:
             )
 
     def format_column(self, column, name, value):
-        for item in self._config['columns']:
+        for item in self._output_config['columns']:
             if item['column'] == column:
                 name = item['name'].format(OutFormat(name))
                 value = item['value'].format(OutFormat(value))
@@ -219,7 +220,7 @@ class Output:
 
     @register_output_format('stdout')
     def output_type_stdout(self, packages):
-        self._config['type'] = PLAIN
+        self._output_config['type'] = PLAIN
         _packages = self.output_type_module(packages)
         for k in _packages:
             v = _packages[k]
@@ -229,7 +230,7 @@ class Output:
 
     @register_output_format('shell')
     def output_type_shell(self, packages):
-        self._config['type'] = PLAIN
+        self._output_config['type'] = PLAIN
         result = '\n'
         _packages = self.output_type_module(packages)
         for k in _packages:
@@ -240,7 +241,7 @@ class Output:
 
     @register_output_format('cmd')
     def output_type_cmd(self, packages):
-        self._config['type'] = PLAIN
+        self._output_config['type'] = PLAIN
         result = '\n'
         _packages = self.output_type_module(packages)
         for k in _packages:
@@ -248,6 +249,35 @@ class Output:
             result += "set {}={}\n".format(self.get_var_name(k), v)
         result += '\n'
         return result
+
+    @register_output_format('lock')
+    def output_type_lock(self, packages):
+        self._output_config['type'] = PLAIN
+        text = ''
+        tmp_packages = OrderedDict()
+        columns = self._config.get_columns()
+        widths = {}
+        for _pkg in packages.values():
+            _pkg_name = _pkg.package_name
+            _params = _pkg.get_params(columns, merged=True, raw=False)
+            if _pkg_name not in tmp_packages:
+                tmp_packages[_pkg_name] = _params
+                comment = 1
+                for _col in columns:
+                    widths[_col] = max(widths.get(_col, len(_col)), len(str(_params.get(_col, '')))) + comment
+                    comment = 0
+        comment = 1
+        for _col in columns:
+            text += '{}{} '.format(_col, ' ' * (widths[_col] - len(_col) - comment))
+            comment = 0
+        text = '#{}\n'.format(text.strip())
+        for _pkg_name in sorted(tmp_packages, key=lambda x: str(x).lower()):
+            _pkg = tmp_packages[_pkg_name]
+            line = ''
+            for _col in columns:
+                line += '{}{} '.format(_pkg[_col], ' ' * (widths[_col] - len(str(_pkg[_col]))))
+            text += '{}\n'.format(line.strip())
+        return text
 
     def output_type_module(self, packages, esc_path=False):
         """
@@ -266,7 +296,7 @@ class Output:
                 if _pkg:
                     _pkg_params = _pkg.get_params(self._columns, True)
                     _res_item = {}
-                    for item in self._config['columns']:
+                    for item in self._output_config['columns']:
                         name = item['name'].format(OutFormat(item['column']))
                         value = _pkg_params.get(item['column'], '')
                         if not isinstance(value, (list, dict, tuple)):
@@ -285,19 +315,19 @@ class Output:
                     list_.append(_res_item)
             return list_
 
-        result_list = create_ordered_list(packages,)
+        result_list = create_ordered_list(packages, )
 
-        if self._config['type'] == LIST:
+        if self._output_config['type'] == LIST:
             return result_list
 
         result = OrderedDict()
         for item in result_list:
             # TODO: Error handling
-            name = item[self._config['key']]
-            if self._config['value']:
-                value = item[self._config['value']]
+            name = item[self._output_config['key']]
+            if self._output_config['value']:
+                value = item[self._output_config['value']]
             else:
-                value = OrderedDict([(k, v) for k, v in item.items() if k != self._config['key']])
+                value = OrderedDict([(k, v) for k, v in item.items() if k != self._output_config['key']])
 
             result[name] = value
 
@@ -326,12 +356,12 @@ class Output:
         res = ''
         dict_or_list = self.output_type_module(packages, True)
         for item in items_iter(dict_or_list):
-            if self._config['type'] == LIST:
+            if self._output_config['type'] == LIST:
                 res += '    {\n'
                 for k, v in item.items():
                     res += "        '{}': {},\n".format(k, get_value(v))
                 res += '    },\n'
-            elif self._config['type'] == DICT:
+            elif self._output_config['type'] == DICT:
                 res += "    '{}': ".format(item)
                 if isinstance(dict_or_list[item], dict):
                     res += '{\n'
@@ -360,12 +390,12 @@ class Output:
                 else:  # str
                     res += "{}\n".format(get_value(dict_or_list[item]))
 
-        if self._config['type'] == LIST:
-            result += '{} = [\n'.format(self._config['root'] or 'PACKAGES_ROOT')
+        if self._output_config['type'] == LIST:
+            result += '{} = [\n'.format(self._output_config['root'] or 'PACKAGES_ROOT')
             result += res
             result += ']\n'
-        elif self._config['type'] == DICT:
-            result += '{} = {}\n'.format(self._config['root'] or 'PACKAGES_ROOT', '{')
+        elif self._output_config['type'] == DICT:
+            result += '{} = {}\n'.format(self._output_config['root'] or 'PACKAGES_ROOT', '{')
             result += res
             result += '}\n'
         else:
@@ -376,9 +406,9 @@ class Output:
     @register_output_format('json')
     def output_type_json(self, packages):
         dict_or_list = self.output_type_module(packages)
-        if self._config['root']:
+        if self._output_config['root']:
             dict_or_list = {
-                self._config['root']: dict_or_list
+                self._output_config['root']: dict_or_list
             }
         # TODO: Find a proper way to avoid double backslashes in path only (or not?)
         result = json.dumps(dict_or_list, indent=True)  # .replace('\\\\', '\\')
