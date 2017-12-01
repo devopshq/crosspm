@@ -17,7 +17,7 @@ class Locker(Downloader):
         deps_path = config.deps_path.strip().strip('"').strip("'")
         self._deps_path = os.path.realpath(os.path.expanduser(deps_path))
 
-    def lock_packages(self, deps_file_path=None, depslock_file_path=None, search_before=True):
+    def lock_packages(self, deps_file_path=None, depslock_file_path=None, packages=None):
         """
         Lock packages. Downloader search packages
         """
@@ -32,8 +32,10 @@ class Locker(Downloader):
             #     'Dependencies and Lock files are same: "{}".'.format(deps_file_path),
             # )
 
-        if search_before:
+        if packages is None:
             self.search_dependencies(deps_file_path)
+        else:
+            self._root_package.packages = packages
 
         self._log.info('Writing lock file [{}]'.format(depslock_file_path))
 

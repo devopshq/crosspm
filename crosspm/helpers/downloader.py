@@ -95,7 +95,7 @@ class Downloader:
                 from crosspm.helpers.locker import Locker
                 depslock_path = os.path.realpath(
                     os.path.join(os.path.dirname(depslock_file_path), self._config.deps_lock_file_name))
-                Locker(self._config).lock_packages(depslock_file_path, depslock_path, search_before=False)
+                Locker(self._config).lock_packages(depslock_file_path, depslock_path, packages=self._root_package.packages)
 
         return self._root_package.all_packages
 
