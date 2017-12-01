@@ -244,7 +244,7 @@ class CrossPM:
                     return self._output.output_type_module(cpm_downloader.get_tree_packages())
             else:
                 # self._output.write(params, packages)
-                self._output.write(params, cpm_downloader.get_tree_packages())
+                self._output.write_output(params, cpm_downloader.get_tree_packages())
         return ''
 
     def lock(self):
