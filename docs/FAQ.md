@@ -67,3 +67,35 @@ output: # Для упрощения дебага в stdout
 ```yaml
 type: artifactory-aql
 ```
+
+#### Как вынести пароль из файла конфигурации?
+С помощью [разделения на два файла конфигурации и использования import](config/IMPORT)
+
+
+#### Как сделать проверку что все используемые пакеты имеют одинаковую версию? Например, что все используют последнюю версию openssl?
+Если нужно проверить, что все пакеты используют одну версию пакетов, **но** загрузить только файлы, указанные непосредственно в **dependencies.txt**, можно поступить следующим образом:
+1. [Разделить файлы конфигурации](config/IMPORT) на **crosspm.main.yaml**, **crosspm.download.yaml**, **crosspm.lock.yaml**
+2. В **lock**-конфигурации указать существующий **dependencies.txt.lock**
+3. В **download**-конфигурации указать НЕ существующий **no-dependencies.txt.lock**
+4. Запустить crosspm с указанием разных конфигураций:
+```bash
+# CrossPM: lock and recursive check packages
+# Попытается сделать lock-файл для пакетов из dep.txt, при этом проверит его зависимости на использование одной версии пакетов
+crosspm lock \
+    dependencies.txt dependencies.txt.lock \
+    --recursive \
+    --options cl="gcc-5.1",arch="x86_64",os="debian-8" \
+    --config=".\crosspm.lock.yaml"
+(( $? )) && exit 1
+
+# CrossPM: downloading packages
+# Скачает только пакеты, которые указаны в dependencies.txt
+crosspm download \
+    --config=".\crosspm.download.yaml" \
+    --lock-on-success \
+    --deps-path=".\dependencies.txt" \
+    --out-format="cmd" \
+    --output=".\klmn.cmd" \
+    --options cl="gcc-5.1",arch="x86_64",os="debian-8" \
+(( $? )) && exit 1
+```
