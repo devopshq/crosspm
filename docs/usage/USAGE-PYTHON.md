@@ -42,4 +42,10 @@ print(package.get_file_path('some.exe'))
 
 print('Like "get_file_path" or None if file not exist')
 print(package.get_file("some.exe"))
+
+print('Get package params like arch, branch, compiler, osname, version, repo, etc')
+params = package.get_params()
+print(package.get_params['version'])
+for param, value in params:
+    print("{}={}".format(param, value))
 ```

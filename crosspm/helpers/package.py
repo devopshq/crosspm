@@ -12,6 +12,7 @@ class Package:
     def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, params_found_raw=None,
                  stat=None, in_cache=False):
         self.name = name
+        self.package_name = name
         self.packed_path = ''
         self.unpacked_path = ''
         self.duplicated = False

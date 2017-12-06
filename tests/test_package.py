@@ -9,7 +9,9 @@ from crosspm.helpers.package import Package
 
 
 class TestPackage(TestCase):
-    _package = Package('package', None, None, None, None, None, None, None, None)
+    params = {'arch': 'x86', 'osname': 'win'}
+    params_found = {'repo': 'lib-cpp-release', 'version': '1.2.3'}
+    _package = Package('package', None, params, None, None, None, params_found, None, None)
     _package.unpacked_path = "/test/path"
 
     _root = Package('root', None, None, None, None, None, None, None, None)
@@ -45,3 +47,6 @@ class TestPackage(TestCase):
 
         assert os.path.normpath(package.get_file_path('some.exe')) == os.path.normpath('/test/path/some.exe')
         assert package.get_file('not-exist.exe', unpack_force=False) is None
+
+        assert isinstance(package.get_params(), dict)
+        assert package.get_params()['osname'] == 'win'
