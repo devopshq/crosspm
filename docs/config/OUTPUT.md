@@ -32,7 +32,6 @@ PACKAGENAME2_ROOT=/crosspm/cache/pachagename2/branch/version
 ## cmd
 Для использования в Windows:
 ```bash
-ECHO ##teamcity[blockOpened name='CrossPM: downloading packages']
 crosspm download ^
     --config=".\crosspm.yaml" ^
     --out-format="cmd" ^
