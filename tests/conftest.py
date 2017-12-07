@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import pytest
 
+from crosspm.helpers.output import Output
 from crosspm.helpers.package import Package
 
 
@@ -44,3 +45,9 @@ def package_root():
     for _package in _root.all_packages:
         _package.unpacked_path = "/test/path/{}".format(_package.name)
     yield _root
+
+
+@pytest.fixture
+def output():
+    _output = Output(data=None, name_column='package', config=None)
+    yield _output
