@@ -239,7 +239,7 @@ class Adapter(BaseAdapter):
 
         # HACK for not found packages
         _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
-        _packages_found_names = [x.package_name for x in _packages_found.values()]
+        _packages_found_names = [x.name for x in _packages_found.values()]
         for package in _package_names:
             if package not in _packages_found_names:
                 _packages_found[package] = None

@@ -32,8 +32,11 @@ Options:
 """
 
 import logging
-from docopt import docopt
 import os
+import time
+
+from docopt import docopt
+
 from crosspm import version
 from crosspm.helpers.archive import Archive
 from crosspm.helpers.config import (
@@ -42,9 +45,9 @@ from crosspm.helpers.config import (
     Config,
 )
 from crosspm.helpers.downloader import Downloader
+from crosspm.helpers.exceptions import *
 from crosspm.helpers.locker import Locker
 from crosspm.helpers.output import Output
-from crosspm.helpers.exceptions import *
 
 app_name = 'CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)'.format(version=version)
 
@@ -101,7 +104,9 @@ class CrossPM:
         self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
 
     def run(self):
+        time_start = time.time()
         if self._ready:
+
             errorcode, msg = self.do_run(self.set_logging_level)
             self._log.info(app_name)
             errorcode, msg = self.do_run(self.check_common_args)
@@ -123,6 +128,8 @@ class CrossPM:
                         errorcode, msg = self.do_run(self.cache)
         else:
             errorcode, msg = CROSSPM_ERRORCODE_WRONG_ARGS, self._args
+        time_end = time.time()
+        self._log.info('Done in %2.2f sec' % (time_end - time_start))
         return errorcode, msg
 
     def exit(self, code, msg):

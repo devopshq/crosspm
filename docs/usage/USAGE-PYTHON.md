@@ -16,8 +16,36 @@ crosspm_unique_packages = set(crosspm_raw_packages)
 # crosspm_tree_packages - LIST of first-level packages, with child in package.packages variable
 err, crosspm_tree_packages = CrossPM(argv, return_result='tree').run()
 
-
 package = crosspm_tree_packages[0]
-child_packages = package.packages # access to all child packages
-duplicate = package.duplicated # TRUE if other package with 'unique' field exist in tree
+# class Package have this public interface:
+print('Package has this dependencies')
+dependencies_package = package.packages # access to all child packages
+print(len(dependencies_package))
+
+print('Package name')
+print(package.name)
+
+print('Path to archive (tar.gz\zip\\nupkg)')
+print(package.packed_path)
+
+print('Path to unpacked folder')
+print(package.unpacked_path)
+
+print('The package has a duplicate package with different version')
+print(package.duplicated)
+
+print('LEGACY - access to "name, unpacked_path"')
+print(package.get_name_and_path())
+
+print('Path to unpacked file (inside package)')
+print(package.get_file_path('some.exe'))
+
+print('Like "get_file_path" or None if file not exist')
+print(package.get_file("some.exe"))
+
+print('Get package params like arch, branch, compiler, osname, version, repo, etc')
+params = package.get_params()
+print(package.get_params['version'])
+for param, value in params:
+    print("{}={}".format(param, value))
 ```
