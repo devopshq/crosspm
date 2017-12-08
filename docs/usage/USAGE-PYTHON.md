@@ -1,5 +1,6 @@
 Usage as Python module
 =======
+### Usage
 You can use CrossPM in python-code:
 ```python
 from crosspm import CrossPM
@@ -15,37 +16,71 @@ crosspm_unique_packages = set(crosspm_raw_packages)
 
 # crosspm_tree_packages - LIST of first-level packages, with child in package.packages variable
 err, crosspm_tree_packages = CrossPM(argv, return_result='tree').run()
+```
 
+### Package
+You can get some Package field, like this:
+
+```python
 package = crosspm_tree_packages[0]
 # class Package have this public interface:
 print('Package has this dependencies')
 dependencies_package = package.packages # access to all child packages
 print(len(dependencies_package))
 
-print('Package name')
-print(package.name)
+name = package.name # Package name
+packed = package.packed_path # Path to archive (tar.gz\zip\nupkg
+unpacked = package.unpacked_path # Path to unpacked folder
+dup = package.duplicated # The package has a duplicate package with different version
+package.get_name_and_path() # LEGACY - access to "name, unpacked_path"
+package.get_file_path('some.exe') # Path to unpacked file (inside package)
+package.get_file("some.exe") # Like "get_file_path" or None if file not exist
 
-print('Path to archive (tar.gz\zip\\nupkg)')
-print(package.packed_path)
-
-print('Path to unpacked folder')
-print(package.unpacked_path)
-
-print('The package has a duplicate package with different version')
-print(package.duplicated)
-
-print('LEGACY - access to "name, unpacked_path"')
-print(package.get_name_and_path())
-
-print('Path to unpacked file (inside package)')
-print(package.get_file_path('some.exe'))
-
-print('Like "get_file_path" or None if file not exist')
-print(package.get_file("some.exe"))
-
-print('Get package params like arch, branch, compiler, osname, version, repo, etc')
+# Get package params like arch, branch, compiler, osname, version, repo, etc
 params = package.get_params()
-print(package.get_params['version'])
-for param, value in params:
-    print("{}={}".format(param, value))
+""" Return dict, like this
+NB: version is list
+{
+  "arch": "x86",
+  "branch": "1.9-pm",
+  "compiler": "vc120",
+  "osname": "win",
+  "package": "libiconv",
+  "repo": "libs-cpp-release",
+  "version": ["1", "9", "131", "feature"] 
+}
+"""
+
+# Get version in string format
+params = package.get_params(merged=True)
+"""
+NB: version is list
+{
+  "arch": "x86",
+  "branch": "1.9-pm",
+  "compiler": "vc120",
+  "osname": "win",
+  "package": "libiconv",
+  "repo": "libs-cpp-release",
+  "version": "1.9.131-feature",
+}
+"""
+
+# Get version in string format
+params = package.get_params(param_list='version', merged=True)
+"""
+NB: version is list
+{
+  "version": "1.9.131-feature",
+}
+"""
+params = package.get_params(param_list=['arch','version'], merged=True)
+"""
+NB: version is list
+{
+  "arch": "x86",
+  "version": "1.9.131-feature",
+}
+"""
+    
 ```

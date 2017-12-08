@@ -153,9 +153,18 @@ class Package:
             self._log.info('')
 
     def get_params(self, param_list=None, get_path=False, merged=False, raw=False):
+        """
+        Get Package params
+        :param param_list: name or list of parameters
+        :param get_path:
+        :param merged: if version splited, True return version in string
+        :param raw:
+        :return:
+        """
+        # Convert parameter name to list
         if param_list and isinstance(param_list, str):
-            result = {param_list: self.name}
-        elif param_list and isinstance(param_list, (list, tuple)):
+            param_list = [param_list]
+        if param_list and isinstance(param_list, (list, tuple)):
             result = {k: v for k, v in self._params_found.items() if k in param_list}
             result.update({k: v for k, v in self._params.items() if (k in param_list and k not in result)})
         else:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+from unittest import TestCase
 
 
 def test_package_tree(package_root):
@@ -22,8 +23,12 @@ def test_public_interface(package):
     # Legacy get_name_and_path
     assert package.get_name_and_path() == (package.name, package.unpacked_path)
 
+
+def test_get_file(package):
     assert os.path.normpath(package.get_file_path('some.exe')) == os.path.normpath('/test/path/some.exe')
     assert package.get_file('not-exist.exe', unpack_force=False) is None
 
+
+def test_get_params(package):
     assert isinstance(package.get_params(), dict)
     assert package.get_params()['osname'] == 'win'

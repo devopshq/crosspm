@@ -51,10 +51,32 @@ set OTHERPACKAGE_ROOT=E:\crosspm\cache\otherpackage\branch\version
 
 
 ## json
-TODO: Описать
+```bash
+crosspm download \
+    --config="./crosspm.yaml" \
+    --out-format="json" \
+    --output="./paths.json"
+(( $? )) && exit 1
+
+cat ./paths.sh
+```
+
+Контент файла **paths.json**:
+```json
+{
+ "PACKAGES_ROOT": {
+  "OPENSSL_ROOT": "/test/path/package2",
+  "BOOST_ROOT": "/test/path/package11"
+ }
+}
+```
+    
+
 ## python
-TODO: Описать
+[Лучшая практика использования в python](../usage/USAGE-PYTHON)
+
 ## stdout
-TODO: Описать
+Используется для вывода в stdout, смотри тесты
+
 ## lock
-TODO: Описать
+Создаёт lock-файл, используется для `crosspm lock` команды
