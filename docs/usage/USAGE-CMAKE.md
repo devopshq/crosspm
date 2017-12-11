@@ -12,7 +12,7 @@ crosspm.cmake downloads the packages specified in dependencies.txt.lock and then
 which contains the import logic of a specific package into the calling project.
 An example of _pm_package.cmake:
 
-```python
+```bash
 function(pm_add_lib ZLIB_ROOT)
     message("ZLIB_ROOT = ${ZLIB_ROOT}")
 
@@ -43,8 +43,7 @@ include(crosspm)
 pm_download_dependencies()
 ...
 target_link_libraries(
- BOOST
- POCO
+ZLIB
 )
 ```
 
