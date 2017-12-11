@@ -118,7 +118,7 @@ class Package:
             res_str = ''
             for out_item in output:
                 for k, v in out_item.items():
-                    cur_str = self._params_found.get(k, '')
+                    cur_str = self.get_params(merged=True).get(k, '')
                     if not res_str:
                         cur_str = self._params.get(k, '')
                     if not res_str:
