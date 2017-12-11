@@ -8,11 +8,12 @@ An example of dependencies.txt.lock:
 zlib                 1.2.8.199            1.2.8-pm
 ```
 Place a file crosspm.cmake to your project. The file is available after downloading crosspm.
-crosspm.cmake downloads the packages specified in dependencies.txt.lock and then looks there for the _pm_package file,
-which contains the import logic of a specific package into the calling project.
+crosspm.cmake downloads the libraries specified in dependencies.txt.lock and then looks there for the _pm_package file,
+which contains the import logic of a specific library into the calling project.
 An example of _pm_package.cmake:
 
-```bash
+```shell
+
 function(pm_add_lib ZLIB_ROOT)
     message("ZLIB_ROOT = ${ZLIB_ROOT}")
 
