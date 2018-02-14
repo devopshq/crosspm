@@ -243,21 +243,31 @@ class CrossPM:
 
         if do_load:
             if self._return_result:
-                if str(self._return_result).lower() == 'raw':
-                    return cpm_downloader.get_raw_packages()
-                if str(self._return_result).lower() == 'tree':
-                    return cpm_downloader.get_tree_packages()
-                else:
-                    return self._output.output_type_module(cpm_downloader.get_tree_packages())
+                return self._return(cpm_downloader)
             else:
                 # self._output.write(params, packages)
                 self._output.write_output(params, cpm_downloader.get_tree_packages())
         return ''
 
+    def _return(self, cpm_downloader):
+        if str(self._return_result).lower() == 'raw':
+            return cpm_downloader.get_raw_packages()
+        if str(self._return_result).lower() == 'tree':
+            return cpm_downloader.get_tree_packages()
+        else:
+            return self._output.output_type_module(cpm_downloader.get_tree_packages())
+
+    @do_run
     def lock(self):
 
         cpm_locker = Locker(self._config)
         cpm_locker.lock_packages()
+        if self._return_result:
+            return self._return(cpm_locker)
+        # TODO: Добавить вывод в stdout
+        # else:
+        #     # self._output.write(params, packages)
+        #     self._output.write_output(params, cpm_downloader.get_tree_packages())
 
     def pack(self):
         Archive.create(self._args['<OUT>'], self._args['<SOURCE>'])
