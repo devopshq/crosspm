@@ -75,12 +75,12 @@ class Adapter(BaseAdapter):
                     _tmp_params['repo'] = _sub_paths['repo']
                     # ------ START ----
                     # HACK for prefer-local
-                    if self._config.prefer_local:
+                    if self._config.prefer_local and not parser.has_rule('properties'):
                         params = parser.get_params_with_extra('path', _paths['params'])
                         for param in params:
                             param['repo'] = _tmp_params['repo']
                             _path_packed = downloader.cache.path_packed(None, param)
-                            _packed_exist = os.path.isfile(_path_packed) and self._config.prefer_local
+                            _packed_exist = os.path.isfile(_path_packed)
                             if _packed_exist:
                                 self._log.info("Skip searching, use package cache in path {}".format(_path_packed))
                                 _packed_cache_params = param
