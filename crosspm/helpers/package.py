@@ -50,9 +50,14 @@ class Package:
         """
         exists, dest_path = self._downloader.cache.exists_packed(package=self, pkg_path=self.packed_path,
                                                                  check_stat=not self._in_cache)
+        unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self.unpacked_path)
+
+        # Если архива нет, то и кешу доверять не стоит
+        if not exists:
+            unp_exists = False
+
         if exists and not self.packed_path:
             self.packed_path = dest_path
-        unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self.unpacked_path)
 
         if force or not exists:
             # _packed_path = self._packed_path
