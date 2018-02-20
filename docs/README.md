@@ -99,6 +99,7 @@ Other pages
     - [CrossPM in Python as module](usage/USAGE-PYTHON)
     - [CrossPM in Cmake](usage/USAGE-CMAKE)
 - [CrossPM Config](config/CONFIG)
+    - [Path to package (RU)](config/config-path)
     - [Import (RU)](config/IMPORT)
     - [Output - get information about downloaded packages (RU)](config/OUTPUT)
     - [Environment variables (RU)](config/Environment-variables)
