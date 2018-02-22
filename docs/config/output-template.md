@@ -110,4 +110,4 @@ print(VARIABLE_NAME)
 #C:\Python34\Lib\site-packages\module1\module2\my_template_name.j2
 ```
 
-Пример распространения и настройки смотри в `crosspm.templates`
+Пример распространения и настройки смотри в `crosspm.template`

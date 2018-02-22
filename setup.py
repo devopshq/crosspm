@@ -130,7 +130,7 @@ setup(
     ],
     package_data={
         '': [
-            '../crosspm/templates/*',
+            './template/*.j2',
             '*.cmake',
             '../LICENSE',
             # '../README.*',
