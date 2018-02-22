@@ -252,7 +252,7 @@ class Output:
         return result
 
     @register_output_format('jinja')
-    def output_format_shell(self, packages, output_template, **kwargs):
+    def output_format_jinja(self, packages, output_template, **kwargs):
         output_template = os.path.realpath(output_template)
         template_dir, template_name = os.path.split(output_template)
         j2_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True)
