@@ -118,6 +118,11 @@ setup(
         'pytest',
         'pytest-flask',
         'pyyaml',
+        'requests',
+        'docopt',
+        'pyyaml',
+        'dohq-artifactory>=0.2.62',
+        'jinja2'
     ],
     install_requires=[
         'requests',
