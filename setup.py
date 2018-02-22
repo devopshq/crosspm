@@ -122,7 +122,8 @@ setup(
         'requests',
         'docopt',
         'pyyaml',
-        'dohq-artifactory',
+        'dohq-artifactory>=0.2.62',
+        'jinja2'
         # 'pyopenssl>=16.2.0',
         # 'cryptography>=1.7',
     ],

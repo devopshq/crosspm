@@ -25,6 +25,7 @@ Options:
     --lock-on-success               Save file with locked dependencies next to original one if download succeeds
     --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                   Output file name (required if --out_format is not stdout)
+    --output-template=FILE          Template path, e.g. nuget.packages.config.j2 (required if --out_format=jinja)
     --no-fails                      Ignore fails config if possible.
     --recursive                     Process all packages recursively to find and lock all dependencies  
     --prefer-local                  Do not search package if exist in cache
@@ -234,6 +235,7 @@ class CrossPM:
             params = {
                 'out_format': ['--out-format', ''],
                 'output': ['--output', ''],
+                'output_template': ['--output-template', ''],
                 # 'out_prefix': ['--out-prefix', ''],
                 # 'depslock_path': ['--depslock-path', ''],
             }
@@ -267,6 +269,7 @@ class CrossPM:
 
     @do_run
     def lock(self):
+        # TODO: Сделать локику lock как и download (только + создание lock-файла)
         cpm_locker = Locker(self._config)
         cpm_locker.lock_packages()
         if self._return_result:

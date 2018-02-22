@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import fnmatch
+import hashlib
 import logging
 import os
 import shutil
 from collections import OrderedDict
+
+from artifactory import ArtifactoryPath
 
 from crosspm.helpers.archive import Archive
 
@@ -18,6 +21,10 @@ class Package:
         self.duplicated = False
         self.packages = OrderedDict()
 
+        self.pkg = pkg  # type: ArtifactoryPath
+        # Someone use this internal object, do not remove  them :)
+        self._pkg = self.pkg
+
         if isinstance(pkg, int):
             if pkg == 0:
                 self._root = True
@@ -29,7 +36,6 @@ class Package:
         self._not_cached = True
         self._log = logging.getLogger('crosspm')
 
-        self._pkg = pkg
         self._params = params
         self._adapter = adapter
         self._parser = parser
@@ -222,3 +228,21 @@ class Package:
             if any((fnmatch.fnmatch(name, x) or fnmatch.fnmatch(name, '*%s' % x)) for x in check_ext):
                 return True
         return False
+
+    @property
+    def md5(self):
+        try:
+            return ArtifactoryPath.stat(self.pkg).md5
+        except AttributeError:
+            return md5sum(self.packed_path)
+
+
+def md5sum(filename):
+    """
+    Calculates md5 hash of a file
+    """
+    md5 = hashlib.md5()
+    with open(filename, 'rb') as f:
+        for chunk in iter(lambda: f.read(128 * md5.block_size), b''):
+            md5.update(chunk)
+    return md5.hexdigest()
