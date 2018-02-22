@@ -10,8 +10,8 @@ branches:
 before_install:
 - export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
 install:
+- pip install docopt coverage codacy-coverage
 - python setup.py install
-- pip install dohq-artifactory docopt pyyaml requests pypandoc coverage codacy-coverage
 before_script:
 - git config --global user.email "ak@alkov.pro"
 - git config --global user.name "Alexander Kovalev"
