@@ -14,8 +14,13 @@ def update_progress(msg, progress):
     sys.stderr.flush()
 
 
-class Downloader:
-    def __init__(self, config, do_load=True):
+class Command(object):
+    def entrypoint(self, *args, **kwargs):
+        assert NotImplemented
+
+
+class Downloader(Command):
+    def __init__(self, config, do_load):
         self._log = logging.getLogger('crosspm')
         self._config = config
         self.cache = config.cache
@@ -95,9 +100,13 @@ class Downloader:
                 from crosspm.helpers.locker import Locker
                 depslock_path = os.path.realpath(
                     os.path.join(os.path.dirname(depslock_file_path), self._config.deps_lock_file_name))
-                Locker(self._config).lock_packages(depslock_file_path, depslock_path, packages=self._root_package.packages)
+                Locker(self._config).lock_packages(depslock_file_path, depslock_path,
+                                                   packages=self._root_package.packages)
 
         return self._root_package.all_packages
+
+    def entrypoint(self, *args, **kwargs):
+        self.download_packages(*args, **kwargs)
 
     def search_dependencies(self, depslock_file_path):
         self._log.info('Check dependencies ...')

@@ -199,11 +199,11 @@ class CrossPM:
 
                 if errorcode == 0:
                     if self._args['download']:
-                        errorcode, msg = self.download()
-                        # self.download()
+                        errorcode, msg = self.command(Downloader)
+                        # self.command()
 
                     elif self._args['lock']:
-                        errorcode, msg = self.lock()
+                        errorcode, msg = self.command(Locker)
 
                     elif self._args['pack']:
                         errorcode, msg = self.pack()
@@ -217,7 +217,7 @@ class CrossPM:
         return errorcode, msg
 
     @do_run
-    def download(self):
+    def command(self, command_):
         if self._return_result:
             params = {}
         else:
@@ -252,7 +252,8 @@ class CrossPM:
                 # Try to load from python module
                 module_template = get_object_from_string(output_template)
                 if module_template is not None:
-                    self._log.debug("Found output template path '{}' from '{}'".format(module_template, output_template))
+                    self._log.debug(
+                        "Found output template path '{}' from '{}'".format(module_template, output_template))
                     params['output_template'] = module_template
                 else:
                     self._log.debug("Output template '{}' use like file path".format(output_template))
@@ -264,17 +265,20 @@ class CrossPM:
                                        "Can not find template '{}'".format(output_template))
 
         do_load = not self._args['--list']
-        if do_load:
-            self._config.cache.auto_clear()
-        cpm_downloader = Downloader(self._config, do_load)
-        cpm_downloader.download_packages()
+        # hack for Locker
+        if command_ is Locker:
+            do_load = self._config.recursive
 
-        if do_load:
-            if self._return_result:
-                return self._return(cpm_downloader)
-            else:
-                # self._output.write(params, packages)
-                self._output.write_output(params, cpm_downloader.get_tree_packages())
+        # if do_load:
+        #     self._config.cache.auto_clear()
+        cpm_ = command_(self._config, do_load)
+        cpm_.entrypoint()
+
+        if self._return_result:
+            return self._return(cpm_)
+        else:
+            # self._output.write(params, packages)
+            self._output.write_output(params, cpm_.get_tree_packages())
         return ''
 
     def _return(self, cpm_downloader):
@@ -284,18 +288,6 @@ class CrossPM:
             return cpm_downloader.get_tree_packages()
         else:
             return self._output.output_type_module(cpm_downloader.get_tree_packages())
-
-    @do_run
-    def lock(self):
-        # TODO: Сделать локику lock как и download (только + создание lock-файла)
-        cpm_locker = Locker(self._config)
-        cpm_locker.lock_packages()
-        if self._return_result:
-            return self._return(cpm_locker)
-        # TODO: Добавить вывод в stdout
-        # else:
-        #     # self._output.write(params, packages)
-        #     self._output.write_output(params, cpm_downloader.get_tree_packages())
 
     @do_run
     def pack(self):
