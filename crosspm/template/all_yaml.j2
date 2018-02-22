@@ -1,0 +1,12 @@
+{% for package in packages.values() %}
+- 'name': '{{package.name}}'
+  'packed_path': '{{package.packed_path}}'
+  'unpacked_path': '{{package.unpacked_path}}'
+  'duplicated': '{{package.unpacked_path}}'
+  'url': '{{package.pkg}}'
+  'md5': '{{package.md5}}'
+  'params':
+{% for name, value in package.get_params(merged=True).items() %}
+    '{{name}}': '{{value}}'
+{% endfor %}
+{% endfor %}
