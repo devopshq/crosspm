@@ -108,6 +108,7 @@ setup(
         'crosspm',
         'crosspm.helpers',
         'crosspm.adapters',
+        'crosspm.template',
     ],
     setup_requires=[
         'wheel',
@@ -129,6 +130,7 @@ setup(
     ],
     package_data={
         '': [
+            '../crosspm/templates/*',
             '*.cmake',
             '../LICENSE',
             # '../README.*',

@@ -49,6 +49,7 @@ from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.locker import Locker
 from crosspm.helpers.output import Output
+from crosspm.helpers.python import get_object_from_string
 
 app_name = 'CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)'.format(version=version)
 
@@ -244,6 +245,23 @@ class CrossPM:
                 params[k] = self._args[v[0]] if v[0] in self._args else v[1]
                 if isinstance(params[k], str):
                     params[k] = params[k].strip('"').strip("'")
+
+            # try to dynamic load --output-template from python module
+            output_template = params['output_template']
+            if output_template:
+                # Try to load from python module
+                module_template = get_object_from_string(output_template)
+                if module_template is not None:
+                    self._log.debug("Found output template path '{}' from '{}'".format(module_template, output_template))
+                    params['output_template'] = module_template
+                else:
+                    self._log.debug("Output template '{}' use like file path".format(output_template))
+
+            # check template exist
+            output_template = params['output_template']
+            if output_template and not os.path.exists(output_template):
+                raise CrosspmException(CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
+                                       "Can not find template '{}'".format(output_template))
 
         do_load = not self._args['--list']
         if do_load:

@@ -255,7 +255,7 @@ class Output:
     def output_format_shell(self, packages, output_template, **kwargs):
         output_template = os.path.realpath(output_template)
         template_dir, template_name = os.path.split(output_template)
-        j2_env = Environment(loader=FileSystemLoader(template_dir),  trim_blocks=True)
+        j2_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True)
         result = j2_env.get_template(template_name).render(packages=packages)
         return result
 
