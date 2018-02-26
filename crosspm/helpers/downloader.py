@@ -44,7 +44,13 @@ class Downloader(Command):
 
     # Get list of all packages needed to resolve all the dependencies.
     # List of Package class instances.
-    def get_dependency_packages(self, list_or_file_path=None):
+    def get_dependency_packages(self, list_or_file_path=None, property_validate=True):
+        """
+        
+        :param list_or_file_path: 
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :return: 
+        """
         if list_or_file_path is None:
             list_or_file_path = self._depslock_path
             if not os.path.isfile(list_or_file_path):
@@ -57,7 +63,7 @@ class Downloader(Command):
             if i > 0:
                 self._log.info('')
                 self._log.info('Next source ...')
-            _found_packages = _src.get_packages(self, list_or_file_path)
+            _found_packages = _src.get_packages(self, list_or_file_path, property_validate)
             _packages.update(
                 OrderedDict([(k, v) for k, v in _found_packages.items() if _packages.get(k, None) is None]))
             if not self._config.no_fails:
@@ -110,7 +116,7 @@ class Downloader(Command):
 
     def search_dependencies(self, depslock_file_path):
         self._log.info('Check dependencies ...')
-        self._root_package.find_dependencies(depslock_file_path)
+        self._root_package.find_dependencies(depslock_file_path, property_validate=True)
         self._log.info('')
         self.set_duplicated_flag()
         self._log.info('Dependency tree:')

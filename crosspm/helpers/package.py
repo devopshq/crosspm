@@ -88,7 +88,7 @@ class Package:
     def get_file(self, file_name, unpack_force=True):
         if unpack_force:
             self.unpack()
-        _dest_file = self.get_file_path(file_name)
+        _dest_file = os.path.normpath(self.get_file_path(file_name))
         _dest_file = _dest_file if os.path.isfile(_dest_file) else None
         return _dest_file
 
@@ -96,9 +96,16 @@ class Package:
         _dest_file = os.path.join(self.unpacked_path, file_name)
         return _dest_file
 
-    def find_dependencies(self, depslock_file_path):
+    def find_dependencies(self, depslock_file_path, property_validate=True):
+        """
+        Find all dependencies by package
+        :param depslock_file_path:
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :return:
+        """
         self._raw = [x for x in self._parser.iter_packages_params(depslock_file_path)]
-        self.packages = self._downloader.get_dependency_packages({'raw': self._raw})
+        self.packages = self._downloader.get_dependency_packages({'raw': self._raw},
+                                                                 property_validate=property_validate)
 
     def unpack(self, force=False):
         if self._downloader.solid(self):

@@ -27,7 +27,16 @@ session = requests.Session()
 
 
 class Adapter(BaseAdapter):
-    def get_packages(self, source, parser, downloader, list_or_file_path):
+    def get_packages(self, source, parser, downloader, list_or_file_path, property_validate=True):
+        """
+
+        :param source:
+        :param parser:
+        :param downloader:
+        :param list_or_file_path:
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :return:
+        """
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
         _art_auth_etc = {}
         if 'auth' in source.args:
@@ -132,8 +141,11 @@ class Adapter(BaseAdapter):
                                 _params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
                                 _mark = 'match'
 
-                                # TODO: _params_raw
-                                if parser.has_rule('properties'):
+                                # Check if it's `root` packages or from `lock` file
+                                # ALSO, if from `lock` and have * in name - validate with property
+                                property_validate_tmp = property_validate or '*' in _file_name_pattern
+                                # If have not rule in config, skip this part
+                                if parser.has_rule('properties') and property_validate_tmp:
                                     _found_properties = {x['key']: x.get('value', '') for x in _found['properties']}
                                     _valid, _params = parser.validate(_found_properties, 'properties', _tmp_params,
                                                                       return_params=True)
@@ -231,11 +243,11 @@ class Adapter(BaseAdapter):
                     _package.download()
                     _deps_file = _package.get_file(self._config.deps_lock_file_name)
                     if _deps_file:
-                        _package.find_dependencies(_deps_file)
+                        _package.find_dependencies(_deps_file, property_validate=False)
                     elif self._config.deps_file_name:
                         _deps_file = _package.get_file(self._config.deps_file_name)
                         if _deps_file and os.path.isfile(_deps_file):
-                            _package.find_dependencies(_deps_file)
+                            _package.find_dependencies(_deps_file, property_validate=False)
 
         # HACK for not found packages
         _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
