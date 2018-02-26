@@ -124,7 +124,9 @@ setup(
         'docopt',
         'pyyaml',
         'dohq-artifactory>=0.2.62',
-        'jinja2'
+        'jinja2',
+        'patool',  # need for pyunpack
+        'pyunpack',
         # 'pyopenssl>=16.2.0',
         # 'cryptography>=1.7',
     ],
