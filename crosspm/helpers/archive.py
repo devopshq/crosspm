@@ -89,7 +89,9 @@ class Archive:
                 else:
                     zf.extractall(path=dst_dir_path)
 
-
+        elif archive_name.endswith('.deb'):
+            # We unpack above
+            pass
 
         else:
             tries = 0
