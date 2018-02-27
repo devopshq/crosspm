@@ -103,7 +103,7 @@ class Package:
         :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
         :return:
         """
-        self._raw = [x for x in self._parser.iter_packages_params(depslock_file_path)]
+        self._raw = [x for x in self._downloader.common_parser.iter_packages_params(depslock_file_path)]
         self.packages = self._downloader.get_dependency_packages({'raw': self._raw},
                                                                  property_validate=property_validate)
 

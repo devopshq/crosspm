@@ -25,8 +25,9 @@ class Downloader(Command):
         self._config = config
         self.cache = config.cache
         self.solid = config.solid
+        self.common_parser = Parser('common', {}, config)
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
-                                     Parser('common', {}, config))
+                                     self.common_parser)
 
         if not config.deps_path:
             config.deps_path = \

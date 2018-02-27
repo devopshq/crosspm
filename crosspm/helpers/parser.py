@@ -176,8 +176,8 @@ class Parser:
         if column not in self._columns:
             if isinstance(value, (list, tuple)):
                 # TODO: Check for value is not None - if it is, raise "column value not set"
-                if None in value:
-                    value = ['' if x is None else x for x in value]
+                # if None in value:
+                #     value = ['' if x is None else x for x in value]
                 value = ''.join(value)
             return value  # nothing to parse
         if not isinstance(value, (list, tuple)):
