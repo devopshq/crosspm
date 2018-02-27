@@ -70,6 +70,8 @@ class Archive:
             # На linux - распаковываем сразу
             else:
                 from pyunpack import Archive
+                if not os.path.exists(dst_dir_path):
+                    os.makedirs(dst_dir_path)
                 Archive(archive_name).extractall(dst_dir_path)
         # ------- END deb-package -------
 
