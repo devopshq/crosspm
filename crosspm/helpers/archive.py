@@ -51,18 +51,27 @@ class Archive:
             os.renames(dst_dir_path, dst_dir_path_tmp)
 
         # TODO: remove hack for deb-package
-        # deb-пакет содержит в себе data.tar файл
-        # Распаковываем deb в первый раз, сохраняя data.tar рядом с deb-файлом
-        # Затем, подменяет имя архива и пускаем по обычному пути распаковки,
-        # чтобы он нашел tar и распаковал его как обычно
+        # ------- START deb-package -------
         if archive_name.endswith(".deb"):
-            datatar_dir = os.path.dirname(archive_name)
-            if not os.path.exists(datatar_dir):
-                os.makedirs(datatar_dir)
-            from pyunpack import Archive
-            Archive(archive_name).extractall(datatar_dir)
-            # Подмена имени
-            archive_name = os.path.join(datatar_dir, 'data.tar')
+            # На Windows:
+            # deb-пакет содержит в себе data.tar файл
+            # Распаковываем deb в первый раз, сохраняя data.tar рядом с deb-файлом
+            # Затем, подменяет имя архива и пускаем по обычному пути распаковки,
+            # чтобы он нашел tar и распаковал его как обычно
+            WINDOWS = True if sys.platform == 'win32' else False
+            if WINDOWS:
+                datatar_dir = os.path.dirname(archive_name)
+                if not os.path.exists(datatar_dir):
+                    os.makedirs(datatar_dir)
+                from pyunpack import Archive
+                Archive(archive_name).extractall(datatar_dir)
+                # Подмена имени
+                archive_name = os.path.join(datatar_dir, 'data.tar')
+            # На linux - распаковываем сразу
+            else:
+                from pyunpack import Archive
+                Archive(archive_name).extractall(dst_dir_path)
+        # ------- END deb-package -------
 
         if tarfile.is_tarfile(archive_name):
             with contextlib.closing(tarfile.TarFile.open(archive_name, 'r:*')) as tf:
