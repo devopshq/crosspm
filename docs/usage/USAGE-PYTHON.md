@@ -32,6 +32,10 @@ name = package.name # Package name
 packed = package.packed_path # Path to archive (tar.gz\zip\nupkg
 unpacked = package.unpacked_path # Path to unpacked folder
 dup = package.duplicated # The package has a duplicate package with different version
+
+pkg = package.pkg # type: ArtifactoryPath from dohq-artifactory
+md5 = package.md5 # Artifactory or local file md5hash
+
 package.get_name_and_path() # LEGACY - access to "name, unpacked_path"
 package.get_file_path('some.exe') # Path to unpacked file (inside package)
 package.get_file("some.exe") # Like "get_file_path" or None if file not exist

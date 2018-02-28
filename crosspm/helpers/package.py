@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import fnmatch
+import hashlib
 import logging
 import os
 import shutil
 from collections import OrderedDict
+
+from artifactory import ArtifactoryPath
 
 from crosspm.helpers.archive import Archive
 
@@ -18,6 +21,10 @@ class Package:
         self.duplicated = False
         self.packages = OrderedDict()
 
+        self.pkg = pkg  # type: ArtifactoryPath
+        # Someone use this internal object, do not remove  them :)
+        self._pkg = self.pkg
+
         if isinstance(pkg, int):
             if pkg == 0:
                 self._root = True
@@ -29,7 +36,6 @@ class Package:
         self._not_cached = True
         self._log = logging.getLogger('crosspm')
 
-        self._pkg = pkg
         self._params = params
         self._adapter = adapter
         self._parser = parser
@@ -50,9 +56,14 @@ class Package:
         """
         exists, dest_path = self._downloader.cache.exists_packed(package=self, pkg_path=self.packed_path,
                                                                  check_stat=not self._in_cache)
+        unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self.unpacked_path)
+
+        # Если архива нет, то и кешу доверять не стоит
+        if not exists:
+            unp_exists = False
+
         if exists and not self.packed_path:
             self.packed_path = dest_path
-        unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self.unpacked_path)
 
         if force or not exists:
             # _packed_path = self._packed_path
@@ -77,7 +88,7 @@ class Package:
     def get_file(self, file_name, unpack_force=True):
         if unpack_force:
             self.unpack()
-        _dest_file = self.get_file_path(file_name)
+        _dest_file = os.path.normpath(self.get_file_path(file_name))
         _dest_file = _dest_file if os.path.isfile(_dest_file) else None
         return _dest_file
 
@@ -85,9 +96,16 @@ class Package:
         _dest_file = os.path.join(self.unpacked_path, file_name)
         return _dest_file
 
-    def find_dependencies(self, depslock_file_path):
-        self._raw = [x for x in self._parser.iter_packages_params(depslock_file_path)]
-        self.packages = self._downloader.get_dependency_packages({'raw': self._raw})
+    def find_dependencies(self, depslock_file_path, property_validate=True):
+        """
+        Find all dependencies by package
+        :param depslock_file_path:
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :return:
+        """
+        self._raw = [x for x in self._downloader.common_parser.iter_packages_params(depslock_file_path)]
+        self.packages = self._downloader.get_dependency_packages({'raw': self._raw},
+                                                                 property_validate=property_validate)
 
     def unpack(self, force=False):
         if self._downloader.solid(self):
@@ -217,3 +235,21 @@ class Package:
             if any((fnmatch.fnmatch(name, x) or fnmatch.fnmatch(name, '*%s' % x)) for x in check_ext):
                 return True
         return False
+
+    @property
+    def md5(self):
+        try:
+            return ArtifactoryPath.stat(self.pkg).md5
+        except AttributeError:
+            return md5sum(self.packed_path)
+
+
+def md5sum(filename):
+    """
+    Calculates md5 hash of a file
+    """
+    md5 = hashlib.md5()
+    with open(filename, 'rb') as f:
+        for chunk in iter(lambda: f.read(128 * md5.block_size), b''):
+            md5.update(chunk)
+    return md5.hexdigest()

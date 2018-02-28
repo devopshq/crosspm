@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+from jinja2 import Environment, FileSystemLoader
 from collections import OrderedDict
 
 from crosspm.helpers.exceptions import *
@@ -197,14 +198,20 @@ class Output:
         return list(_output_format_map.keys())
 
     def write_output(self, params, packages):
+        """
+        Функция вызывает определенную функцию для фиксированного out-format
+        :param params:
+        :param packages:
+        :return:
+        """
         if params['out_format'] not in _output_format_map:
             raise CrosspmException(
                 CROSSPM_ERRORCODE_UNKNOWN_OUT_TYPE,
-                'unknown output type: [{}]'.format(params['out_format']),
+                'Unknown out_format: [{}]'.format(params['out_format']),
             )
 
         f = _output_format_map[params['out_format']]
-        result = f(self, packages)
+        result = f(self, packages, **params)
 
         if result:
             out_file_path = os.path.realpath(os.path.expanduser(params['output']))
@@ -224,9 +231,9 @@ class Output:
         return {'name': name, 'value': value}
 
     @register_output_format('stdout')
-    def output_type_stdout(self, packages):
+    def output_format_stdout(self, packages, **kwargs):
         self._output_config['type'] = PLAIN
-        _packages = self.output_type_module(packages)
+        _packages = self.output_format_module(packages)
         for k in _packages:
             v = _packages[k]
             sys.stdout.write('{}: {}\n'.format(self.get_var_name(k), v))
@@ -234,21 +241,29 @@ class Output:
         return None
 
     @register_output_format('shell')
-    def output_type_shell(self, packages):
+    def output_format_shell(self, packages, **kwargs):
         self._output_config['type'] = PLAIN
         result = '\n'
-        _packages = self.output_type_module(packages)
+        _packages = self.output_format_module(packages)
         for k in _packages:
             v = _packages[k]
             result += "{}='{}'\n".format(self.get_var_name(k), v)
         result += '\n'
         return result
 
+    @register_output_format('jinja')
+    def output_format_jinja(self, packages, output_template, **kwargs):
+        output_template = os.path.realpath(output_template)
+        template_dir, template_name = os.path.split(output_template)
+        j2_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True)
+        result = j2_env.get_template(template_name).render(packages=packages)
+        return result
+
     @register_output_format('cmd')
-    def output_type_cmd(self, packages):
+    def output_format_cmd(self, packages, **kwargs):
         self._output_config['type'] = PLAIN
         result = '\n'
-        _packages = self.output_type_module(packages)
+        _packages = self.output_format_module(packages)
         for k in _packages:
             v = _packages[k]
             result += "set {}={}\n".format(self.get_var_name(k), v)
@@ -256,7 +271,7 @@ class Output:
         return result
 
     @register_output_format('lock')
-    def output_type_lock(self, packages):
+    def output_format_lock(self, packages, **kwargs):
         """ Text to lock file """
         self._output_config['type'] = PLAIN
         text = ''
@@ -285,7 +300,7 @@ class Output:
             text += '{}\n'.format(line.strip())
         return text
 
-    def output_type_module(self, packages, esc_path=False):
+    def output_format_module(self, packages, esc_path=False):
         """
         Create out with child first position
         """
@@ -340,7 +355,7 @@ class Output:
         return result
 
     @register_output_format('python')
-    def output_type_python(self, packages):
+    def output_format_python(self, packages, **kwargs):
         def get_value(_v):
             if isinstance(_v, (int, float, bool)):
                 _res = '{}'.format(str(_v))
@@ -360,7 +375,7 @@ class Output:
 
         result = '# -*- coding: utf-8 -*-\n\n'
         res = ''
-        dict_or_list = self.output_type_module(packages, True)
+        dict_or_list = self.output_format_module(packages, True)
         for item in items_iter(dict_or_list):
             if self._output_config['type'] == LIST:
                 res += '    {\n'
@@ -410,8 +425,8 @@ class Output:
         return result
 
     @register_output_format('json')
-    def output_type_json(self, packages):
-        dict_or_list = self.output_type_module(packages)
+    def output_format_json(self, packages, **kwargs):
+        dict_or_list = self.output_format_module(packages)
         if self._output_config['root']:
             dict_or_list = {
                 self._output_config['root']: dict_or_list

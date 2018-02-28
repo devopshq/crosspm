@@ -8,9 +8,9 @@ from crosspm.helpers.output import Output
 
 
 class Locker(Downloader):
-    def __init__(self, config):
+    def __init__(self, config, do_load):
         # TODO: revise logic to allow recursive search without downloading
-        super(Locker, self).__init__(config, do_load=False or config.recursive)
+        super(Locker, self).__init__(config, do_load)
 
         if not getattr(config, 'deps_path', ''):
             config.deps_path = config.deps_file_name or CROSSPM_DEPENDENCY_FILENAME
@@ -46,3 +46,6 @@ class Locker(Downloader):
         Output(config=self._config).write_output(output_params, self._root_package.packages)
         self._log.info('Done!')
         return self._root_package.packages
+
+    def entrypoint(self, *args, **kwargs):
+        self.lock_packages(*args, **kwargs)

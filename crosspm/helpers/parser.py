@@ -176,6 +176,8 @@ class Parser:
         if column not in self._columns:
             if isinstance(value, (list, tuple)):
                 # TODO: Check for value is not None - if it is, raise "column value not set"
+                # if None in value:
+                #     value = ['' if x is None else x for x in value]
                 value = ''.join(value)
             return value  # nothing to parse
         if not isinstance(value, (list, tuple)):
@@ -474,41 +476,34 @@ class Parser:
         return _result, _result_params, _result_params_raw
 
     def validate(self, value, rule_name, params, return_params=False):
+
+        # Если правила для валидации не заданы - говорим что пакет нам подходит
         if rule_name not in self._rules:
             return (True, {}) if return_params else True
-            # raise CrosspmException(
-            #     CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
-            #     'Parser rule for [{}] not found in config.'.format(rule_name)
-            # )
         if len(self._rules[rule_name]) == 0:
             return (True, {}) if return_params else True
         if self._rules[rule_name] is None:
             return (True, {}) if return_params else True
-        _res = True
-        _res_params = {}
-        # _dirty = self._rules[rule_name].format(**params)
+
+        _valid = True
+        _result_params = {}
+
+        # Все возможные вариант rule. Для properties - bad, snapshot, etc...
+        # Но содержим массив массивов
         _all_dirties = self.fill_rule(rule_name, params, return_params=True, return_defaults=True)
-        # _all_defaults = []
-        # if self._defaults:
-        #     if isinstance(value, dict):
-        #         for _default in self.fill_rule(rule_name, self._defaults, return_params=False):
-        #             _tmp = [x.strip() for x in _default.split('=')]
-        #             _tmp = [x if len(x) > 0 else '*' for x in _tmp]
-        #             for _key in fnmatch.filter(value.keys(), _tmp[0]):
-        #                 if len(_tmp) > 1:
-        #                     _tmp_val = value[_key]
-        #             if _tmp[0] not in value:
-        #                 value[_tmp[0]] = _tmp[1]
 
         for _dirties in _all_dirties:
+            # _dirties - набор конкретных правил для валидации
             _res_sub = False
             _res_sub_params = {}
             for _dirt in _dirties:
+                # _dirty - Одно "возможное" правило?
                 _res_var = False
                 # TODO: Use split_with_regexp() instead
                 _dirty = [x.split(']') for x in _dirt['var'].split('[')]
                 _dirty = self.list_flatter(_dirty)
                 _variants = self.get_variants(_dirty, [])
+
                 if isinstance(value, str):
                     _res_var = value in _variants
                 elif isinstance(value, (list, tuple)):
@@ -557,10 +552,10 @@ class Parser:
                 if _res_sub:
                     _res_sub_params = _dirt['params']
                     break
-            _res = _res and _res_sub
-            if _res:
-                _res_params.update(_res_sub_params)
-        return (_res, _res_params) if return_params else _res
+            _valid = _valid and _res_sub
+            if _valid:
+                _result_params.update(_res_sub_params)
+        return (_valid, _result_params) if return_params else _valid
 
     def iter_matched_values(self, column_name, value):
         _values = self._config.get_values(column_name)

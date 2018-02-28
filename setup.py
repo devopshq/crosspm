@@ -108,6 +108,7 @@ setup(
         'crosspm',
         'crosspm.helpers',
         'crosspm.adapters',
+        'crosspm.template',
     ],
     setup_requires=[
         'wheel',
@@ -122,12 +123,16 @@ setup(
         'requests',
         'docopt',
         'pyyaml',
-        'dohq-artifactory',
+        'dohq-artifactory>=0.2.62',
+        'jinja2',
+        'patool',  # need for pyunpack
+        'pyunpack',
         # 'pyopenssl>=16.2.0',
         # 'cryptography>=1.7',
     ],
     package_data={
         '': [
+            './template/*.j2',
             '*.cmake',
             '../LICENSE',
             # '../README.*',

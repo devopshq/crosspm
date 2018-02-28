@@ -25,6 +25,7 @@ Options:
     --lock-on-success               Save file with locked dependencies next to original one if download succeeds
     --out-format=TYPE               Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                   Output file name (required if --out_format is not stdout)
+    --output-template=FILE          Template path, e.g. nuget.packages.config.j2 (required if --out_format=jinja)
     --no-fails                      Ignore fails config if possible.
     --recursive                     Process all packages recursively to find and lock all dependencies  
     --prefer-local                  Do not search package if exist in cache
@@ -48,8 +49,30 @@ from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.locker import Locker
 from crosspm.helpers.output import Output
+from crosspm.helpers.python import get_object_from_string
 
 app_name = 'CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)'.format(version=version)
+
+
+def do_run(func):
+    def wrapper(self, *args, **kwargs):
+        try:
+            res = func(self, *args, **kwargs)
+        except CrosspmExceptionWrongArgs as e:
+            print(__doc__)
+            return self.exit(e.error_code, e.msg)
+
+        except CrosspmException as e:
+            print_stdout('')
+            return self.exit(e.error_code, e.msg)
+
+        except Exception as e:
+            print_stdout('')
+            self._log.exception(e)
+            return self.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR, 'Unknown error occurred!')
+        return 0, res
+
+    return wrapper
 
 
 class CrossPM:
@@ -90,6 +113,7 @@ class CrossPM:
 
         self._ready = True
 
+    @do_run
     def read_config(self):
         _deps_path = self._args['--deps-path']
         _depslock_path = self._args['--depslock-path']
@@ -103,35 +127,6 @@ class CrossPM:
                               self._args['--prefer-local'])
         self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
 
-    def run(self):
-        time_start = time.time()
-        if self._ready:
-
-            errorcode, msg = self.do_run(self.set_logging_level)
-            self._log.info(app_name)
-            errorcode, msg = self.do_run(self.check_common_args)
-            if errorcode == 0:
-                errorcode, msg = self.do_run(self.read_config)
-
-                if errorcode == 0:
-                    if self._args['download']:
-                        errorcode, msg = self.do_run(self.download)
-                        # self.download()
-
-                    elif self._args['lock']:
-                        errorcode, msg = self.do_run(self.lock)
-
-                    elif self._args['pack']:
-                        errorcode, msg = self.do_run(self.pack)
-
-                    elif self._args['cache']:
-                        errorcode, msg = self.do_run(self.cache)
-        else:
-            errorcode, msg = CROSSPM_ERRORCODE_WRONG_ARGS, self._args
-        time_end = time.time()
-        self._log.info('Done in %2.2f sec' % (time_end - time_start))
-        return errorcode, msg
-
     def exit(self, code, msg):
         self._log.critical(msg)
         if self._throw_exceptions:
@@ -139,23 +134,7 @@ class CrossPM:
         else:
             return code, msg
 
-    def do_run(self, func, *args, **kwargs):
-        try:
-            res = func(*args, **kwargs)
-        except CrosspmExceptionWrongArgs as e:
-            print(__doc__)
-            return self.exit(e.error_code, e.msg)
-
-        except CrosspmException as e:
-            print_stdout('')
-            return self.exit(e.error_code, e.msg)
-
-        except Exception as e:
-            print_stdout('')
-            self._log.exception(e)
-            return self.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR, 'Unknown error occurred!')
-        return 0, res
-
+    @do_run
     def check_common_args(self):
         if self._args['--output']:
             output = self._args['--output'].strip().strip("'").strip('"')
@@ -166,6 +145,7 @@ class CrossPM:
                 )
             self._args['--output'] = output
 
+    @do_run
     def set_logging_level(self):
         level_str = self._args['--verbose'].strip().lower()
 
@@ -207,7 +187,37 @@ class CrossPM:
                 fh.setFormatter(formatter)
                 self._log.addHandler(fh)
 
-    def download(self):
+    def run(self):
+        time_start = time.time()
+        if self._ready:
+
+            errorcode, msg = self.set_logging_level()
+            self._log.info(app_name)
+            errorcode, msg = self.check_common_args()
+            if errorcode == 0:
+                errorcode, msg = self.read_config()
+
+                if errorcode == 0:
+                    if self._args['download']:
+                        errorcode, msg = self.command(Downloader)
+                        # self.command()
+
+                    elif self._args['lock']:
+                        errorcode, msg = self.command(Locker)
+
+                    elif self._args['pack']:
+                        errorcode, msg = self.pack()
+
+                    elif self._args['cache']:
+                        errorcode, msg = self.cache()
+        else:
+            errorcode, msg = CROSSPM_ERRORCODE_WRONG_ARGS, self._args
+        time_end = time.time()
+        self._log.info('Done in %2.2f sec' % (time_end - time_start))
+        return errorcode, msg
+
+    @do_run
+    def command(self, command_):
         if self._return_result:
             params = {}
         else:
@@ -226,6 +236,7 @@ class CrossPM:
             params = {
                 'out_format': ['--out-format', ''],
                 'output': ['--output', ''],
+                'output_template': ['--output-template', ''],
                 # 'out_prefix': ['--out-prefix', ''],
                 # 'depslock_path': ['--depslock-path', ''],
             }
@@ -235,33 +246,54 @@ class CrossPM:
                 if isinstance(params[k], str):
                     params[k] = params[k].strip('"').strip("'")
 
-        do_load = not self._args['--list']
-        if do_load:
-            self._config.cache.auto_clear()
-        cpm_downloader = Downloader(self._config, do_load)
-        cpm_downloader.download_packages()
-
-        if do_load:
-            if self._return_result:
-                if str(self._return_result).lower() == 'raw':
-                    return cpm_downloader.get_raw_packages()
-                if str(self._return_result).lower() == 'tree':
-                    return cpm_downloader.get_tree_packages()
+            # try to dynamic load --output-template from python module
+            output_template = params['output_template']
+            if output_template:
+                # Try to load from python module
+                module_template = get_object_from_string(output_template)
+                if module_template is not None:
+                    self._log.debug(
+                        "Found output template path '{}' from '{}'".format(module_template, output_template))
+                    params['output_template'] = module_template
                 else:
-                    return self._output.output_type_module(cpm_downloader.get_tree_packages())
-            else:
-                # self._output.write(params, packages)
-                self._output.write_output(params, cpm_downloader.get_tree_packages())
+                    self._log.debug("Output template '{}' use like file path".format(output_template))
+
+            # check template exist
+            output_template = params['output_template']
+            if output_template and not os.path.exists(output_template):
+                raise CrosspmException(CROSSPM_ERRORCODE_CONFIG_NOT_FOUND,
+                                       "Can not find template '{}'".format(output_template))
+
+        do_load = not self._args['--list']
+        # hack for Locker
+        if command_ is Locker:
+            do_load = self._config.recursive
+
+        # if do_load:
+        #     self._config.cache.auto_clear()
+        cpm_ = command_(self._config, do_load)
+        cpm_.entrypoint()
+
+        if self._return_result:
+            return self._return(cpm_)
+        else:
+            # self._output.write(params, packages)
+            self._output.write_output(params, cpm_.get_tree_packages())
         return ''
 
-    def lock(self):
+    def _return(self, cpm_downloader):
+        if str(self._return_result).lower() == 'raw':
+            return cpm_downloader.get_raw_packages()
+        if str(self._return_result).lower() == 'tree':
+            return cpm_downloader.get_tree_packages()
+        else:
+            return self._output.output_type_module(cpm_downloader.get_tree_packages())
 
-        cpm_locker = Locker(self._config)
-        cpm_locker.lock_packages()
-
+    @do_run
     def pack(self):
         Archive.create(self._args['<OUT>'], self._args['<SOURCE>'])
 
+    @do_run
     def cache(self):
         if self._args['clear']:
             self._config.cache.clear(self._args['hard'])

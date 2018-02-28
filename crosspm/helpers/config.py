@@ -219,7 +219,7 @@ class Config:
                     DEFAULT_CONFIG_PATH.insert(ind, config_path_env)
                     ind += 1
 
-            cpm_file_default, cpm_file_deps = self.find_cpmconfig(cpm_conf_name)
+            cpm_file_default, cpm_file_deps = self.get_object_from_string(cpm_conf_name)
             if cpm_file_deps:
                 DEFAULT_CONFIG_PATH.insert(ind, cpm_file_deps)
 

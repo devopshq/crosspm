@@ -24,7 +24,9 @@ cpm:
 cache:
   cmdline: cache
   env: CROSSPM_CACHE_ROOT
-  default:
+  storage:
+    packed: '{package}/{branch}/{version}/{compiler}/{arch}/{osname}/{package}.{version}.tar.gz'
+    unpacked: '{package}/{branch}/{version}/{compiler}/{arch}/{osname}'
   clear:
     days: 10
     size: 300 mb
@@ -137,6 +139,12 @@ Let's keep in mind that any value we use in path, properties and columns descrip
   <dd><i>env</i> - Environment variable name with path to cache folder. Used if command line option is not set.</dd>
   <dd><i>default</i> - Default path to cache folder. Used if command line option and environment variable are not set.</dd>
   <dd><i>path</i> - Path to cache folder. "cmdline", "env" and "default" are ignored if "path" set.</dd>
+  <dd><i>storage</i> - local storage setting
+  <dl>
+    <dd><i>packed</i> - Path to packed file</dd>
+    <dd><i>unpacked</i> - Path to UNpacked directory</dd>
+  </dl>
+  </dd>
   <dd><i>clear</i> - Parameters for cleaning cache.
   <dl>
     <dd><i>days</i> - Delete files or folders older than "days".</dd>

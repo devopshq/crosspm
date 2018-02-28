@@ -314,6 +314,7 @@ class Cache:
             _stat_file = os.stat(path)
             if any(package.stat[k] != getattr(_stat_file, v, -999) for k, v in _stat_attr.items()):
                 res = False
+                os.remove(path)
 
         return res, path
 
