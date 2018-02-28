@@ -70,7 +70,7 @@ artifacts:
 
 Для этого, мы создаём файл `deb.j2` со следующим содержимым
 
-```yaml
+```
 {% for package in packages.values() %}
 {{package.pkg.name}} = {{package.get_params(merged=True)['version']}}
 {% endfor %}
