@@ -20,6 +20,8 @@ setup = {
     "name": [
         "artifactory-aql",
         "jfrog-artifactory-aql",
+        "artifactory",
+        "jfrog-artifactory",
     ],
 }
 
