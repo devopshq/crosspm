@@ -9,7 +9,7 @@ class Usedby(Locker):
         # Ignore do_load flag
         super(Usedby, self).__init__(config, False)
 
-    def lock_packages(self, deps_file_path=None, depslock_file_path=None, packages=None):
+    def usedby_packages(self, deps_file_path=None, depslock_file_path=None, packages=None):
         """
         Lock packages. Downloader search packages
         """
@@ -24,26 +24,14 @@ class Usedby(Locker):
             self.search_dependencies(deps_file_path)
         else:
             self._root_package.packages = packages
-
-        self._log.info('Writing lock file [{}]'.format(depslock_file_path))
-
-        output_params = {
-            'out_format': 'lock',
-            'output': depslock_file_path,
-        }
-        Output(config=self._config).write_output(output_params, self._root_package.packages)
         self._log.info('Done!')
-        return self._root_package.packages
 
     def search_dependencies(self, depslock_file_path):
         self._log.info('Check dependencies ...')
         self._root_package.find_usedby(depslock_file_path, property_validate=True)
         self._log.info('')
-        self.set_duplicated_flag()
         self._log.info('Dependency tree:')
         self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
-        self.check_unique(self._config.no_fails)
-        self.check_not_found()
 
     def entrypoint(self, *args, **kwargs):
-        self.lock_packages(*args, **kwargs)
+        self.usedby_packages(*args, **kwargs)

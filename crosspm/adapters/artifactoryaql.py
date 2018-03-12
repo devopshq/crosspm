@@ -337,6 +337,7 @@ class Adapter(BaseAdapter):
                         if _path_pattern:
                             _aql_path_pattern = _aql_path_pattern + "/" + _path_pattern
 
+                        # TODO: Попробовать использовать lru_cache для кеширования кучи запросов
                         _aql_query_url = '{}/api/search/aql'.format(_artifactory_server)
                         _aql_query_dict = {
                             "repo": {
@@ -359,6 +360,7 @@ class Adapter(BaseAdapter):
                                 path=_found['path'],
                                 file_name=_found['name'])
                             _repo_path = ArtifactoryPath(_repo_path, **_art_auth_etc)
+                            _found_properties = {x['key']: x.get('value', '') for x in _found['properties']}
 
                             _matched, _params, _params_raw = parser.validate_path(str(_repo_path), _tmp_params)
                             _params_found[_repo_path] = {k: v for k, v in _params.items()}
@@ -369,31 +371,19 @@ class Adapter(BaseAdapter):
                             _params_found[_repo_path]['filename'] = str(_repo_path.name)
 
                             _params_raw = _params_found_raw.get(_repo_path, {})
-                            _package = Package(_pkg_name, _repo_path, _paths['params'], downloader, self, parser,
-                                               {}, _params_raw)
-                            if (_package is not None) or (not self._config.no_fails):
-                                _added, _package = downloader.add_package(_pkg_name, _package)
-                            else:
-                                _added = False
-                            if _package is not None:
-                                _pkg_name = _package.name
-                            if _added or (_package is not None):
-                                if (_package is not None) or (not self._config.no_fails):
-                                    if (_package is not None) or (_packages_found.get(_pkg_name, None) is None):
-                                        _packages_found[_pkg_name] = _package
-
-                            if _added and (_package is not None):
-                                if downloader.do_load:
-                                    _package.download()
-                                    _deps_file = _package.get_file(self._config.deps_lock_file_name)
-                                    if _deps_file:
-                                        _package.find_dependencies(_deps_file, property_validate=False)
-                                    elif self._config.deps_file_name:
-                                        _deps_file = _package.get_file(self._config.deps_file_name)
-                                        if _deps_file and os.path.isfile(_deps_file):
-                                            _package.find_dependencies(_deps_file, property_validate=False)
-                                            _mark = 'chosen'
-                                            self._log.info('  {}: {}'.format(_mark, str(_repo_path)))
+                            params_found = {}
+                            params = {
+                                'package': _found_properties['deb.name'],
+                                'version': _found_properties['deb.version'],
+                                'qaverdict': '',
+                            }
+                            _package = Package(_found_properties['deb.name'], _repo_path, params, downloader, self,
+                                               parser,
+                                               params_found, _params_raw)
+                            _packages_found[str(_repo_path)] = _package
+                            # _package.find_dependencies(_deps_file, property_validate=False)
+                            _mark = 'chosen'
+                            self._log.info('  {}: {}'.format(_mark, str(_repo_path)))
                     except RuntimeError as e:
                         try:
                             err = json.loads(e.args[0])
@@ -424,11 +414,11 @@ class Adapter(BaseAdapter):
                                 last_error = msg
 
         # HACK for not found packages
-        _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
-        _packages_found_names = [x.name for x in _packages_found.values()]
-        for package in _package_names:
-            if package not in _packages_found_names:
-                _packages_found[package] = None
+        # _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
+        # _packages_found_names = [x.name for x in _packages_found.values()]
+        # for package in _package_names:
+        #     if package not in _packages_found_names:
+        #         _packages_found[package] = None
 
         return _packages_found
 
