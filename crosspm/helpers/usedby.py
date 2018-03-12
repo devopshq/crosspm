@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
 
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
 from crosspm.helpers.locker import Locker
 from crosspm.helpers.output import Output
 
@@ -21,10 +19,6 @@ class Usedby(Locker):
             depslock_file_path = self._depslock_path
         if deps_file_path == depslock_file_path:
             depslock_file_path += '.lock'
-            # raise CrosspmException(
-            #     CROSSPM_ERRORCODE_WRONG_ARGS,
-            #     'Dependencies and Lock files are same: "{}".'.format(deps_file_path),
-            # )
 
         if packages is None:
             self.search_dependencies(deps_file_path)
@@ -40,6 +34,16 @@ class Usedby(Locker):
         Output(config=self._config).write_output(output_params, self._root_package.packages)
         self._log.info('Done!')
         return self._root_package.packages
+
+    def search_dependencies(self, depslock_file_path):
+        self._log.info('Check dependencies ...')
+        self._root_package.find_usedby(depslock_file_path, property_validate=True)
+        self._log.info('')
+        self.set_duplicated_flag()
+        self._log.info('Dependency tree:')
+        self._root_package.print(0, self._config.output('tree', [{self._config.name_column: 0}]))
+        self.check_unique(self._config.no_fails)
+        self.check_not_found()
 
     def entrypoint(self, *args, **kwargs):
         self.lock_packages(*args, **kwargs)

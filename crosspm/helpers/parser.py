@@ -19,13 +19,27 @@ class Parser:
         self._name = name
         self._sort = data.get('sort', [])
         self._index = data.get('index', -1)
-        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults']}
+
+        # Должно быть вида key: str_value
+        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults', 'usedby']}
+
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
         self._config = config
         self.init_rules_vars()
         if 'defaults' in data:
             self.init_defaults(data['defaults'])
+        if 'usedby' in data:
+            self._usedby = data['usedby']
+
+    def get_usedby_aql(self, params):
+        _result = {}
+        params = self.merge_valued(params)
+        for k, v in self._usedby['AQL'].items():
+            k = k.format(**params)
+            v = v.format(**params)
+            _result[k] = v
+        return _result
 
     def get_vars(self):
         _vars = []
