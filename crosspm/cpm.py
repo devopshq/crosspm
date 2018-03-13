@@ -5,7 +5,7 @@
 Usage:
     crosspm download [options]
     crosspm lock [DEPS] [DEPSLOCK] [options]
-    crosspm usedby [options]
+    crosspm usedby [DEPS] [options]
     crosspm pack <OUT> <SOURCE> [options]
     crosspm cache [size | age | clear [hard]]
     crosspm -h | --help
