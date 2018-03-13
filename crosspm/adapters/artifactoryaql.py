@@ -371,6 +371,8 @@ class Adapter(BaseAdapter):
                         _package = Package(params[_pkg_name_col], _repo_path, params, downloader, self,
                                            parser,
                                            params_found, _params_raw)
+
+                        _package.find_usedby(None, property_validate=False)
                         _packages_found[str(_repo_path)] = _package
                         # _package.find_dependencies(_deps_file, property_validate=False)
                         _mark = 'chosen'
