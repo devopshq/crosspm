@@ -66,6 +66,15 @@ parsers:
       - version
       - '*'
     index: -1
+    usedby:
+      AQL:
+        "@dd.{package}.version": "{version}"
+        "@dd.{package}.operator": "="
+
+      property-parser:
+        "deb.name": "package"
+        "deb.version": "version"
+        "qaverdict": "qaverdict"
 
   artifactory:
     path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"

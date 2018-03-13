@@ -5,6 +5,7 @@
 Usage:
     crosspm download [options]
     crosspm lock [DEPS] [DEPSLOCK] [options]
+    crosspm usedby [DEPS] [options]
     crosspm pack <OUT> <SOURCE> [options]
     crosspm cache [size | age | clear [hard]]
     crosspm -h | --help
@@ -50,6 +51,7 @@ from crosspm.helpers.exceptions import *
 from crosspm.helpers.locker import Locker
 from crosspm.helpers.output import Output
 from crosspm.helpers.python import get_object_from_string
+from crosspm.helpers.usedby import Usedby
 
 app_name = 'CrossPM (Cross Package Manager) version: {version} The MIT License (MIT)'.format(version=version)
 
@@ -204,6 +206,9 @@ class CrossPM:
 
                     elif self._args['lock']:
                         errorcode, msg = self.command(Locker)
+
+                    elif self._args['usedby']:
+                        errorcode, msg = self.command(Usedby)
 
                     elif self._args['pack']:
                         errorcode, msg = self.pack()

@@ -45,7 +45,6 @@ class Locker(Downloader):
         }
         Output(config=self._config).write_output(output_params, self._root_package.packages)
         self._log.info('Done!')
-        return self._root_package.packages
 
     def entrypoint(self, *args, **kwargs):
         self.lock_packages(*args, **kwargs)

@@ -19,13 +19,34 @@ class Parser:
         self._name = name
         self._sort = data.get('sort', [])
         self._index = data.get('index', -1)
-        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults']}
+
+        # Должно быть вида key: str_value
+        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults', 'usedby']}
+
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
         self._config = config
         self.init_rules_vars()
         if 'defaults' in data:
             self.init_defaults(data['defaults'])
+        self._usedby = data.get('usedby', None)
+
+    def get_usedby_aql(self, params):
+        """
+        Возвращает запрос AQL (без репозитория), из файла конфигурации
+        :param params:
+        :return:
+        """
+        if self._usedby is None:
+            return None
+
+        _result = {}
+        params = self.merge_valued(params)
+        for k, v in self._usedby['AQL'].items():
+            k = k.format(**params)
+            v = v.format(**params)
+            _result[k] = v
+        return _result
 
     def get_vars(self):
         _vars = []
@@ -992,3 +1013,8 @@ class Parser:
         if self._rules.get(rule_name, False):
             res = True
         return res
+
+    def get_params_from_properties(self, properties):
+        # Парсит свойства артефакта и выдаёт параметры
+        result = {y: properties.get(x, '') for x, y in self._usedby.get('property-parser', {}).items()}
+        return result

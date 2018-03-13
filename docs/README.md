@@ -98,6 +98,7 @@ Other pages
 - [Usage (RU)](usage/USAGE)
     - [CrossPM in Python as module](usage/USAGE-PYTHON)
     - [CrossPM in Cmake](usage/USAGE-CMAKE)
+    - [CrossPM used by (RU)](usage/USAGE-USEDBY)
 - [CrossPM Config](config/CONFIG)
     - [Path to package (RU)](config/config-path)
     - [Import (RU)](config/IMPORT)
