@@ -60,7 +60,7 @@ class Adapter(BaseAdapter):
         else:
             _art_auth_etc['verify'] = False
 
-        _pkg_name_col = self._config.name_column
+        _pkg_name_column = self._config.name_column
         _packages_found = OrderedDict()
         _pkg_name_old = ""
         _packed_exist = False
@@ -72,13 +72,13 @@ class Adapter(BaseAdapter):
             _params_found = {}
             _params_found_raw = {}
             last_error = ''
-            _pkg_name = _paths['params'][_pkg_name_col]
+            _pkg_name = _paths['params'][_pkg_name_column]
             if _pkg_name != _pkg_name_old:
                 _pkg_name_old = _pkg_name
                 self._log.info(
                     '{}: {}'.format(_pkg_name,
                                     {k: v for k, v in _paths['params'].items() if
-                                     k not in (_pkg_name_col, 'repo')}))
+                                     k not in (_pkg_name_column, 'repo')}))
             for _sub_paths in _paths['paths']:
                 _tmp_params = dict(_paths['params'])
                 self._log.info('repo: {}'.format(_sub_paths['repo']))
@@ -307,8 +307,6 @@ class Adapter(BaseAdapter):
         _pkg_name_col = self._config.name_column
         _packages_found = OrderedDict()
         _pkg_name_old = ""
-        _packed_exist = False
-        _packed_cache_params = None
 
         for _paths in parser.get_paths(list_or_file_path, source):
             _packages = []
@@ -325,100 +323,86 @@ class Adapter(BaseAdapter):
             for _sub_paths in _paths['paths']:
                 _tmp_params = dict(_paths['params'])
                 self._log.info('repo: {}'.format(_sub_paths['repo']))
-                for _path in _sub_paths['paths']:
-                    _tmp_params['repo'] = _sub_paths['repo']
-                    _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
+                _tmp_params['repo'] = _sub_paths['repo']
+                try:
+                    _artifactory_server = _tmp_params['server']
+                    _search_repo = _tmp_params['repo']
+
+                    # TODO: Попробовать использовать lru_cache для кеширования кучи запросов
+                    _aql_query_url = '{}/api/search/aql'.format(_artifactory_server)
+                    _aql_query_dict = {
+                        "repo": {
+                            "$eq": _search_repo,
+                        },
+                    }
+                    _usedby_aql = parser.get_usedby_aql(_tmp_params)
+                    if _usedby_aql is None:
+                        continue
+                    _aql_query_dict.update(_usedby_aql)
+                    query = 'items.find({query_dict}).include("*", "property")'.format(
+                        query_dict=json.dumps(_aql_query_dict))
+                    session.auth = _art_auth_etc['auth']
+                    r = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
+                    r.raise_for_status()
+
+                    _found_paths = r.json()
+                    for _found in _found_paths['results']:
+                        _repo_path = "{artifactory}/{repo}/{path}/{file_name}".format(
+                            artifactory=_artifactory_server,
+                            repo=_found['repo'],
+                            path=_found['path'],
+                            file_name=_found['name'])
+                        _repo_path = ArtifactoryPath(_repo_path, **_art_auth_etc)
+                        _found_properties = {x['key']: x.get('value', '') for x in _found['properties']}
+
+                        _matched, _params, _params_raw = parser.validate_path(str(_repo_path), _tmp_params)
+                        _params_found[_repo_path] = {k: v for k, v in _params.items()}
+                        _params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
+                        _params = _tmp_params
+                        _packages += [_repo_path]
+                        _params_found[_repo_path].update({k: v for k, v in _params.items()})
+                        _params_found[_repo_path]['filename'] = str(_repo_path.name)
+
+                        _params_raw = _params_found_raw.get(_repo_path, {})
+                        params_found = {}
+
+                        # TODO: Проставление params брать из config.yaml usedby
+                        params = parser.get_params_from_properties(_found_properties)
+                        _package = Package(params[_pkg_name_col], _repo_path, params, downloader, self,
+                                           parser,
+                                           params_found, _params_raw)
+                        _packages_found[str(_repo_path)] = _package
+                        # _package.find_dependencies(_deps_file, property_validate=False)
+                        _mark = 'chosen'
+                        self._log.info('  {}: {}'.format(_mark, str(_repo_path)))
+                except RuntimeError as e:
                     try:
-                        _artifactory_server = _tmp_params['server']
-                        _search_repo = _tmp_params['repo']
-
-                        # Get AQL path pattern, with fixed part path, without artifactory url and repository name
-                        _aql_path_pattern = _path_fixed[len(_artifactory_server) + 1 + len(_search_repo) + 1:]
-                        if _path_pattern:
-                            _aql_path_pattern = _aql_path_pattern + "/" + _path_pattern
-
-                        # TODO: Попробовать использовать lru_cache для кеширования кучи запросов
-                        _aql_query_url = '{}/api/search/aql'.format(_artifactory_server)
-                        _aql_query_dict = {
-                            "repo": {
-                                "$eq": _search_repo,
-                            },
-                        }
-                        _usedby_aql = parser.get_usedby_aql(_tmp_params)
-                        if _usedby_aql is None:
-                            continue
-                        _aql_query_dict.update(_usedby_aql)
-                        query = 'items.find({query_dict}).include("*", "property")'.format(
-                            query_dict=json.dumps(_aql_query_dict))
-                        session.auth = _art_auth_etc['auth']
-                        r = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
-                        r.raise_for_status()
-
-                        _found_paths = r.json()
-                        for _found in _found_paths['results']:
-                            _repo_path = "{artifactory}/{repo}/{path}/{file_name}".format(
-                                artifactory=_artifactory_server,
-                                repo=_found['repo'],
-                                path=_found['path'],
-                                file_name=_found['name'])
-                            _repo_path = ArtifactoryPath(_repo_path, **_art_auth_etc)
-                            _found_properties = {x['key']: x.get('value', '') for x in _found['properties']}
-
-                            _matched, _params, _params_raw = parser.validate_path(str(_repo_path), _tmp_params)
-                            _params_found[_repo_path] = {k: v for k, v in _params.items()}
-                            _params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
-                            _params = _tmp_params
-                            _packages += [_repo_path]
-                            _params_found[_repo_path].update({k: v for k, v in _params.items()})
-                            _params_found[_repo_path]['filename'] = str(_repo_path.name)
-
-                            _params_raw = _params_found_raw.get(_repo_path, {})
-                            params_found = {}
-
-                            # TODO: Проставление params брать из config.yaml usedby
-                            params = parser.get_params_from_properties(_found_properties)
-                            _package = Package(params[self._config.name_column], _repo_path, params, downloader, self,
-                                               parser,
-                                               params_found, _params_raw)
-                            _packages_found[str(_repo_path)] = _package
-                            # _package.find_dependencies(_deps_file, property_validate=False)
-                            _mark = 'chosen'
-                            self._log.info('  {}: {}'.format(_mark, str(_repo_path)))
-                    except RuntimeError as e:
-                        try:
-                            err = json.loads(e.args[0])
-                        except:
-                            err = {}
-                        if isinstance(err, dict):
-                            # Check errors
-                            # :e.args[0]: {
-                            #                 "errors" : [ {
-                            #                     "status" : 404,
-                            #                     "message" : "Not Found"
-                            #                  } ]
-                            #             }
-                            for error in err.get('errors', []):
-                                err_status = error.get('status', -1)
-                                err_msg = error.get('message', '')
-                                if err_status == 401:
-                                    msg = 'Authentication error[{}]{}'.format(err_status,
-                                                                              (': {}'.format(
-                                                                                  err_msg)) if err_msg else '')
-                                elif err_status == 404:
-                                    msg = last_error
-                                else:
-                                    msg = 'Error[{}]{}'.format(err_status,
-                                                               (': {}'.format(err_msg)) if err_msg else '')
-                                if last_error != msg:
-                                    self._log.error(msg)
-                                last_error = msg
-
-        # HACK for not found packages
-        # _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
-        # _packages_found_names = [x.name for x in _packages_found.values()]
-        # for package in _package_names:
-        #     if package not in _packages_found_names:
-        #         _packages_found[package] = None
+                        err = json.loads(e.args[0])
+                    except:
+                        err = {}
+                    if isinstance(err, dict):
+                        # Check errors
+                        # :e.args[0]: {
+                        #                 "errors" : [ {
+                        #                     "status" : 404,
+                        #                     "message" : "Not Found"
+                        #                  } ]
+                        #             }
+                        for error in err.get('errors', []):
+                            err_status = error.get('status', -1)
+                            err_msg = error.get('message', '')
+                            if err_status == 401:
+                                msg = 'Authentication error[{}]{}'.format(err_status,
+                                                                          (': {}'.format(
+                                                                              err_msg)) if err_msg else '')
+                            elif err_status == 404:
+                                msg = last_error
+                            else:
+                                msg = 'Error[{}]{}'.format(err_status,
+                                                           (': {}'.format(err_msg)) if err_msg else '')
+                            if last_error != msg:
+                                self._log.error(msg)
+                            last_error = msg
 
         return _packages_found
 
