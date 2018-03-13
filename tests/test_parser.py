@@ -2,6 +2,7 @@
 import pytest
 import yaml
 
+from crosspm.helpers.config import Config
 from crosspm.helpers.parser import Parser
 
 
@@ -40,10 +41,20 @@ class TestParser(BaseParserTest):
           - version
           - '*'
         index: -1
+        
 
       artifactory:
         path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
         properties: ""
+        usedby:
+          AQL:
+            "@dd.{package}.version": "{version}"
+            "@dd.{package}.operator": "="
+
+          property-parser:
+            "deb.name": "package"
+            "deb.version": "version"
+            "qaverdict": "qaverdict"
     """
 
     @pytest.fixture(scope='class', autouse=True)
@@ -277,3 +288,28 @@ class TestParser(BaseParserTest):
 
         for res in expected_result:
             assert res in result, "Result contain LESS element then expected"
+
+    def test_get_usedby_aql(self):
+        parser = self._parsers.get('artifactory', None)  # type: Parser
+        parser.merge_valued = lambda x: x  # TODO: Убрать этот грубый хак :)
+        result = parser.get_usedby_aql({'package': 'packagename', 'version': '1.2.3'})
+        expect_result = {
+            '@dd.packagename.version': '1.2.3',
+            '@dd.packagename.operator': '=',
+        }
+        assert expect_result == result
+
+    def test_get_usedby_aql_none(self):
+        parser = self._parsers.get('common', None)  # type: Parser
+        result = parser.get_usedby_aql({})
+        assert result is None
+
+    def test_get_params_from_properties(self):
+        parser = self._parsers.get('artifactory', None)  # type: Parser
+        params = parser.get_params_from_properties({'deb.name': 'packagename', 'deb.version': '1.2.3'})
+        expect_params = {
+            'package': 'packagename',
+            'version': '1.2.3',
+            'qaverdict': ''
+        }
+        assert expect_params == params

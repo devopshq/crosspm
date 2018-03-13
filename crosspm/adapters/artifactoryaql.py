@@ -345,6 +345,8 @@ class Adapter(BaseAdapter):
                             },
                         }
                         _usedby_aql = parser.get_usedby_aql(_tmp_params)
+                        if _usedby_aql is None:
+                            continue
                         _aql_query_dict.update(_usedby_aql)
                         query = 'items.find({query_dict}).include("*", "property")'.format(
                             query_dict=json.dumps(_aql_query_dict))
@@ -372,12 +374,10 @@ class Adapter(BaseAdapter):
 
                             _params_raw = _params_found_raw.get(_repo_path, {})
                             params_found = {}
-                            params = {
-                                'package': _found_properties['deb.name'],
-                                'version': _found_properties['deb.version'],
-                                'qaverdict': '',
-                            }
-                            _package = Package(_found_properties['deb.name'], _repo_path, params, downloader, self,
+
+                            # TODO: Проставление params брать из config.yaml usedby
+                            params = parser.get_params_from_properties(_found_properties)
+                            _package = Package(params[self._config.name_column], _repo_path, params, downloader, self,
                                                parser,
                                                params_found, _params_raw)
                             _packages_found[str(_repo_path)] = _package

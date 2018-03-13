@@ -29,10 +29,17 @@ class Parser:
         self.init_rules_vars()
         if 'defaults' in data:
             self.init_defaults(data['defaults'])
-        if 'usedby' in data:
-            self._usedby = data['usedby']
+        self._usedby = data.get('usedby', None)
 
     def get_usedby_aql(self, params):
+        """
+        Возвращает запрос AQL (без репозитория), из файла конфигурации
+        :param params:
+        :return:
+        """
+        if self._usedby is None:
+            return None
+
         _result = {}
         params = self.merge_valued(params)
         for k, v in self._usedby['AQL'].items():
@@ -1006,3 +1013,8 @@ class Parser:
         if self._rules.get(rule_name, False):
             res = True
         return res
+
+    def get_params_from_properties(self, properties):
+        # Парсит свойства артефакта и выдаёт параметры
+        result = {y: properties.get(x, '') for x, y in self._usedby.get('property-parser', {}).items()}
+        return result
