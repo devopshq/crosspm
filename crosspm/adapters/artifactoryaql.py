@@ -65,7 +65,7 @@ class Adapter(BaseAdapter):
         _pkg_name_old = ""
         _packed_exist = False
         _packed_cache_params = None
-
+        self._log.info('parser: {}'.format(parser._name))
         for _paths in parser.get_paths(list_or_file_path, source):
 
             _packages = []
