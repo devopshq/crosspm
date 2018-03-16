@@ -6,6 +6,7 @@ import logging
 import os
 import re
 
+from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 
 
@@ -811,7 +812,11 @@ class Parser:
         return paths
 
     def iter_packages_params(self, list_or_file_path):
-        if isinstance(list_or_file_path, str):
+        if list_or_file_path.__class__ is DependenciesContent:
+            # Даёт возможность передать сразу контекнт файла, а не файл
+            for i, line in enumerate(list_or_file_path.splitlines()):
+                yield self.get_package_params(i, line)
+        elif isinstance(list_or_file_path, str):
             if not os.path.exists(list_or_file_path):
                 raise CrosspmException(
                     CROSSPM_ERRORCODE_FILE_DEPS_NOT_FOUND,

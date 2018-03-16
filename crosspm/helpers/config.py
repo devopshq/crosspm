@@ -4,6 +4,8 @@ import logging
 import json
 import platform
 import yaml
+
+from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
 from crosspm.helpers.source import Source
@@ -78,8 +80,12 @@ class Config:
 
         cpm_conf_name = ''
         if deps_path:
-            deps_path = deps_path.strip().strip('"').strip("'")
-            self.deps_path = os.path.realpath(os.path.expanduser(deps_path))
+            if deps_path.__class__ is DependenciesContent:
+                # HACK
+                self.deps_path = deps_path
+            else:
+                deps_path = deps_path.strip().strip('"').strip("'")
+                self.deps_path = os.path.realpath(os.path.expanduser(deps_path))
             if not cpm_conf_name:
                 cpm_conf_name = self.get_cpm_conf_name(deps_path)
             if os.path.isfile(deps_path):
@@ -90,8 +96,13 @@ class Config:
                 DEFAULT_CONFIG_PATH.append(config_path_tmp)
 
         if depslock_path:
-            depslock_path = depslock_path.strip().strip('"').strip("'")
-            self.depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
+            if depslock_path.__class__ is DependenciesContent:
+                # HACK
+                self.depslock_path = depslock_path
+            else:
+                depslock_path = depslock_path.strip().strip('"').strip("'")
+                self.depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
+
             if not cpm_conf_name:
                 cpm_conf_name = self.get_cpm_conf_name(depslock_path)
             if os.path.isfile(depslock_path):
