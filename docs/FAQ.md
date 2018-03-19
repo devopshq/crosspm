@@ -10,6 +10,7 @@
 - [Как вынести пароль из файла конфигурации?](#)
 - [Как сделать проверку что все используемые пакеты имеют одинаковую версию? Например, что все используют последнюю версию openssl?](#openssl)
 - [Хочу использовать кеш, но crosspm странно себя ведет - берет кеш пакета с другой версией?](#crosspm)
+- [Не хочу создавать dependencies-файл, хочу указать сразу в команде crosspm список пакетов](#content)
 
 Frequently Asked Questions
 ==========================
@@ -139,6 +140,22 @@ storage:
 packed: '{package}/{branch}/{version}/{compiler}/{arch}/{osname}/{package}.{version}.tar.gz'
 unpacked: '{package}/{branch}/{version}/{compiler}/{arch}/{osname}'
 ```
+
+<a class="mk-toclify" id="content"></a>
+## Не хочу создавать dependencies-файл, хочу указать сразу в команде crosspm список пакетов
+Для этого нужно запустить одну из команд:
+
+```bash
+# download - без указания --depslock-path
+crosspm download --config config.yaml --dependencies-lock-content "boost 1.64.388 1.64-pm-icu" -o os=win,cl=vc140,arch=x86_64
+
+# lock - БЕЗ указания файлов в начале. Создает по итогам файл dependencies.txt.lock
+crosspm lock --config config.yaml --dependencies-content "boost 1.64.388 1.64-pm-icu" -o os=win,cl=vc140,arch=x86_64
+
+# usedby - БЕЗ указания файлов в начале
+crosspm usedby -c config.yaml --dependencies-content "packagename 1.2.* master"
+```
+
 
 
 ----------------

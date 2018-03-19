@@ -22,9 +22,9 @@ Options:
     -c FILE, --config=FILE               Path to configuration file.
     -o OPTIONS, --options OPTIONS        Extra options.
     --deps-path=FILE                     Path to file with dependencies [./{deps_default}]
+    --depslock-path=FILE                 Path to file with locked dependencies [./{deps_lock_default}]
     --dependencies-content=CONTENT       Content for dependencies.txt file
     --dependencies-lock-content=CONTENT  Content for dependencies.txt.lock file
-    --depslock-path=FILE                 Path to file with locked dependencies [./{deps_lock_default}]
     --lock-on-success                    Save file with locked dependencies next to original one if download succeeds
     --out-format=TYPE                    Output data format. Available formats:({out_format}) [default: {out_format_default}]
     --output=FILE                        Output file name (required if --out_format is not stdout)
