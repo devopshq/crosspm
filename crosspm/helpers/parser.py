@@ -495,7 +495,7 @@ class Parser:
                                     _res = True
                                     break
                                 except Exception as e:
-                                    logging.error("Somethin wrong when parse '{}' in '{}'".format(_sym, _path))
+                                    logging.error("Something wrong when parse '{}' in '{}'".format(_sym, _path))
                                     logging.exception(e)
 
                         if not _res:
