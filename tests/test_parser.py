@@ -49,6 +49,8 @@ class TestParser(BaseParserTest):
           AQL:
             "@dd.{package}.version": "{version}"
             "@dd.{package}.operator": "="
+            "path":
+                "$match": "*vc140/x86_64/win*"
 
           property-parser:
             "deb.name": "package"
@@ -297,6 +299,8 @@ class TestParser(BaseParserTest):
         expect_result = {
             '@dd.packagename.version': '1.2.3',
             '@dd.packagename.operator': '=',
+            'path':
+                {'$match': '*win*'}
         }
         assert expect_result == result
 

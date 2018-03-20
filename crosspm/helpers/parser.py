@@ -45,8 +45,9 @@ class Parser:
         _result = {}
         params = self.merge_valued(params)
         for k, v in self._usedby['AQL'].items():
-            k = k.format(**params)
-            v = v.format(**params)
+            if isinstance(v, str):
+                k = k.format(**params)
+                v = v.format(**params)
             _result[k] = v
         return _result
 
