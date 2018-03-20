@@ -2,7 +2,6 @@
 import pytest
 import yaml
 
-from crosspm.helpers.config import Config
 from crosspm.helpers.parser import Parser
 
 
@@ -32,7 +31,7 @@ class BaseParserTest:
 
 
 class TestParser(BaseParserTest):
-    config = """
+    config = r"""
     parsers:
       common:
         columns:
@@ -55,6 +54,8 @@ class TestParser(BaseParserTest):
             "deb.name": "package"
             "deb.version": "version"
             "qaverdict": "qaverdict"
+            
+          path-parser: 'https://repo.example.com/artifactory/libs-cpp-release.snapshot/(?P<package>.*?)/(?P<branch>.*?)/(?P<version>.*?)/(?P<compiler>.*?)/(?P<arch>.*?)/(?P<osname>.*?)/.*.tar.gz'
     """
 
     @pytest.fixture(scope='class', autouse=True)
@@ -311,5 +312,19 @@ class TestParser(BaseParserTest):
             'package': 'packagename',
             'version': '1.2.3',
             'qaverdict': ''
+        }
+        assert expect_params == params
+
+    def test_get_params_from_path(self):
+        parser = self._parsers.get('artifactory', None)  # type: Parser
+        params = parser.get_params_from_path(
+            "https://repo.example.com/artifactory/libs-cpp-release.snapshot/zlib/1.2.8-pm/1.2.8.199/vc110/x86/win/zlib.1.2.8.199.tar.gz")
+        expect_params = {
+            'arch': 'x86',
+            'branch': '1.2.8-pm',
+            'compiler': 'vc110',
+            'osname': 'win',
+            'package': 'zlib',
+            'version': '1.2.8.199',
         }
         assert expect_params == params

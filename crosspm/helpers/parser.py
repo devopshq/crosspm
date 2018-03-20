@@ -1042,3 +1042,12 @@ class Parser:
         # Парсит свойства артефакта и выдаёт параметры
         result = {y: properties.get(x, '') for x, y in self._usedby.get('property-parser', {}).items()}
         return result
+
+    def get_params_from_path(self, path):
+        pattern = self._usedby.get('path-parser', None)
+        if pattern is None:
+            return {}
+        match = re.match(pattern, path)
+        if match is None:
+            return {}
+        return match.groupdict()

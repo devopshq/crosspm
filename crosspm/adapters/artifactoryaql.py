@@ -368,6 +368,7 @@ class Adapter(BaseAdapter):
 
                         # TODO: Проставление params брать из config.yaml usedby
                         params = parser.get_params_from_properties(_found_properties)
+                        params.update(parser.get_params_from_path(str(_repo_path)))
                         _package = Package(params[_pkg_name_col], _repo_path, params, downloader, self,
                                            parser,
                                            params_found, _params_raw)
