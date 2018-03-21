@@ -2,9 +2,11 @@
 import copy
 import fnmatch
 import itertools
+import logging
 import os
 import re
 
+from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 
 
@@ -19,13 +21,35 @@ class Parser:
         self._name = name
         self._sort = data.get('sort', [])
         self._index = data.get('index', -1)
-        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults']}
+
+        # Должно быть вида key: str_value
+        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults', 'usedby']}
+
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
         self._config = config
         self.init_rules_vars()
         if 'defaults' in data:
             self.init_defaults(data['defaults'])
+        self._usedby = data.get('usedby', None)
+
+    def get_usedby_aql(self, params):
+        """
+        Возвращает запрос AQL (без репозитория), из файла конфигурации
+        :param params:
+        :return:
+        """
+        if self._usedby is None:
+            return None
+
+        _result = {}
+        params = self.merge_valued(params)
+        for k, v in self._usedby['AQL'].items():
+            if isinstance(v, str):
+                k = k.format(**params)
+                v = v.format(**params)
+            _result[k] = v
+        return _result
 
     def get_vars(self):
         _vars = []
@@ -456,6 +480,24 @@ class Parser:
                                 _new_path += _atom
                                 _res = True
                                 break
+                            else:
+                                # HACK for * in path when more than one folder use
+                                # e.g.:
+                                # _sym = /pool/*/
+                                # _path = /pool/detects/e/filename.deb
+                                try:
+                                    re_str = fnmatch.translate(_sym)
+                                    # \/pool\/.*\/\Z(?ms) => \/pool\/.*\/
+                                    if re_str.endswith('\\Z(?ms)'):
+                                        re_str = re_str[:-7]
+                                    found_str = re.match(re_str, _path).group()
+                                    _path = _path[len(found_str):]
+                                    _new_path += found_str
+                                    _res = True
+                                    break
+                                except Exception as e:
+                                    logging.error("Something wrong when parse '{}' in '{}'".format(_sym, _path))
+                                    logging.exception(e)
 
                         if not _res:
                             return False, {}, {}
@@ -771,7 +813,11 @@ class Parser:
         return paths
 
     def iter_packages_params(self, list_or_file_path):
-        if isinstance(list_or_file_path, str):
+        if list_or_file_path.__class__ is DependenciesContent:
+            # Даёт возможность передать сразу контекнт файла, а не файл
+            for i, line in enumerate(list_or_file_path.splitlines()):
+                yield self.get_package_params(i, line)
+        elif isinstance(list_or_file_path, str):
             if not os.path.exists(list_or_file_path):
                 raise CrosspmException(
                     CROSSPM_ERRORCODE_FILE_DEPS_NOT_FOUND,
@@ -992,3 +1038,17 @@ class Parser:
         if self._rules.get(rule_name, False):
             res = True
         return res
+
+    def get_params_from_properties(self, properties):
+        # Парсит свойства артефакта и выдаёт параметры
+        result = {y: properties.get(x, '') for x, y in self._usedby.get('property-parser', {}).items()}
+        return result
+
+    def get_params_from_path(self, path):
+        pattern = self._usedby.get('path-parser', None)
+        if pattern is None:
+            return {}
+        match = re.match(pattern, path)
+        if match is None:
+            return {}
+        return match.groupdict()

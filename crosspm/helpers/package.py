@@ -10,6 +10,12 @@ from artifactory import ArtifactoryPath
 
 from crosspm.helpers.archive import Archive
 
+# import only for TypeHint
+try:
+    from crosspm.helpers.downloader import Downloader
+except ImportError:
+    pass
+
 
 class Package:
     def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, params_found_raw=None,
@@ -39,7 +45,7 @@ class Package:
         self._params = params
         self._adapter = adapter
         self._parser = parser
-        self._downloader = downloader
+        self._downloader = downloader  # type: Downloader
         self._in_cache = in_cache
 
         if params_found:
@@ -106,6 +112,22 @@ class Package:
         self._raw = [x for x in self._downloader.common_parser.iter_packages_params(depslock_file_path)]
         self.packages = self._downloader.get_dependency_packages({'raw': self._raw},
                                                                  property_validate=property_validate)
+
+    def find_usedby(self, depslock_file_path, property_validate=True):
+        """
+        Find all dependencies by package
+        :param depslock_file_path:
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :return:
+        """
+        if depslock_file_path is None:
+            self._raw = [self._params]
+            self._raw[0]['repo'] = None
+            self._raw[0]['server'] = None
+        else:
+            self._raw = [x for x in self._downloader.common_parser.iter_packages_params(depslock_file_path)]
+        self.packages = self._downloader.get_usedby_packages({'raw': self._raw},
+                                                             property_validate=property_validate)
 
     def unpack(self, force=False):
         if self._downloader.solid(self):

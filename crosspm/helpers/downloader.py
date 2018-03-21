@@ -3,7 +3,8 @@ import logging
 import os
 from collections import OrderedDict, defaultdict
 
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME
+from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME, Config
+from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.package import Package
 from crosspm.helpers.parser import Parser
@@ -22,7 +23,7 @@ class Command(object):
 class Downloader(Command):
     def __init__(self, config, do_load):
         self._log = logging.getLogger('crosspm')
-        self._config = config
+        self._config = config  # type: Config
         self.cache = config.cache
         self.solid = config.solid
         self.common_parser = Parser('common', {}, config)
@@ -32,14 +33,25 @@ class Downloader(Command):
         if not config.deps_path:
             config.deps_path = \
                 config.deps_file_name if config.deps_file_name else CROSSPM_DEPENDENCY_FILENAME
-        deps_path = config.deps_path.strip().strip('"').strip("'")
-        self._deps_path = os.path.realpath(os.path.expanduser(deps_path))
+        deps_path = config.deps_path
+        if deps_path.__class__ is DependenciesContent:
+            # HACK
+            pass
+            self._deps_path = deps_path
+        else:
+            deps_path = config.deps_path.strip().strip('"').strip("'")
+            self._deps_path = os.path.realpath(os.path.expanduser(deps_path))
 
         if not config.depslock_path:
             config.depslock_path = \
                 config.deps_lock_file_name if config.deps_lock_file_name else CROSSPM_DEPENDENCY_LOCK_FILENAME
-        depslock_path = config.depslock_path.strip().strip('"').strip("'")
-        self._depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
+        depslock_path = config.depslock_path
+        if depslock_path.__class__ is DependenciesContent:
+            # HACK
+            self._depslock_path = depslock_path
+        else:
+            depslock_path = depslock_path.strip().strip('"').strip("'")
+            self._depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
 
         self.do_load = do_load
 
@@ -77,11 +89,46 @@ class Downloader(Command):
 
         return _packages
 
+    def get_usedby_packages(self, list_or_file_path=None, property_validate=True):
+        """
+
+        :param list_or_file_path:
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :return:
+        """
+        if list_or_file_path is None:
+            list_or_file_path = self._depslock_path
+            if not os.path.isfile(list_or_file_path):
+                list_or_file_path = self._deps_path
+
+        _packages = OrderedDict()
+        if isinstance(list_or_file_path, str):
+            self._log.info('Reading dependencies ... [%s]', list_or_file_path)
+        for i, _src in enumerate(self._config.sources()):
+            if i > 0:
+                self._log.info('')
+                self._log.info('Next source ...')
+            _found_packages = _src.get_usedby(self, list_or_file_path, property_validate)
+            _packages.update(
+                OrderedDict([(k, v) for k, v in _found_packages.items() if _packages.get(k, None) is None]))
+            if not self._config.no_fails:
+                if isinstance(list_or_file_path, (list, tuple)):
+                    list_or_file_path = [x for x in list_or_file_path if
+                                         _packages.get(x[self._config.name_column], None) is None]
+                elif isinstance(list_or_file_path, dict) and isinstance(list_or_file_path.get('raw', None), list):
+                    list_or_file_path['raw'] = [x for x in list_or_file_path['raw'] if
+                                                _packages.get(x[self._config.name_column], None) is None]
+
+        return _packages
+
     # Download packages or just unpack already loaded (it's up to adapter to decide)
     def download_packages(self, depslock_file_path=None):
         if depslock_file_path is None:
             depslock_file_path = self._depslock_path
-        if isinstance(depslock_file_path, str):
+        if depslock_file_path.__class__ is DependenciesContent:
+            # HACK для возможности проставления контента файла, а не пути
+            pass
+        elif isinstance(depslock_file_path, str):
             if not os.path.isfile(depslock_file_path):
                 depslock_file_path = self._deps_path
 
@@ -108,7 +155,7 @@ class Downloader(Command):
                 depslock_path = os.path.realpath(
                     os.path.join(os.path.dirname(depslock_file_path), self._config.deps_lock_file_name))
                 Locker(self._config, do_load=self.do_load).lock_packages(depslock_file_path, depslock_path,
-                                                   packages=self._root_package.packages)
+                                                                         packages=self._root_package.packages)
 
         return self._root_package.all_packages
 

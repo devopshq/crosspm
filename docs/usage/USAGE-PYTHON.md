@@ -6,7 +6,14 @@ You can use CrossPM in python-code:
 from crosspm import CrossPM
 config_name = 'myconfig.yaml'
 dependencies = 'dependencies.txt.lock'
+
+# Если у вас есть уже подготовленный файл dependencies.txt.lock
 argv = 'download -c "{}" --depslock-path="{}" --no-fails'.format(config_name, dependencies)
+
+# Если нужно указать зависимости сразу в коде
+# dependencies = "packagename 1.2.123 master"
+# argv = 'download -c "{}" --dependencies-lock-content="{}" --no-fails'.format(config_name, dependencies)
+
 
 # run download and get result
 # crosspm_raw_packages - LIST of all downloaded packages (with duplicate)

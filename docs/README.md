@@ -74,23 +74,27 @@ You'll see something like this:
       crosspm -h | --help
       crosspm --version
 
-  Options:
-      <OUT>                           Output file.
-      <SOURCE>                        Source directory path.
-      -h, --help                      Show this screen.
-      --version                       Show version.
-      -L, --list                      Do not load packages and its dependencies. Just show what's found.
-      -v LEVEL, --verbose=LEVEL       Set output verbosity: (critical, error, warning, info, debug) [default: ].
-      -l LOGFILE, --log=LOGFILE       File name for log output. Log level is 'info' if set when verbose doesn't.
-      -c FILE, --config=FILE          Path to configuration file.
-      -o OPTIONS, --options OPTIONS   Extra options.
-      --deps-path=FILE                Path to file with dependencies [./dependencies.txt]
-      --depslock-path=FILE            Path to file with locked dependencies [./dependencies.txt.lock]
-      --lock-on-success               Save file with locked dependencies next to original one if download succeeds
-      --out-format=TYPE               Output data format. Available formats:(['stdout', 'cmd', 'python', 'shell', 'json']) [default: stdout]
-      --output=FILE                   Output file name (required if --out_format is not stdout)
-      --no-fails                      Ignore fails config if possible.
-      --recursive                     Process all packages recursively to find and lock all dependencies
+  options:
+      <OUT>                                Output file.
+      <SOURCE>                             Source directory path.
+      -h, --help                           Show this screen.
+      --version                            Show version.
+      -L, --list                           Do not load packages and its dependencies. Just show what's found.
+      -v LEVEL, --verbose=LEVEL            Set output verbosity: ({verb_level}) [default: ].
+      -l LOGFILE, --log=LOGFILE            File name for log output. Log level is '{log_default}' if set when verbose doesn't.
+      -c FILE, --config=FILE               Path to configuration file.
+      -o OPTIONS, --options OPTIONS        Extra options.
+      --deps-path=FILE                     Path to file with dependencies [./{deps_default}]
+      --depslock-path=FILE                 Path to file with locked dependencies [./{deps_lock_default}]
+      --dependencies-content=CONTENT       Content for dependencies.txt file
+      --dependencies-lock-content=CONTENT  Content for dependencies.txt.lock file
+      --lock-on-success                    Save file with locked dependencies next to original one if download succeeds
+      --out-format=TYPE                    Output data format. Available formats:({out_format}) [default: {out_format_default}]
+      --output=FILE                        Output file name (required if --out_format is not stdout)
+      --output-template=FILE               Template path, e.g. nuget.packages.config.j2 (required if --out_format=jinja)
+      --no-fails                           Ignore fails config if possible.
+      --recursive                          Process all packages recursively to find and lock all dependencies
+      --prefer-local                       Do not search package if exist in cache
 ```
 
 Other pages
@@ -98,6 +102,7 @@ Other pages
 - [Usage (RU)](usage/USAGE)
     - [CrossPM in Python as module](usage/USAGE-PYTHON)
     - [CrossPM in Cmake](usage/USAGE-CMAKE)
+    - [CrossPM used by (RU)](usage/USAGE-USEDBY)
 - [CrossPM Config](config/CONFIG)
     - [Path to package (RU)](config/config-path)
     - [Import (RU)](config/IMPORT)

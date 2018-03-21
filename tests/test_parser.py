@@ -31,7 +31,7 @@ class BaseParserTest:
 
 
 class TestParser(BaseParserTest):
-    config = """
+    config = r"""
     parsers:
       common:
         columns:
@@ -40,10 +40,24 @@ class TestParser(BaseParserTest):
           - version
           - '*'
         index: -1
+        
 
       artifactory:
         path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
         properties: ""
+        usedby:
+          AQL:
+            "@dd.{package}.version": "{version}"
+            "@dd.{package}.operator": "="
+            "path":
+                "$match": "*vc140/x86_64/win*"
+
+          property-parser:
+            "deb.name": "package"
+            "deb.version": "version"
+            "qaverdict": "qaverdict"
+            
+          path-parser: 'https://repo.example.com/artifactory/libs-cpp-release.snapshot/(?P<package>.*?)/(?P<branch>.*?)/(?P<version>.*?)/(?P<compiler>.*?)/(?P<arch>.*?)/(?P<osname>.*?)/.*.tar.gz'
     """
 
     @pytest.fixture(scope='class', autouse=True)
@@ -277,3 +291,44 @@ class TestParser(BaseParserTest):
 
         for res in expected_result:
             assert res in result, "Result contain LESS element then expected"
+
+    def test_get_usedby_aql(self):
+        parser = self._parsers.get('artifactory', None)  # type: Parser
+        parser.merge_valued = lambda x: x  # TODO: Убрать этот грубый хак :)
+        result = parser.get_usedby_aql({'package': 'packagename', 'version': '1.2.3'})
+        expect_result = {
+            '@dd.packagename.version': '1.2.3',
+            '@dd.packagename.operator': '=',
+            'path':
+                {'$match': '*vc140/x86_64/win*'}
+        }
+        assert expect_result == result
+
+    def test_get_usedby_aql_none(self):
+        parser = self._parsers.get('common', None)  # type: Parser
+        result = parser.get_usedby_aql({})
+        assert result is None
+
+    def test_get_params_from_properties(self):
+        parser = self._parsers.get('artifactory', None)  # type: Parser
+        params = parser.get_params_from_properties({'deb.name': 'packagename', 'deb.version': '1.2.3'})
+        expect_params = {
+            'package': 'packagename',
+            'version': '1.2.3',
+            'qaverdict': ''
+        }
+        assert expect_params == params
+
+    def test_get_params_from_path(self):
+        parser = self._parsers.get('artifactory', None)  # type: Parser
+        params = parser.get_params_from_path(
+            "https://repo.example.com/artifactory/libs-cpp-release.snapshot/zlib/1.2.8-pm/1.2.8.199/vc110/x86/win/zlib.1.2.8.199.tar.gz")
+        expect_params = {
+            'arch': 'x86',
+            'branch': '1.2.8-pm',
+            'compiler': 'vc110',
+            'osname': 'win',
+            'package': 'zlib',
+            'version': '1.2.8.199',
+        }
+        assert expect_params == params
