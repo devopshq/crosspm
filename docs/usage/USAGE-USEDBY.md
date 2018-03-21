@@ -16,6 +16,8 @@ parsers:
         "deb.version": "version"
         "qaverdict": "qaverdict"
 
+      path-parser: 'https://(?P<server>.*?)/artifactory/(?P<repo>.*?)/(?P<package>.*?)/(?P<branch>.*?)/(?P<version>.*?)/(?P<compiler>.*?)/(?P<arch>.*?)/(?P<osname>.*?)/.*.tar.gz'
+
   # может быть и в секции конкретного parser
   artifactory:
     usedby: ...
@@ -59,6 +61,36 @@ dd.package31.version: 31.0.1
 dd.package31.operator: =
 dd.package32.version: 32.0.2
 dd.package32.operator: =
+```
+
+Теперь, если мы находит баг в пакете `package31`, мы делаем поиск (смотри выше пример cli-запуска)
+```bash
+>> cat dependencies.txt
+# package version
+package31 31.0.1
+
+# Примерный вывод в stdout
+>> crosspm usedby
+Dependencies tree:
+- <root>
+  - package3   3.0.3
+    - package1  1.0.1
+```
+
+## Пример поиска tar-gz crosspm package
+Допустим, у нас есть пакеты, с примерной иерархией зависимостей (с помощью файлов `dependencies.txt.lock`, но проставление свойств должно быть реализовано сторонним инструментом)
+```
+package1 1.0.1
+  - package2 2.0.2
+  - package3 3.0.3
+    - package31 31.0.1
+    - package32 32.0.2
+```
+
+Мы проставляем при загрузке в артифакторий дополнительные свойства, по формату (пример для `package3`)
+```
+ud.package31.version: 31.0.1
+ud.package32.version: 32.0.2
 ```
 
 Теперь, если мы находит баг в пакете `package31`, мы делаем поиск (смотри выше пример cli-запуска)

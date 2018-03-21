@@ -300,7 +300,7 @@ class TestParser(BaseParserTest):
             '@dd.packagename.version': '1.2.3',
             '@dd.packagename.operator': '=',
             'path':
-                {'$match': '*win*'}
+                {'$match': '*vc140/x86_64/win*'}
         }
         assert expect_result == result
 
