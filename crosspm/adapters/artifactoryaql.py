@@ -121,6 +121,9 @@ class Adapter(BaseAdapter):
                                 "$match": _file_name_pattern,
                             },
                         }
+                        # Remove path if is empty string
+                        if not _aql_path_pattern:
+                            _aql_query_dict.pop('path')
                         query = 'items.find({query_dict}).include("*", "property")'.format(
                             query_dict=json.dumps(_aql_query_dict))
                         session.auth = _art_auth_etc['auth']

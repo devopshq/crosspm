@@ -486,15 +486,16 @@ class Parser:
                                 # _sym = /pool/*/
                                 # _path = /pool/detects/e/filename.deb
                                 try:
-                                    re_str = fnmatch.translate(_sym)
-                                    # \/pool\/.*\/\Z(?ms) => \/pool\/.*\/
-                                    if re_str.endswith('\\Z(?ms)'):
-                                        re_str = re_str[:-7]
-                                    found_str = re.match(re_str, _path).group()
-                                    _path = _path[len(found_str):]
-                                    _new_path += found_str
-                                    _res = True
-                                    break
+                                    if '*' in _sym:
+                                        re_str = fnmatch.translate(_sym)
+                                        # \/pool\/.*\/\Z(?ms) => \/pool\/.*\/
+                                        if re_str.endswith('\\Z(?ms)'):
+                                            re_str = re_str[:-7]
+                                        found_str = re.match(re_str, _path).group()
+                                        _path = _path[len(found_str):]
+                                        _new_path += found_str
+                                        _res = True
+                                        break
                                 except Exception as e:
                                     logging.error("Something wrong when parse '{}' in '{}'".format(_sym, _path))
                                     logging.exception(e)
