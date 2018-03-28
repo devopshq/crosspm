@@ -33,21 +33,30 @@ class Adapter(BaseAdapter):
         if 'auth' in source.args:
             _auth = source.args['auth']
 
+            # First Step checking creds
             if isinstance(_auth, str):
                if ':' in _auth:
                    _auth = _auth.split(':')
                elif _auth.startswith('$'):
-                   print('Found')
+                   for el in list_or_file_path:
+                        _auth = list_or_file_path[el][0][_auth[1:]]
+                        if ':' in _auth:
+                            _auth = _auth.split(':')
+                        else:
+                            msg = 'Wrong format of creditals '
+
+            # Second step check creds
+
+
 
             # I don't know why whey here, but only creds are here. Some kind of mystic
             options = downloader._config._options
+
+            # Remove all creds from list_or_file_path - to not show it
             for opt in options:
                 print(opt)
-
-
-
-
-            print(_auth)
+                for el in list_or_file_path:
+                    del list_or_file_path[el][0][opt]
 
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
