@@ -31,6 +31,24 @@ class Adapter(BaseAdapter):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
         _art_auth_etc = {}
         if 'auth' in source.args:
+            _auth = source.args['auth']
+
+            if isinstance(_auth, str):
+               if ':' in _auth:
+                   _auth = _auth.split(':')
+               elif _auth.startswith('$'):
+                   print('Found')
+
+            # I don't know why whey here, but only creds are here. Some kind of mystic
+            options = downloader._config._options
+            for opt in options:
+                print(opt)
+
+
+
+
+            print(_auth)
+
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
                 session.auth = _art_auth_etc['auth']
