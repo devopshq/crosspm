@@ -75,6 +75,7 @@ class Config:
         self.depslock_path = ''
         self.cache_config = {}
         self.init_env_config_path()
+        self.secret_creds=[]
 
         cpm_conf_name = ''
         if deps_path:
