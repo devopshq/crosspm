@@ -92,6 +92,7 @@ class Adapter(BaseAdapter):
             _art_auth_etc['verify'] = False
 
         _pkg_name_col = self._config.name_column
+        _secret_creds = self._config.secret_creds
         _packages_found = OrderedDict()
         _pkg_name_old = ""
         _packed_exist = False
@@ -109,7 +110,10 @@ class Adapter(BaseAdapter):
                 self._log.info(
                     '{}: {}'.format(_pkg_name,
                                     {k: v for k, v in _paths['params'].items() if
-                                     k not in (_pkg_name_col, 'repo')}))
+                                     (k not in (_pkg_name_col, 'repo') and k not in _secret_creds)
+                                     }
+                                    )
+                )
             for _sub_paths in _paths['paths']:
                 _tmp_params = dict(_paths['params'])
                 self._log.info('repo: {}'.format(_sub_paths['repo']))

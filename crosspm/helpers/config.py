@@ -123,6 +123,11 @@ class Config:
         else:
             config_data.update(self.read_config_file())
 
+        # Add secret creds to special list in config
+        for line in config_data['options']:
+            if 'secret' in config_data['options'][line] and config_data['options'][line]['secret']:
+                self.secret_creds.append(line)
+
         self.no_fails = no_fails
         self.parse_config(config_data, cmdline)
         self.cache = Cache(self, self.cache_config)
