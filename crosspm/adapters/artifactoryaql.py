@@ -63,15 +63,6 @@ class Adapter(BaseAdapter):
                                 raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
                 source.args['auth'] = _auth
 
-            # I don't know why whey here, but only creds are here. Some kind of mystic
-            options = downloader._config._options
-            print(options)
-            # Remove all creds from list_or_file_path - to not show it
-            #for opt in options:
-            #    for el in list_or_file_path:
-            #        del list_or_file_path[el][0][opt]
-
-
 
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
