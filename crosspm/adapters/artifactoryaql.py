@@ -35,28 +35,43 @@ class Adapter(BaseAdapter):
 
             # First Step checking creds
             if isinstance(_auth, str):
-               if ':' in _auth:
-                   _auth = _auth.split(':')
-               elif _auth.startswith('$'):
-                   for el in list_or_file_path:
-                        _auth = list_or_file_path[el][0][_auth[1:]]
+                if ':' in _auth:
+                    _auth = _auth.split(':')
+                elif _auth.startswith('$'):
+                    for el in list_or_file_path:
+                        try:
+                            _auth = list_or_file_path[el][0][_auth[1:]]
+                        except:
+                            msg = 'Cred {_auth} not found in options'.format(**locals())
+                            raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+
                         if ':' in _auth:
                             _auth = _auth.split(':')
                         else:
-                            msg = 'Wrong format of creditals '
+                            msg = 'Wrong format of oneline credentials. Use user:password'
+                            raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
 
             # Second step check creds
-
-
+            if isinstance(_auth, list):
+                for i in range(len(_auth)):
+                    if _auth[i].startswith('$'):
+                        for el in list_or_file_path:
+                            try:
+                                _auth[i] = list_or_file_path[el][0][_auth[i][1:]]
+                            except:
+                                msg = 'Cred {_auth[i]} not found in options'.format(**locals())
+                                raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+                source.args['auth'] = _auth
 
             # I don't know why whey here, but only creds are here. Some kind of mystic
             options = downloader._config._options
-
+            print(options)
             # Remove all creds from list_or_file_path - to not show it
-            for opt in options:
-                print(opt)
-                for el in list_or_file_path:
-                    del list_or_file_path[el][0][opt]
+            #for opt in options:
+            #    for el in list_or_file_path:
+            #        del list_or_file_path[el][0][opt]
+
+
 
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
