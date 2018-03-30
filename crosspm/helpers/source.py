@@ -10,16 +10,7 @@ class Source:
             data['repo'] = ''
         if isinstance(data['repo'], str):
             data['repo'] = [data['repo']]
-
-        cmdline = self._adapter._config.cmdline
-
-        options = self._adapter._config._options
-
-
-
         self.args = {k: v for k, v in data.items() if k not in ['type', 'parser']}
-
-
 
     def get_packages(self, downloader, list_or_file_path):
         return self._adapter.get_packages(self, self._parser, downloader, list_or_file_path)
