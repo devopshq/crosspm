@@ -61,8 +61,8 @@ class Adapter(BaseAdapter):
                             except:
                                 msg = 'Cred {_auth[i]} not found in options'.format(**locals())
                                 raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
-                source.args['auth'] = _auth
 
+            source.args['auth'] = _auth
 
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
