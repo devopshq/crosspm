@@ -76,6 +76,7 @@ class Config:
         self.cache_config = {}
         self.init_env_config_path()
         self.secret_creds=[]
+        self.cmdline = cmdline
 
         cpm_conf_name = ''
         if deps_path:

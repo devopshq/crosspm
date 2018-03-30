@@ -31,9 +31,9 @@ class Adapter(BaseAdapter):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
         _art_auth_etc = {}
         if 'auth' in source.args:
-            _auth = source.args['auth']
 
             # First Step checking creds
+            _auth = source.args['auth']
             if isinstance(_auth, str):
                 if ':' in _auth:
                     _auth = _auth.split(':')
