@@ -24,6 +24,38 @@ class Adapter(BaseAdapter):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
         _art_auth = {}
         if 'auth' in source.args:
+
+            # First Step checking creds
+            _auth = source.args['auth']
+            if isinstance(_auth, str):
+                if ':' in _auth:
+                    _auth = _auth.split(':')
+                elif _auth.startswith('$'):
+                    for el in list_or_file_path:
+                        try:
+                            _auth = list_or_file_path[el][0][_auth[1:]]
+                        except:
+                            msg = 'Cred {_auth} not found in options'.format(**locals())
+                            raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+
+                        if ':' in _auth:
+                            _auth = _auth.split(':')
+                        else:
+                            msg = 'Wrong format of oneline credentials. Use user:password'
+                            raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+
+            # Second step check creds
+            if isinstance(_auth, list):
+                for i in range(len(_auth)):
+                    if _auth[i].startswith('$'):
+                        for el in list_or_file_path:
+                            try:
+                                _auth[i] = list_or_file_path[el][0][_auth[i][1:]]
+                            except:
+                                msg = 'Cred {_auth[i]} not found in options'.format(**locals())
+                                raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+            source.args['auth'] = _auth
+
             if _auth_type == 'simple':
                 _art_auth['auth'] = tuple(source.args['auth'])
             elif _auth_type == 'cert':
@@ -34,6 +66,7 @@ class Adapter(BaseAdapter):
         _pkg_name_col = self._config.name_column
         _packages_found = {}
         _pkg_name_old = ""
+        _secret_creds = self._config.secret_creds
         for _paths in parser.get_paths(list_or_file_path, source):
             _packages = []
             _params_found = {}
@@ -45,7 +78,10 @@ class Adapter(BaseAdapter):
                 self._log.info(
                     '{}: {}'.format(_pkg_name,
                                     {k: v for k, v in _paths['params'].items() if
-                                     k not in (_pkg_name_col, 'repo')}))
+                                     (k not in (_pkg_name_col, 'repo') and k not in _secret_creds)
+                                     }
+                                    )
+                )
             for _sub_paths in _paths['paths']:
                 self._log.info('repo: {}'.format(_sub_paths['repo']))
                 for _path in _sub_paths['paths']:
@@ -98,6 +134,8 @@ class Adapter(BaseAdapter):
                                 if last_error != msg:
                                     self._log.error(msg)
                                 last_error = msg
+                    except AttributeError as err2:
+                        msg = 'Error: {err2}'.format(**locals())
 
             _package = None
             if _packages:
