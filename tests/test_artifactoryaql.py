@@ -467,3 +467,53 @@ sources:
 
     assert cpm._config._sources[0].args['auth'] == [user1, password1]
     assert cpm._config._sources[1].args['auth'] == [user2, password2]
+
+
+def test_two_Repo_cmd_usedby():
+    with open("dependencies.txt.lock", 'w') as depF:
+        depF.write('boost * 1.64-pm-icu')
+
+    with open("dependencies.txt", 'w') as depF:
+        depF.write('boost * 1.64-pm-icu')
+
+    Config = """
+common:
+  server: https://repo.example.com/artifactory
+  parser: artifactory
+  type: jfrog-artifactory-aql
+  auth_type: simple
+
+sources:
+  - repo:
+      - first-repo.snapshot
+    auth: 
+        - $user1
+        - $password1         
+  - repo:
+      - second-repo.snapshot
+    auth: 
+        - $user2
+        - $password2    
+
+        """
+    testConfig = MainConfig + Config
+    with open("config.yaml", 'w') as conF:
+        conF.write(testConfig)
+    user1 = 'cmd_user1'
+    password1 = 'cmd_password1'
+    user2 = 'cmd_user2'
+    password2 = 'cmd_password2'
+    if os.path.isfile(os.path.join(os.getcwd(), 'config.yaml')):
+        configFile = os.path.join(os.getcwd(), 'config.yaml')
+    else:
+        print('Noooooo')
+
+    dep = 'dependencies.txt.lock'
+
+    argv = 'usedby --config="{configFile}" --depslock-path="{dep}" -o user1={user1},password1={password1},' \
+           'user2={user2},password2={password2}'.format(**locals())
+    cpm = CrossPM(argv, return_result='raw')
+    cpm.run()
+
+    assert cpm._config._sources[0].args['auth'] == [user1, password1]
+    assert cpm._config._sources[1].args['auth'] == [user2, password2]
