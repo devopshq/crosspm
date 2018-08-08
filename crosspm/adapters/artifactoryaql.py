@@ -42,6 +42,38 @@ class Adapter(BaseAdapter):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
         _art_auth_etc = {}
         if 'auth' in source.args:
+
+            # First Step checking creds
+            _auth = source.args['auth']
+            if isinstance(_auth, str):
+                if ':' in _auth:
+                    _auth = _auth.split(':')
+                elif _auth.startswith('$'):
+                    for el in list_or_file_path:
+                        try:
+                            _auth = list_or_file_path[el][0][_auth[1:]]
+                        except:
+                            msg = 'Cred {_auth} not found in options'.format(**locals())
+                            raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+
+                        if ':' in _auth:
+                            _auth = _auth.split(':')
+                        else:
+                            msg = 'Wrong format of oneline credentials. Use user:password'
+                            raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+
+            # Second step check creds
+            if isinstance(_auth, list):
+                for i in range(len(_auth)):
+                    if _auth[i].startswith('$'):
+                        for el in list_or_file_path:
+                            try:
+                                _auth[i] = list_or_file_path[el][0][_auth[i][1:]]
+                            except:
+                                msg = 'Cred {_auth[i]} not found in options'.format(**locals())
+                                raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+            source.args['auth'] = _auth
+
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
                 session.auth = _art_auth_etc['auth']
@@ -61,6 +93,7 @@ class Adapter(BaseAdapter):
             _art_auth_etc['verify'] = False
 
         _pkg_name_column = self._config.name_column
+        _secret_creds = self._config.secret_creds
         _packages_found = OrderedDict()
         _pkg_name_old = ""
         _packed_exist = False
@@ -78,7 +111,10 @@ class Adapter(BaseAdapter):
                 self._log.info(
                     '{}: {}'.format(_pkg_name,
                                     {k: v for k, v in _paths['params'].items() if
-                                     k not in (_pkg_name_column, 'repo')}))
+                                     (k not in (_pkg_name_column, 'repo') and k not in _secret_creds)
+                                     }
+                                    )
+                )
             for _sub_paths in _paths['paths']:
                 _tmp_params = dict(_paths['params'])
                 self._log.info('repo: {}'.format(_sub_paths['repo']))
@@ -127,8 +163,12 @@ class Adapter(BaseAdapter):
                         query = 'items.find({query_dict}).include("*", "property")'.format(
                             query_dict=json.dumps(_aql_query_dict))
                         session.auth = _art_auth_etc['auth']
-                        r = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
-                        r.raise_for_status()
+                        try:
+                            r = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
+                            r.raise_for_status()
+                        except:
+                            self._log.info('Could not connect to repo: {}'.format(_aql_query_url))
+                            break
 
                         _found_paths = r.json()
                         for _found in _found_paths['results']:
@@ -289,6 +329,38 @@ class Adapter(BaseAdapter):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
         _art_auth_etc = {}
         if 'auth' in source.args:
+
+            # First Step checking creds
+            _auth = source.args['auth']
+            if isinstance(_auth, str):
+                if ':' in _auth:
+                    _auth = _auth.split(':')
+                elif _auth.startswith('$'):
+                    for el in list_or_file_path:
+                        try:
+                            _auth = list_or_file_path[el][0][_auth[1:]]
+                        except:
+                            msg = 'Cred {_auth} not found in options'.format(**locals())
+                            raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+
+                        if ':' in _auth:
+                            _auth = _auth.split(':')
+                        else:
+                            msg = 'Wrong format of oneline credentials. Use user:password'
+                            raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+
+            # Second step check creds
+            if isinstance(_auth, list):
+                for i in range(len(_auth)):
+                    if _auth[i].startswith('$'):
+                        for el in list_or_file_path:
+                            try:
+                                _auth[i] = list_or_file_path[el][0][_auth[i][1:]]
+                            except:
+                                msg = 'Cred {_auth[i]} not found in options'.format(**locals())
+                                raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
+            source.args['auth'] = _auth
+
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
                 session.auth = _art_auth_etc['auth']
@@ -307,6 +379,7 @@ class Adapter(BaseAdapter):
         else:
             _art_auth_etc['verify'] = False
 
+        _secret_creds = self._config.secret_creds
         _pkg_name_col = self._config.name_column
         _packages_found = OrderedDict()
         _pkg_name_old = ""
@@ -322,7 +395,10 @@ class Adapter(BaseAdapter):
                 self._log.info(
                     '{}: {}'.format(_pkg_name,
                                     {k: v for k, v in _paths['params'].items() if
-                                     k not in (_pkg_name_col, 'repo')}))
+                                     (k not in (_pkg_name_col, 'repo') and k not in _secret_creds)
+                                     }
+                                    )
+                )
             for _sub_paths in _paths['paths']:
                 _tmp_params = dict(_paths['params'])
                 self._log.info('repo: {}'.format(_sub_paths['repo']))
