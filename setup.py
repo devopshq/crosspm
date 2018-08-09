@@ -123,7 +123,7 @@ setup(
         'requests',
         'docopt',
         'pyyaml',
-        'dohq-artifactory>=0.2.62',
+        'dohq-artifactory',
         'jinja2',
         'patool',  # need for pyunpack
         'pyunpack',
