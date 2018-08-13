@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# (c) Positive Technologies, 2018.
 
 from crosspm import CrossPM
 

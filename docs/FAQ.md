@@ -158,11 +158,11 @@ crosspm usedby -c config.yaml --dependencies-content "packagename 1.2.* master"
 ```
 
 <a class="mk-toclify" id="creds"></a>
-##Как просто и безопасно передавать учётные данные в рамках crosspm. 
+## Как просто и безопасно передавать учётные данные в рамках crosspm. 
 
 Для этого нужно задать переменные в конфигурационном файле. 
 
-Подробнее можно [почитать тут](usage/USEGE-CREDS.md)
+Подробнее можно [почитать тут](usage/USAGE-CREDS.md)
 
 
 ##
