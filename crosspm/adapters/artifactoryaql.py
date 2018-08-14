@@ -42,7 +42,7 @@ class Adapter(BaseAdapter):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
         _art_auth_etc = {}
         if 'auth' in source.args:
-            self._search_auth(list_or_file_path, source)
+            self.search_auth(list_or_file_path, source)
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
                 session.auth = _art_auth_etc['auth']
@@ -272,7 +272,7 @@ class Adapter(BaseAdapter):
 
         return _packages_found
 
-    def _search_auth(self, list_or_file_path, source):
+    def search_auth(self, list_or_file_path, source):
         """
         Looking for auth in env, cmdline, str
         :param list_or_file_path:
@@ -284,27 +284,27 @@ class Adapter(BaseAdapter):
                 _auth = _auth.split(':')
             elif _auth.endswith('}') and (
                     _auth.startswith('{') or ':' in _auth):  # {auth}, {user}:{password}, user:{password}
-                _auth = self._get_auth(list_or_file_path, _auth)
-                _auth = self._split_auth(_auth)
+                _auth = self.get_auth(list_or_file_path, _auth)
+                _auth = self.split_auth(_auth)
 
         if isinstance(_auth, list):
             for i in range(len(_auth)):
                 if _auth[i].endswith('}') and (
                         _auth[i].startswith('{') or ':' in _auth[i]):  # {auth}, {user}:{password}, user:{password}
-                    _auth[i] = self._get_auth(list_or_file_path, _auth[i])
+                    _auth[i] = self.get_auth(list_or_file_path, _auth[i])
                     if ':' in _auth[i]:
-                        _auth = self._split_auth(_auth[i])
+                        _auth = self.split_auth(_auth[i])
 
         source.args['auth'] = _auth
 
-    def _get_auth(self, list_or_file_path, _auth):
+    def get_auth(self, list_or_file_path, _auth):
         try:
             return list_or_file_path['raw'][0][_auth[1:-1]]
         except:
             msg = 'Cred {_auth} not found in options'.format(**locals())
             raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
 
-    def _split_auth(self, _auth):
+    def split_auth(self, _auth):
         if ':' in _auth:
             return _auth.split(':')
         else:
@@ -337,7 +337,7 @@ class Adapter(BaseAdapter):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
         _art_auth_etc = {}
         if 'auth' in source.args:
-            self._search_auth(list_or_file_path, source)
+            self.search_auth(list_or_file_path, source)
             if _auth_type == 'simple':
                 _art_auth_etc['auth'] = HTTPBasicAuth(*tuple(source.args['auth']))
                 session.auth = _art_auth_etc['auth']

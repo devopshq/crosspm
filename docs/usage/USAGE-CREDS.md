@@ -85,7 +85,7 @@ sources:
     auth: 
         - '{user2}:{password2}'
     auth: 
-        - 'user:{password2}'
+        - 'user:{password}'
   - repo:
       - third-repo.snapshot
     auth: 
