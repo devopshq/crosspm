@@ -77,6 +77,7 @@ class Config:
         self.depslock_path = ''
         self.cache_config = {}
         self.init_env_config_path()
+        self.secret_variables = []
 
         cpm_conf_name = ''
         if deps_path:
@@ -132,6 +133,11 @@ class Config:
             self._log.debug('Overriding config file values with global config.')
         else:
             config_data.update(self.read_config_file())
+
+        # Add secret variables to special list in config
+        for name, value in config_data['options'].items():
+            if value.get('secret'):
+                self.secret_variables.append(name)
 
         self.no_fails = no_fails
         self.parse_config(config_data, cmdline)
