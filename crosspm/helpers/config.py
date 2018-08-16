@@ -135,9 +135,9 @@ class Config:
             config_data.update(self.read_config_file())
 
         # Add secret variables to special list in config
-        for name, value in config_data['options'].items():
-            if value.get('secret'):
-                self.secret_variables.append(name)
+        for variable, property in config_data['options'].items():
+            if property.get('secret', False):
+                self.secret_variables.append(variable)
 
         self.no_fails = no_fails
         self.parse_config(config_data, cmdline)
