@@ -132,12 +132,8 @@ class Adapter(BaseAdapter):
                         query = 'items.find({query_dict}).include("*", "property")'.format(
                             query_dict=json.dumps(_aql_query_dict))
                         session.auth = _art_auth_etc['auth']
-                        try:
-                            r = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
-                            r.raise_for_status()
-                        except Exception as err:
-                            self._log.info('Could not connect to repo: {}.\n Error: {}'.format(_aql_query_url, err))
-                            break
+                        r = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
+                        r.raise_for_status()
 
                         _found_paths = r.json()
                         for _found in _found_paths['results']:
