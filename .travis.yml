@@ -1,5 +1,8 @@
 language: python
-python: '3.5'
+python:
+- '3.4'
+- '3.5'
+- '3.6'
 addons:
   apt_packages:
   - pandoc
@@ -31,6 +34,7 @@ deploy:
   skip_cleanup: true
   on:
     all_branches: true
+    python: '3.4'
 after_script:
 - echo "yes we run after_script"
 - echo "" > $GH_TOKEN_FILE
