@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-from collections import OrderedDict
 
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
 from crosspm.helpers.content import DependenciesContent

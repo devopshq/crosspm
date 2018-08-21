@@ -297,7 +297,7 @@ class Adapter(BaseAdapter):
     def get_auth(self, list_or_file_path, _auth):
         try:
             return list_or_file_path['raw'][0][_auth[1:-1]]
-        except:
+        except Exception as e:
             msg = 'Cred {_auth} not found in options'.format(**locals())
             raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
 

@@ -3,7 +3,7 @@ import logging
 import os
 from collections import OrderedDict, defaultdict
 
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME, Config
+from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME, Config  # noqa
 from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.package import Package
@@ -59,10 +59,9 @@ class Downloader(Command):
     # List of Package class instances.
     def get_dependency_packages(self, list_or_file_path=None, property_validate=True):
         """
-        
-        :param list_or_file_path: 
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
-        :return: 
+        :param list_or_file_path:
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         """
         if list_or_file_path is None:
             list_or_file_path = self._depslock_path
@@ -93,7 +92,8 @@ class Downloader(Command):
         """
 
         :param list_or_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         :return:
         """
         if list_or_file_path is None:
@@ -226,7 +226,8 @@ class Downloader(Command):
         if not_unique:
             raise CrosspmException(
                 CROSSPM_ERRORCODE_MULTIPLE_DEPS,
-                'Multiple versions of package "{}" found in dependencies.\nSee dependency tree in log (package with exclamation mark "!")'.format(
+                'Multiple versions of package "{}" found in dependencies.\n'
+                'See dependency tree in log (package with exclamation mark "!")'.format(
                     ', '.join(not_unique)),
             )
 

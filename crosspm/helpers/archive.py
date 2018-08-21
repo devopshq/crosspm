@@ -5,7 +5,7 @@ import shutil
 import tarfile
 import zipfile
 
-from crosspm.helpers.exceptions import *
+from crosspm.helpers.exceptions import *  # noqa
 
 
 class Archive:
@@ -103,7 +103,7 @@ class Archive:
                     if os.path.exists(dst_dir_path_tmp):
                         os.renames(dst_dir_path_tmp, dst_dir_path)
                     tries = 3
-                except:
+                except Exception as e:
                     pass
             raise CrosspmException(
                 CROSSPM_ERRORCODE_UNKNOWN_ARCHIVE,
@@ -120,6 +120,6 @@ class Archive:
         try:
             Archive.extract(archive_name, dst_dir_path, file_name)
             _dest_file = os.path.join(dst_dir_path, file_name)
-        except:
+        except Exception as e:
             _dest_file = None
         return _dest_file

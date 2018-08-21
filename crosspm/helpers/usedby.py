@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from crosspm.helpers.locker import Locker
-from crosspm.helpers.output import Output
 
 
 class Usedby(Locker):

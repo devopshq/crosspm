@@ -262,7 +262,7 @@ class Parser:
                 if tp == 'int':
                     try:
                         _tmp = int(_tmp)
-                    except:
+                    except Exception as e:
                         _tmp = str(_tmp)
                 if not self.validate_atom(_tmp, param[i]):
                     _res = False
@@ -293,7 +293,7 @@ class Parser:
                 var2 = int(var2)
                 if not _sign:
                     _sign = '=='
-            except:
+            except Exception as e:
                 var1 = str(var1)
 
         if _sign:
@@ -636,7 +636,7 @@ class Parser:
                 var2a = int(var2)
                 if not _sign:
                     _sign = '=='
-            except:
+            except Exception as e:
                 var1a = str(var1)
                 var2a = str(var2)
             var1, var2 = var1a, var2a
@@ -666,8 +666,6 @@ class Parser:
         for z in range(len(self._rules_vars[rule_name])):
             _res_part = []
             _params = {k: v for k, v in params.items()}
-            _default = ''
-            _mask = ''
             _columns = []
             for _col, _valued in self._config.iter_valued_columns2(self._rules_vars[rule_name][z]):
                 if _valued:
@@ -898,7 +896,8 @@ class Parser:
     def split_fixed_pattern(path):
         """
         Split path into fixed and masked parts
-        :param path: e.g https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
+        :param path: e.g
+        https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
         :return:
             _path_fixed: https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/
             _path_pattern: *.*.*/vc110/x86/win/boost.*.*.*.tar.gz
@@ -913,7 +912,8 @@ class Parser:
     def split_fixed_pattern_with_file_name(path):
         """
         Split path into fixed, masked parts and filename
-        :param path: e.g https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
+        :param path: e.g
+https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
         :return:
             _path_fixed: https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/
             _path_pattern: *.*.*/vc100/x86/win
@@ -1021,7 +1021,7 @@ class Parser:
 
         try:
             result = sorted_packages[self._index]
-        except:
+        except Exception as e:
             result = []
         return result
 

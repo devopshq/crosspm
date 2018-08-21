@@ -12,7 +12,7 @@ from crosspm.helpers.archive import Archive
 
 # import only for TypeHint
 try:
-    from crosspm.helpers.downloader import Downloader
+    from crosspm.helpers.downloader import Downloader  # noqa: F401
 except ImportError:
     pass
 
@@ -106,7 +106,8 @@ class Package:
         """
         Find all dependencies by package
         :param depslock_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         :return:
         """
         self._raw = [x for x in self._downloader.common_parser.iter_packages_params(depslock_file_path)]
@@ -117,7 +118,8 @@ class Package:
         """
         Find all dependencies by package
         :param depslock_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         :return:
         """
         if depslock_file_path is None:
