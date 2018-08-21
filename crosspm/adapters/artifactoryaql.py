@@ -11,7 +11,7 @@ from artifactory import ArtifactoryPath
 from requests.auth import HTTPBasicAuth
 
 from crosspm.adapters.common import BaseAdapter
-from crosspm.helpers.exceptions import *
+from crosspm.helpers.exceptions import *  # noqa
 from crosspm.helpers.package import Package
 
 CHUNK_SIZE = 1024
@@ -36,7 +36,8 @@ class Adapter(BaseAdapter):
         :param parser:
         :param downloader:
         :param list_or_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         :return:
         """
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
@@ -165,7 +166,7 @@ class Adapter(BaseAdapter):
                     except RuntimeError as e:
                         try:
                             err = json.loads(e.args[0])
-                        except:
+                        except Exception as e:
                             err = {}
                         if isinstance(err, dict):
                             # Check errors
@@ -283,7 +284,8 @@ class Adapter(BaseAdapter):
         :param parser:
         :param downloader:
         :param list_or_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         :return:
         """
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
@@ -384,7 +386,7 @@ class Adapter(BaseAdapter):
                 except RuntimeError as e:
                     try:
                         err = json.loads(e.args[0])
-                    except:
+                    except Exception as e:
                         err = {}
                     if isinstance(err, dict):
                         # Check errors

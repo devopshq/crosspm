@@ -33,7 +33,7 @@ Options:
     --recursive                          Process all packages recursively to find and lock all dependencies
     --prefer-local                       Do not search package if exist in cache
 
-"""
+"""  # noqa
 
 import logging
 import os
@@ -50,7 +50,7 @@ from crosspm.helpers.config import (
 )
 from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.downloader import Downloader
-from crosspm.helpers.exceptions import *
+from crosspm.helpers.exceptions import *  # noqa
 from crosspm.helpers.locker import Locker
 from crosspm.helpers.output import Output
 from crosspm.helpers.python import get_object_from_string
