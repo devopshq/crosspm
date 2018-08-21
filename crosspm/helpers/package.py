@@ -162,8 +162,9 @@ class Package:
                     if not res_str:
                         cur_str = self._params.get(k, '')
                     if not res_str:
-                        cur_str = '{}{} '.format(left, cur_str)
-                    cur_format = '{}'
+                        res_str = '{}{}'.format(left, cur_str)
+                        continue
+                    cur_format = ' {}'
                     if v > 0:
                         cur_format = '{:%s}' % (v if len(cur_str) <= v else v + len(left))
                     res_str += cur_format.format(cur_str)
