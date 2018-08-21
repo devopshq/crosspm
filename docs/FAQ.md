@@ -11,6 +11,7 @@
 - [Как сделать проверку что все используемые пакеты имеют одинаковую версию? Например, что все используют последнюю версию openssl?](#openssl)
 - [Хочу использовать кеш, но crosspm странно себя ведет - берет кеш пакета с другой версией?](#crosspm)
 - [Не хочу создавать dependencies-файл, хочу указать сразу в команде crosspm список пакетов](#content)
+- [Как просто и безопасно передавать учётные данные в рамках crosspm](#creds)
 
 Frequently Asked Questions
 ==========================
@@ -156,7 +157,13 @@ crosspm lock --config config.yaml --dependencies-content "boost 1.64.388 1.64-pm
 crosspm usedby -c config.yaml --dependencies-content "packagename 1.2.* master"
 ```
 
+<a class="mk-toclify" id="creds"></a>
+## Как просто и безопасно передавать учётные данные в рамках crosspm. 
+
+Для этого нужно задать переменные в конфигурационном файле. 
+
+Подробнее можно [почитать тут](usage/USAGE-CREDS.md)
 
 
-----------------
-Table of content auto generated: https://github.com/rasbt/markdown-toclify
+##
+```Table of content auto generated: https://github.com/rasbt/markdown-toclify```
