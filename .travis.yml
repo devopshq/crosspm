@@ -21,10 +21,12 @@ before_script:
 before_deploy:
 - GH_TOKEN="$(cat $GH_TOKEN_FILE)"
 script:
+- set -e
 - flake8 crosspm
 - coverage run -m py.test tests
 - coverage xml
 - if [[ ! $CODACY_PROJECT_TOKEN ]]; then echo "Variable CODACY_PROJECT_TOKEN not set. Step is skipped."; exit 0; else python-codacy-coverage -r coverage.xml; fi
+- set +e
 deploy:
   provider: pypi
   user: devopshq
