@@ -1,5 +1,6 @@
 Usage as Python module
-=======
+======================
+
 ### Usage
 You can use CrossPM in python-code:
 ```python
@@ -95,3 +96,19 @@ NB: version is list
 """
     
 ```
+
+### Logging
+`crosspm` log message to stderr by default. For now, we have this hack for disable standart logging.
+
+```python
+def init_logging():
+    logger_format_string = '%(message)s'
+    logging.basicConfig(level=logging.DEBUG, format=logger_format_string, stream=sys.stdout)
+init_logging()
+cpm = CrossPM(argv_usedby, return_result='raw')
+cpm.set_logging_level = lambda: (0, None)
+err, crosspm_packages = cpm.run()
+```
+
+**NOTE**: If you set your logging setting and not suppressing `crosspm`-logging, you will have two logs, one in `stderr`, other in `stdout`
+
