@@ -103,7 +103,7 @@ class Archive:
                     if os.path.exists(dst_dir_path_tmp):
                         os.renames(dst_dir_path_tmp, dst_dir_path)
                     tries = 3
-                except Exception as e:
+                except Exception:
                     pass
             raise CrosspmException(
                 CROSSPM_ERRORCODE_UNKNOWN_ARCHIVE,
@@ -120,6 +120,6 @@ class Archive:
         try:
             Archive.extract(archive_name, dst_dir_path, file_name)
             _dest_file = os.path.join(dst_dir_path, file_name)
-        except Exception as e:
+        except Exception:
             _dest_file = None
         return _dest_file

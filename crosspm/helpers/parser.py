@@ -262,7 +262,7 @@ class Parser:
                 if tp == 'int':
                     try:
                         _tmp = int(_tmp)
-                    except Exception as e:
+                    except Exception:
                         _tmp = str(_tmp)
                 if not self.validate_atom(_tmp, param[i]):
                     _res = False
@@ -293,7 +293,7 @@ class Parser:
                 var2 = int(var2)
                 if not _sign:
                     _sign = '=='
-            except Exception as e:
+            except Exception:
                 var1 = str(var1)
 
         if _sign:
@@ -636,7 +636,7 @@ class Parser:
                 var2a = int(var2)
                 if not _sign:
                     _sign = '=='
-            except Exception as e:
+            except Exception:
                 var1a = str(var1)
                 var2a = str(var2)
             var1, var2 = var1a, var2a
@@ -890,7 +890,7 @@ class Parser:
 
     def parse_value_template(self, value):
         # _regexp = ''
-        must_not = self.split_with_regexp('\[.*?\]', value)
+        must_not = self.split_with_regexp(r'\[.*?\]', value)
         for i, x in enumerate(must_not):
             must_not[i] = [self.split_with_regexp('{.*?}', x[0]), x[1]]
             # _atom = '(?P<_1_int>[\\w*><=]+)'
@@ -1025,7 +1025,7 @@ https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*
 
         try:
             result = sorted_packages[self._index]
-        except Exception as e:
+        except Exception:
             result = []
         return result
 

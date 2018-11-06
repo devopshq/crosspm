@@ -324,7 +324,7 @@ class Output:
                             try:
                                 value = item['value'].format(
                                     OutFormat(value, (item['column'] == 'path') if esc_path else False))
-                            except Exception as e:
+                            except Exception:
                                 value = ''
                         # TODO: implement this:
                         # if not value:

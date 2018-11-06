@@ -139,7 +139,7 @@ class Adapter(BaseAdapter):
                     except RuntimeError as e:
                         try:
                             err = json.loads(e.args[0])
-                        except Exception as e:
+                        except Exception:
                             err = {}
                         if isinstance(err, dict):
                             # TODO: Check errors

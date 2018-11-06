@@ -121,6 +121,7 @@ setup(
     ],
     install_requires=[
         'requests',
+        'urllib3',
         'docopt',
         'pyyaml',
         'dohq-artifactory',

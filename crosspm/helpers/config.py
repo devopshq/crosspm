@@ -11,7 +11,7 @@ from crosspm.helpers.parser import Parser
 from crosspm.helpers.source import Source
 from crosspm.helpers.cache import Cache
 
-from requests.packages.urllib3 import disable_warnings
+from urllib3 import disable_warnings
 
 WINDOWS = (platform.system().lower() == 'windows') or (os.name == 'nt')
 DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.yml', 'crosspm.json',)
@@ -123,7 +123,7 @@ class Config:
                     _override = False
             try:
                 _override = bool(_override)
-            except Exception as e:
+            except Exception:
                 _override = True
         else:
             config_data = {}
@@ -160,7 +160,7 @@ class Config:
                                 if line[0].lower() == 'cpmconfig':
                                     result = line[1].split('#')[0].strip('"').strip("'")
                                     break
-            except Exception as e:
+            except Exception:
                 pass
         return result
 
@@ -191,7 +191,7 @@ class Config:
         for config_path in GLOBAL_CONFIG_PATH:
             try:
                 _path = config_path.format(**args).strip().strip("'").strip('"')
-            except Exception as e:
+            except Exception:
                 _path = ''
             if _path:
                 for config_name in GLOBAL_CONFIG_FILE:
@@ -219,7 +219,7 @@ class Config:
             if conf_name:
                 conf_path_add = cpm_find(None, conf_name)[2]
 
-        except Exception as e:
+        except Exception:
             conf_path = ''
         if conf_path and not os.path.isfile(conf_path):
             conf_path = ''
@@ -481,7 +481,7 @@ class Config:
 
         try:
             _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
-        except Exception as e:
+        except Exception:
             _cmdline = {}
 
         # init cpm parameters
@@ -537,7 +537,7 @@ class Config:
                     self.lock_on_success = True
             try:
                 self.lock_on_success = bool(lock_on_success)
-            except Exception as e:
+            except Exception:
                 self.lock_on_success = False
 
         # Cache init
@@ -626,7 +626,7 @@ class Config:
     def parse_options(options, cmdline, check_default=False):
         # try:
         #     _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
-        # except Exception as e:
+        # except Exception:
         #     _cmdline = {}
         _remove = []
         for k, v in options.items():
@@ -755,7 +755,7 @@ class Config:
                 result = _temp.GetSystemDirectory()
                 if result:
                     result = os.path.splitdrive(result)[0]
-            except Exception as e:
+            except Exception:
                 pass
         if not result:
             result = 'C:'
