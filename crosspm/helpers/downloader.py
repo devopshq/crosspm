@@ -132,7 +132,8 @@ class Downloader(Command):
             if not os.path.isfile(depslock_file_path):
                 depslock_file_path = self._deps_path
 
-        self.search_dependencies(depslock_file_path, deps_content=self._deps_path)
+        deps_content = self._deps_path if isinstance(self._deps_path, DependenciesContent) else None
+        self.search_dependencies(depslock_file_path, deps_content=deps_content)
 
         if self.do_load:
             self._log.info('Unpack ...')
