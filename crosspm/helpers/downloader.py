@@ -132,7 +132,7 @@ class Downloader(Command):
             if not os.path.isfile(depslock_file_path):
                 depslock_file_path = self._deps_path
 
-        self.search_dependencies(depslock_file_path)
+        self.search_dependencies(depslock_file_path, deps_content=self._deps_path)
 
         if self.do_load:
             self._log.info('Unpack ...')
@@ -162,9 +162,9 @@ class Downloader(Command):
     def entrypoint(self, *args, **kwargs):
         self.download_packages(*args, **kwargs)
 
-    def search_dependencies(self, depslock_file_path):
+    def search_dependencies(self, depslock_file_path, deps_content=None):
         self._log.info('Check dependencies ...')
-        self._root_package.find_dependencies(depslock_file_path, property_validate=True)
+        self._root_package.find_dependencies(depslock_file_path, property_validate=True, deps_content=deps_content)
         self._log.info('')
         self.set_duplicated_flag()
         self._log.info('Dependency tree:')

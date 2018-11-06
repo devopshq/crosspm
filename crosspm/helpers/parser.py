@@ -811,7 +811,11 @@ class Parser:
                     break
         return paths
 
-    def iter_packages_params(self, list_or_file_path):
+    def iter_packages_params(self, list_or_file_path, deps_content=None):
+        if deps_content is not None:
+            # HACK for download with --dependencies-content and existed file dependencies.txt.lock
+            list_or_file_path = deps_content
+
         if list_or_file_path.__class__ is DependenciesContent:
             # Даёт возможность передать сразу контекнт файла, а не файл
             for i, line in enumerate(list_or_file_path.splitlines()):
