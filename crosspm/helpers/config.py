@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-import os
-import logging
 import json
+import logging
+import os
 import platform
+
+import requests
 import yaml
 
+from crosspm.helpers.cache import Cache
 from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
 from crosspm.helpers.source import Source
-from crosspm.helpers.cache import Cache
 
-from urllib3 import disable_warnings
+requests.packages.urllib3.disable_warnings()
 
 WINDOWS = (platform.system().lower() == 'windows') or (os.name == 'nt')
 DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.yml', 'crosspm.json',)
@@ -44,8 +46,6 @@ CROSSPM_DEPENDENCY_FILENAME = 'dependencies.txt'  # maybe 'cpm.manifest'
 CROSSPM_DEPENDENCY_LOCK_FILENAME = CROSSPM_DEPENDENCY_FILENAME  # 'dependencies.txt.lock'
 CROSSPM_ADAPTERS_NAME = 'adapters'
 CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
-
-disable_warnings()
 
 
 class Config:
