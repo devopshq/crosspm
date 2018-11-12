@@ -3,7 +3,7 @@ import logging
 import os
 from collections import OrderedDict, defaultdict
 
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME, Config
+from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME, Config  # noqa
 from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.package import Package
@@ -59,10 +59,9 @@ class Downloader(Command):
     # List of Package class instances.
     def get_dependency_packages(self, list_or_file_path=None, property_validate=True):
         """
-        
-        :param list_or_file_path: 
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
-        :return: 
+        :param list_or_file_path:
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         """
         if list_or_file_path is None:
             list_or_file_path = self._depslock_path
@@ -93,7 +92,8 @@ class Downloader(Command):
         """
 
         :param list_or_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         :return:
         """
         if list_or_file_path is None:
@@ -132,7 +132,8 @@ class Downloader(Command):
             if not os.path.isfile(depslock_file_path):
                 depslock_file_path = self._deps_path
 
-        self.search_dependencies(depslock_file_path)
+        deps_content = self._deps_path if isinstance(self._deps_path, DependenciesContent) else None
+        self.search_dependencies(depslock_file_path, deps_content=deps_content)
 
         if self.do_load:
             self._log.info('Unpack ...')
@@ -162,9 +163,9 @@ class Downloader(Command):
     def entrypoint(self, *args, **kwargs):
         self.download_packages(*args, **kwargs)
 
-    def search_dependencies(self, depslock_file_path):
+    def search_dependencies(self, depslock_file_path, deps_content=None):
         self._log.info('Check dependencies ...')
-        self._root_package.find_dependencies(depslock_file_path, property_validate=True)
+        self._root_package.find_dependencies(depslock_file_path, property_validate=True, deps_content=deps_content)
         self._log.info('')
         self.set_duplicated_flag()
         self._log.info('Dependency tree:')
@@ -226,7 +227,8 @@ class Downloader(Command):
         if not_unique:
             raise CrosspmException(
                 CROSSPM_ERRORCODE_MULTIPLE_DEPS,
-                'Multiple versions of package "{}" found in dependencies.\nSee dependency tree in log (package with exclamation mark "!")'.format(
+                'Multiple versions of package "{}" found in dependencies.\n'
+                'See dependency tree in log (package with exclamation mark "!")'.format(
                     ', '.join(not_unique)),
             )
 

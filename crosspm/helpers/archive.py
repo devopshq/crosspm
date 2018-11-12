@@ -5,7 +5,9 @@ import shutil
 import tarfile
 import zipfile
 
-from crosspm.helpers.exceptions import *
+from crosspm.helpers.exceptions import *  # noqa
+
+WINDOWS = True if sys.platform == 'win32' else False
 
 
 class Archive:
@@ -42,6 +44,10 @@ class Archive:
 
     @staticmethod
     def extract(archive_name, dst_dir_path, file_name=None):
+        # HACK for https://bugs.python.org/issue18199
+        if WINDOWS:
+            dst_dir_path = "\\\\?\\" + dst_dir_path
+
         dst_dir_path_tmp = '{}_tmp'.format(dst_dir_path)
 
         # remove temp dir
@@ -58,7 +64,6 @@ class Archive:
             # Распаковываем deb в первый раз, сохраняя data.tar рядом с deb-файлом
             # Затем, подменяет имя архива и пускаем по обычному пути распаковки,
             # чтобы он нашел tar и распаковал его как обычно
-            WINDOWS = True if sys.platform == 'win32' else False
             if WINDOWS:
                 datatar_dir = os.path.dirname(archive_name)
                 if not os.path.exists(datatar_dir):
@@ -103,7 +108,7 @@ class Archive:
                     if os.path.exists(dst_dir_path_tmp):
                         os.renames(dst_dir_path_tmp, dst_dir_path)
                     tries = 3
-                except:
+                except Exception:
                     pass
             raise CrosspmException(
                 CROSSPM_ERRORCODE_UNKNOWN_ARCHIVE,
@@ -120,6 +125,6 @@ class Archive:
         try:
             Archive.extract(archive_name, dst_dir_path, file_name)
             _dest_file = os.path.join(dst_dir_path, file_name)
-        except:
+        except Exception:
             _dest_file = None
         return _dest_file

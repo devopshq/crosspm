@@ -324,13 +324,13 @@ class Output:
                             try:
                                 value = item['value'].format(
                                     OutFormat(value, (item['column'] == 'path') if esc_path else False))
-                            except:
+                            except Exception:
                                 value = ''
                         # TODO: implement this:
                         # if not value:
                         #     try:
                         #         value = item['value'].format(OutFormat(_pkg.get_params('', True)))
-                        #     except:
+                        #     except Exception as e:
                         #         pass
                         _res_item[name] = value
                     list_.append(_res_item)

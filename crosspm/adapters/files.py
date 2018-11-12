@@ -3,7 +3,7 @@ import json
 import shutil
 import pathlib
 from crosspm.adapters.common import BaseAdapter
-from crosspm.helpers.exceptions import *
+from crosspm.helpers.exceptions import *  # noqa
 from crosspm.helpers.package import Package
 import os
 
@@ -139,7 +139,7 @@ class Adapter(BaseAdapter):
                     except RuntimeError as e:
                         try:
                             err = json.loads(e.args[0])
-                        except:
+                        except Exception:
                             err = {}
                         if isinstance(err, dict):
                             # TODO: Check errors

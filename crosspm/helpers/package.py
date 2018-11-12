@@ -12,7 +12,7 @@ from crosspm.helpers.archive import Archive
 
 # import only for TypeHint
 try:
-    from crosspm.helpers.downloader import Downloader
+    from crosspm.helpers.downloader import Downloader  # noqa: F401
 except ImportError:
     pass
 
@@ -102,14 +102,17 @@ class Package:
         _dest_file = os.path.join(self.unpacked_path, file_name)
         return _dest_file
 
-    def find_dependencies(self, depslock_file_path, property_validate=True):
+    def find_dependencies(self, depslock_file_path, property_validate=True, deps_content=None):
         """
         Find all dependencies by package
         :param depslock_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        :param deps_content: HACK for use --dependencies-content and existed dependencies.txt.lock file
+        we can skip validate part
         :return:
         """
-        self._raw = [x for x in self._downloader.common_parser.iter_packages_params(depslock_file_path)]
+        self._raw = [x for x in
+                     self._downloader.common_parser.iter_packages_params(depslock_file_path, deps_content=deps_content)]
         self.packages = self._downloader.get_dependency_packages({'raw': self._raw},
                                                                  property_validate=property_validate)
 
@@ -117,7 +120,8 @@ class Package:
         """
         Find all dependencies by package
         :param depslock_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         :return:
         """
         if depslock_file_path is None:

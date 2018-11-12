@@ -2,7 +2,7 @@
 import logging
 import os
 # from crosspm.helpers.package import Package
-from crosspm.helpers.exceptions import *
+from crosspm.helpers.exceptions import *  # noqa
 from datetime import datetime, timedelta
 import time
 
@@ -28,14 +28,14 @@ class Cache:
                 self._clear['auto'] = False
         try:
             self._clear['auto'] = bool(self._clear['auto'])
-        except:
+        except Exception:
             self._clear['auto'] = False
 
         self._clear['size'] = self.str_to_size(self._clear.get('size', '0'))
 
         try:
             self._clear['days'] = int(self._clear.get('days', '0'))
-        except:
+        except Exception:
             self._clear['days'] = 0
 
         _unique = config.get_fails('unique', None)
@@ -60,7 +60,7 @@ class Cache:
         _size = str(size).replace(' ', '').lower()
         try:
             _size0 = float(_size[:-2])
-        except:
+        except Exception:
             _size0 = 0
         _measure = _size[-2:]
         if _measure == 'kb':
@@ -74,14 +74,14 @@ class Cache:
                 _size = _size[:-1]
             try:
                 _size = float(_size)
-            except:
+            except Exception:
                 _size = 0
         return _size
 
     def size_to_str(self, size, dec=0):
         try:
             _size = float(size)
-        except:
+        except Exception:
             _size = 0
         _measure = 'b '
         _size0 = round(_size / 1024, 3)

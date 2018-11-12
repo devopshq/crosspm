@@ -9,6 +9,6 @@ def get_object_from_string(object_path):
         module_name, object_name = object_path.rsplit('.', maxsplit=1)
         module_ = __import__(module_name, globals(), locals(), ['App'], 0)
         variable_ = getattr(module_, object_name)
-    except:
+    except Exception:
         variable_ = None
     return variable_

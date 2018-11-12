@@ -11,7 +11,7 @@ from artifactory import ArtifactoryPath
 from requests.auth import HTTPBasicAuth
 
 from crosspm.adapters.common import BaseAdapter
-from crosspm.helpers.exceptions import *
+from crosspm.helpers.exceptions import *  # noqa
 from crosspm.helpers.package import Package
 
 CHUNK_SIZE = 1024
@@ -36,7 +36,8 @@ class Adapter(BaseAdapter):
         :param parser:
         :param downloader:
         :param list_or_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         :return:
         """
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
@@ -170,7 +171,7 @@ class Adapter(BaseAdapter):
                     except RuntimeError as e:
                         try:
                             err = json.loads(e.args[0])
-                        except:
+                        except Exception:
                             err = {}
                         if isinstance(err, dict):
                             # Check errors
@@ -296,7 +297,7 @@ class Adapter(BaseAdapter):
     def get_auth(self, list_or_file_path, _auth):
         try:
             return list_or_file_path['raw'][0][_auth[1:-1]]
-        except:
+        except Exception:
             msg = 'Cred {_auth} not found in options'.format(**locals())
             raise CrosspmException(CROSSPM_ERRORCODE_ADAPTER_ERROR, msg)
 
@@ -327,7 +328,8 @@ class Adapter(BaseAdapter):
         :param parser:
         :param downloader:
         :param list_or_file_path:
-        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file, we can skip validate part
+        :param property_validate: for `root` packages we need check property, bad if we find packages from `lock` file,
+        we can skip validate part
         :return:
         """
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
@@ -433,7 +435,7 @@ class Adapter(BaseAdapter):
                 except RuntimeError as e:
                     try:
                         err = json.loads(e.args[0])
-                    except:
+                    except Exception:
                         err = {}
                     if isinstance(err, dict):
                         # Check errors

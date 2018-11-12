@@ -262,7 +262,7 @@ class Parser:
                 if tp == 'int':
                     try:
                         _tmp = int(_tmp)
-                    except:
+                    except Exception:
                         _tmp = str(_tmp)
                 if not self.validate_atom(_tmp, param[i]):
                     _res = False
@@ -293,7 +293,7 @@ class Parser:
                 var2 = int(var2)
                 if not _sign:
                     _sign = '=='
-            except:
+            except Exception:
                 var1 = str(var1)
 
         if _sign:
@@ -636,7 +636,7 @@ class Parser:
                 var2a = int(var2)
                 if not _sign:
                     _sign = '=='
-            except:
+            except Exception:
                 var1a = str(var1)
                 var2a = str(var2)
             var1, var2 = var1a, var2a
@@ -666,8 +666,6 @@ class Parser:
         for z in range(len(self._rules_vars[rule_name])):
             _res_part = []
             _params = {k: v for k, v in params.items()}
-            _default = ''
-            _mask = ''
             _columns = []
             for _col, _valued in self._config.iter_valued_columns2(self._rules_vars[rule_name][z]):
                 if _valued:
@@ -813,7 +811,11 @@ class Parser:
                     break
         return paths
 
-    def iter_packages_params(self, list_or_file_path):
+    def iter_packages_params(self, list_or_file_path, deps_content=None):
+        if deps_content is not None:
+            # HACK for download with --dependencies-content and existed file dependencies.txt.lock
+            list_or_file_path = deps_content
+
         if list_or_file_path.__class__ is DependenciesContent:
             # Даёт возможность передать сразу контекнт файла, а не файл
             for i, line in enumerate(list_or_file_path.splitlines()):
@@ -888,7 +890,7 @@ class Parser:
 
     def parse_value_template(self, value):
         # _regexp = ''
-        must_not = self.split_with_regexp('\[.*?\]', value)
+        must_not = self.split_with_regexp(r'\[.*?\]', value)
         for i, x in enumerate(must_not):
             must_not[i] = [self.split_with_regexp('{.*?}', x[0]), x[1]]
             # _atom = '(?P<_1_int>[\\w*><=]+)'
@@ -898,7 +900,8 @@ class Parser:
     def split_fixed_pattern(path):
         """
         Split path into fixed and masked parts
-        :param path: e.g https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
+        :param path: e.g
+        https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
         :return:
             _path_fixed: https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/
             _path_pattern: *.*.*/vc110/x86/win/boost.*.*.*.tar.gz
@@ -913,7 +916,8 @@ class Parser:
     def split_fixed_pattern_with_file_name(path):
         """
         Split path into fixed, masked parts and filename
-        :param path: e.g https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
+        :param path: e.g
+https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
         :return:
             _path_fixed: https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/
             _path_pattern: *.*.*/vc100/x86/win
@@ -1021,7 +1025,7 @@ class Parser:
 
         try:
             result = sorted_packages[self._index]
-        except:
+        except Exception:
             result = []
         return result
 
