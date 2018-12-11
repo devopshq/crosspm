@@ -146,7 +146,7 @@ class CrossPM:
         :param args:
         :return:
         """
-        args = args or sys.argv[1:]
+        args = args or " ".join(sys.argv[1:])
         #
         # --recursive => --recursive=True
         # Normal current way, skip change

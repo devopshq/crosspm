@@ -14,6 +14,8 @@ from crosspm.cpm import CrossPM
     ("command --recursive=True --other command", "command --recursive --other command"),
     ("command --recursive=True", "command --recursive=True"),
     ("command --recursive=False", "command --recursive=False"),
+    ("command --recursive True", "command --recursive True"),
+    ("command --recursive False", "command --recursive False"),
 ])
 def test_prepare_args(expect, raw):
     assert expect == CrossPM.prepare_args(raw)
