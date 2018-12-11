@@ -3,12 +3,15 @@
 import os
 
 from setuptools import setup
-from crosspm import config
+with open('crosspm/config.py', 'r', encoding="utf-8") as f:
+    content = f.readlines()[0]
+    __version__ = content.rsplit('=')[-1].strip(' \'')
+# from crosspm.config import __version__
 
 build_number = os.getenv('TRAVIS_BUILD_NUMBER', '')
 branch = os.getenv('TRAVIS_BRANCH', '')
 travis = any((build_number, branch,))
-version = config.__version__.split('.')
+version = __version__.split('.')
 develop_status = '4 - Beta'
 url = 'http://devopshq.github.io/crosspm'
 
