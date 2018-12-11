@@ -99,18 +99,7 @@ class CrossPM:
 
         self._log = logging.getLogger('crosspm')
 
-        # Add True to --recursive if it with out
-        args = args or sys.argv[1:]
-        if '--recursive' in args:
-            args_list = args.split(' ')
-            recursive_index = args_list.index('--recursive')
-            if len(args_list) > recursive_index+1:
-                if args_list[recursive_index + 1].startswith('-'):
-                    args_list.insert(recursive_index+1, 'True')
-            else:
-                args_list.insert(recursive_index+1, 'True')
-
-            args = " ".join(args_list)
+        args = self.prepare_args(args)
 
         self._args = docopt('{}\n{}'.format(app_name,
                                             __doc__.format(verb_level=Config.get_verbosity_level(),
@@ -123,6 +112,14 @@ class CrossPM:
                                             ),
                             argv=args,
                             version=version)
+        if self._args['--recursive']:
+            recursive_str = self._args['--recursive']
+            if recursive_str.lower() == 'true':
+                self._args['--recursive'] = True
+            elif recursive_str.lower() == 'false':
+                self._args['--recursive'] = False
+            else:
+                raise Exception("Unknown value to --recursive: {}".format(recursive_str))
 
         if isinstance(self._args, str):
             if self._throw_exceptions:
@@ -140,6 +137,35 @@ class CrossPM:
             self.command_ = Usedby
         else:
             self.command_ = None
+
+    @staticmethod
+    def prepare_args(args):
+        """
+        Prepare args - add support for old interface, e.g:
+            - --recursive was "flag" and for now it support True\False value
+        :param args:
+        :return:
+        """
+        args = args or sys.argv[1:]
+        #
+        # --recursive => --recursive=True
+        # Normal current way, skip change
+        if '--recursive=true' in args.lower() or '--recursive=false' in args.lower():
+            return args
+        elif '--recursive true' in args.lower() or '--recursive false' in args.lower():
+            return args
+        # legacy way
+        elif '--recursive' in args:
+            args_list = args.split(' ')
+            recursive_index = args_list.index('--recursive')
+            if len(args_list) > recursive_index + 1:
+                if args_list[recursive_index + 1].startswith('-'):
+                    args_list[recursive_index] = '--recursive=True'
+            else:
+                args_list[recursive_index] = '--recursive=True'
+
+            args = " ".join(args_list)
+        return args
 
     @do_run
     def read_config(self):
@@ -173,12 +199,12 @@ class CrossPM:
             if self._args['--recursive'] is None:
                 recursive = True
             else:
-                recursive = self._args['--recursive'].lower() == 'true'
+                recursive = self._args['--recursive']
         else:
             if self._args['--recursive'] is None:
                 recursive = False
             else:
-                recursive = self._args['--recursive'].lower() == 'true'
+                recursive = self._args['--recursive']
         return recursive
 
     @do_run
