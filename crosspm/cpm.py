@@ -142,7 +142,7 @@ class CrossPM:
     def prepare_args(args):
         """
         Prepare args - add support for old interface, e.g:
-            - --recursive was "flag" and for now it support True\False value
+            - --recursive was "flag" and for now it support True or False value
         :param args:
         :return:
         """
