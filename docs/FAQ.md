@@ -2,6 +2,8 @@
 
 # Table of Contents
 - [Как запретить в конфиге рекурсивное выкачивание пакетов?](#)
+    - [При вызове crosspm в командной строке](#cli)
+    - [Старый способ - через указание в конфиге](#config)
 - [CrossPM вылетает с ошибкой при поиске в репозитории с анонимным доступом (type: artifactory-aql)](#crosspm-type-artifactory-aql)
 - [Как отфильтровать пакеты, чтобы выбирались только БЕЗ feature в версии?](#feature)
 - [А как отфильтровать пакеты, чтобы выбирались ТОЛЬКО feature версии?](#feature)
@@ -17,7 +19,30 @@ Frequently Asked Questions
 ==========================
 
 <a class="mk-toclify" id=""></a>
-## Как запретить в конфиге рекурсивное выкачивание пакетов?
+## Как запретить рекурсивное выкачивание пакетов?
+<a class="mk-toclify" id="cli"></a>
+### При вызове crosspm в командной строке
+Используйте флаг `--recursive=False` при вызове `crosspm`. **Важно** - у команд `download` и `lock` поведение по умолчанию отличается
+```python
+# сделать lock-файл с пакетами только первого уровня, не рекурсивно
+crosspm lock # поведение по умолчанию - только первый уровень
+crosspm lock --recursive=False
+crosspm lock --recursive False
+# проверить правильность и наличие пакетов, рекурсивно
+crosspm lock --recursive
+crosspm lock --recursive=True
+
+# скачать все дерево пакетов вместе с зависимостями
+crosspm download # поведение по умолчанию - рекурсия
+crosspm download --recursive
+crosspm download --recursive=True
+# скачать без зависимостей, только пакеты указанные в dependencies
+crosspm download --recursive=False
+crosspm download --recursive False
+```
+
+<a class="mk-toclify" id="config"></a>
+### Старый способ - через указание в конфиге
 Можно задать неправильные имена файлов dependencies, тогда он не найдет их и не пойдет глубже
 ```yaml
 cpm:
