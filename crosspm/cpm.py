@@ -30,7 +30,7 @@ Options:
     --output=FILE                        Output file name (required if --out_format is not stdout)
     --output-template=FILE               Template path, e.g. nuget.packages.config.j2 (required if --out_format=jinja)
     --no-fails                           Ignore fails config if possible.
-    --recursive                          Process all packages recursively to find and lock all dependencies
+    --recursive VALUE                    Process all packages recursively to find and lock all dependencies
     --prefer-local                       Do not search package if exist in cache
 
 """  # noqa
@@ -98,6 +98,20 @@ class CrossPM:
             self._throw_exceptions = throw_exceptions
 
         self._log = logging.getLogger('crosspm')
+
+        # Add True to --recursive if it with out
+        args = args or sys.argv[1:]
+        if '--recursive' in args:
+            args_list = args.split(' ')
+            recursive_index = args_list.index('--recursive')
+            if len(args_list) > recursive_index+1:
+                if args_list[recursive_index + 1].startswith('-'):
+                    args_list.insert(recursive_index+1, 'True')
+            else:
+                args_list.insert(recursive_index+1, 'True')
+
+            args = " ".join(args_list)
+
         self._args = docopt('{}\n{}'.format(app_name,
                                             __doc__.format(verb_level=Config.get_verbosity_level(),
                                                            log_default=Config.get_verbosity_level(0, True),
@@ -118,6 +132,15 @@ class CrossPM:
 
         self._ready = True
 
+        if self._args['download']:
+            self.command_ = Downloader
+        elif self._args['lock']:
+            self.command_ = Locker
+        elif self._args['usedby']:
+            self.command_ = Usedby
+        else:
+            self.command_ = None
+
     @do_run
     def read_config(self):
         _deps_path = self._args['--deps-path']
@@ -133,7 +156,7 @@ class CrossPM:
             if self._args['DEPSLOCK']:
                 _depslock_path = self._args['DEPSLOCK']
         self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
-                              _deps_path, self._args['--lock-on-success'], self._args['--recursive'],
+                              _deps_path, self._args['--lock-on-success'],
                               self._args['--prefer-local'])
         self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
 
@@ -143,6 +166,20 @@ class CrossPM:
             sys.exit(code)
         else:
             return code, msg
+
+    @property
+    def recursive(self):
+        if self.command_ is Downloader:
+            if self._args['--recursive'] is None:
+                recursive = True
+            else:
+                recursive = self._args['--recursive'].lower() == 'true'
+        else:
+            if self._args['--recursive'] is None:
+                recursive = False
+            else:
+                recursive = self._args['--recursive'].lower() == 'true'
+        return recursive
 
     @do_run
     def check_common_args(self):
@@ -209,18 +246,13 @@ class CrossPM:
 
                 if errorcode == 0:
                     if self._args['download']:
-                        errorcode, msg = self.command(Downloader)
-                        # self.command()
-
+                        errorcode, msg = self.command(self.command_)
                     elif self._args['lock']:
-                        errorcode, msg = self.command(Locker)
-
+                        errorcode, msg = self.command(self.command_)
                     elif self._args['usedby']:
-                        errorcode, msg = self.command(Usedby)
-
+                        errorcode, msg = self.command(self.command_)
                     elif self._args['pack']:
                         errorcode, msg = self.pack()
-
                     elif self._args['cache']:
                         errorcode, msg = self.cache()
         else:
@@ -280,11 +312,9 @@ class CrossPM:
         do_load = not self._args['--list']
         # hack for Locker
         if command_ is Locker:
-            do_load = self._config.recursive
+            do_load = self.recursive
 
-        # if do_load:
-        #     self._config.cache.auto_clear()
-        cpm_ = command_(self._config, do_load)
+        cpm_ = command_(self._config, do_load, self.recursive)
         cpm_.entrypoint()
 
         if self._return_result:
