@@ -863,9 +863,11 @@ class Parser:
                 'Nothing parsed at line {}: [{}]'.format(line_no, line.strip())
             )
 
-        _vars.update(
-            {k: self.parse_by_mask(k, v, False, True) for k, v in self._config.complete_params(_vars, False).items()}
-        )
+        update_items = self._config.complete_params(_vars, False)
+        update_vars = {k: self.parse_by_mask(k, v, False, True) for k, v in update_items.items()}
+        # Expend default params to passed params
+        update_vars = {k: v.format(**_vars) if isinstance(v, str) else v for k, v in update_vars.items()}
+        _vars.update(update_vars)
 
         return _vars
 
