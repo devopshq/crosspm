@@ -7,18 +7,41 @@ from crosspm.cpm import CrossPM
 #
 # ARGS parse
 #
+
 @pytest.mark.parametrize("expect, raw", [
-    ("command", "command"),
-    ("command --command my args", "command --command my args"),
-    ("command --recursive=True", "command --recursive"),
-    ("command --recursive=True --other command", "command --recursive --other command"),
-    ("command --recursive=True", "command --recursive=True"),
-    ("command --recursive=False", "command --recursive=False"),
-    ("command --recursive True", "command --recursive True"),
-    ("command --recursive False", "command --recursive False"),
+    (['download', '--options', 'with quotes'],
+     'download --options "with quotes"'),
+
+    (["command"],
+     "command"),
+
+    (["command", "--command", "my", "args"],
+     "command --command my args"),
+
+    (["command", "--recursive=True"],
+     "command --recursive"),
+
+    (["command", "--recursive=True", "--other", "command"],
+     "command --recursive --other command"),
+
+    (["command", "--recursive=True"],
+     "command --recursive=True"),
+
+    (["command", "--recursive=False"],
+     "command --recursive=False"),
+
+    (["command", "--recursive", "True"],
+     "command --recursive True"),
+
+    (["command", "--recursive", "False"],
+     "command --recursive False"),
+
+    (["command", "--recursive", "false"],
+     "command --recursive false"),
+
 ])
 def test_prepare_args(expect, raw):
-    assert expect == CrossPM.prepare_args(raw)
+    assert CrossPM.prepare_args(raw) == expect, "Error when pass as string"
 
 
 #

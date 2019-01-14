@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
+{app_name}
 Usage:
     crosspm download [options]
     crosspm lock [DEPS] [DEPSLOCK] [options]
@@ -30,13 +31,14 @@ Options:
     --output=FILE                        Output file name (required if --out_format is not stdout)
     --output-template=FILE               Template path, e.g. nuget.packages.config.j2 (required if --out_format=jinja)
     --no-fails                           Ignore fails config if possible.
-    --recursive VALUE                    Process all packages recursively to find and lock all dependencies
+    --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
     --prefer-local                       Do not search package if exist in cache
 
 """  # noqa
 
 import logging
 import os
+import shlex
 import time
 
 from docopt import docopt
@@ -100,16 +102,15 @@ class CrossPM:
         self._log = logging.getLogger('crosspm')
 
         args = self.prepare_args(args)
-
-        self._args = docopt('{}\n{}'.format(app_name,
-                                            __doc__.format(verb_level=Config.get_verbosity_level(),
-                                                           log_default=Config.get_verbosity_level(0, True),
-                                                           deps_default=CROSSPM_DEPENDENCY_FILENAME,
-                                                           deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
-                                                           out_format=Output.get_output_types(),
-                                                           out_format_default='stdout',
-                                                           ),
-                                            ),
+        docopt_str = __doc__.format(app_name=app_name,
+                                    verb_level=Config.get_verbosity_level(),
+                                    log_default=Config.get_verbosity_level(0, True),
+                                    deps_default=CROSSPM_DEPENDENCY_FILENAME,
+                                    deps_lock_default=CROSSPM_DEPENDENCY_LOCK_FILENAME,
+                                    out_format=Output.get_output_types(),
+                                    out_format_default='stdout',
+                                    )
+        self._args = docopt(docopt_str,
                             argv=args,
                             version=version)
         if self._args['--recursive']:
@@ -146,25 +147,29 @@ class CrossPM:
         :param args:
         :return:
         """
-        args = args or " ".join(sys.argv[1:])
-        #
-        # --recursive => --recursive=True
-        # Normal current way, skip change
-        if '--recursive=true' in args.lower() or '--recursive=false' in args.lower():
-            return args
-        elif '--recursive true' in args.lower() or '--recursive false' in args.lower():
-            return args
-        # legacy way
-        elif '--recursive' in args:
-            args_list = args.split(' ')
-            recursive_index = args_list.index('--recursive')
-            if len(args_list) > recursive_index + 1:
-                if args_list[recursive_index + 1].startswith('-'):
-                    args_list[recursive_index] = '--recursive=True'
-            else:
-                args_list[recursive_index] = '--recursive=True'
+        if isinstance(args, str):
+            args = shlex.split(args)
+        elif isinstance(args, list):
+            pass
+        elif args is None:
+            args = sys.argv[1:]
+        else:
+            raise Exception("Unknown args type: {}".format(type(args)))
 
-            args = " ".join(args_list)
+        # --recursive => --recursive=True|False convert
+        for position, argument in enumerate(args):
+            # Normal way, skip change
+            if argument.lower() in ('--recursive=true', '--recursive=false'):
+                return args
+
+            elif argument.lower() == '--recursive':
+                if len(args) > position + 1 and args[position + 1].lower() in ["true", "false"]:
+                    # --recursive true | false
+                    return args
+                else:
+                    # legacy way, convert --recursive to --recursive=true
+                    args[position] = "--recursive=True"
+                    return args
         return args
 
     @do_run
