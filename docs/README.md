@@ -7,14 +7,14 @@ Cross Package Manager (CrossPM)
 [![license](https://img.shields.io/pypi/l/crosspm.svg)](https://github.com/devopshq/crosspm/blob/master/LICENSE)
 
 <!--ts-->
-   * [Cross Package Manager (CrossPM)](./docs/README.md#cross-package-manager-crosspm)
-      * [Introduction](./docs/README.md#introduction)
-      * [Installation](./docs/README.md#installation)
-      * [Usage](./docs/README.md#usage)
-      * [Other pages](./docs/README.md#other-pages)
-      * [Development](./docs/README.md#development)
+   * [Cross Package Manager (CrossPM)](#cross-package-manager-crosspm)
+      * [Introduction](#introduction)
+      * [Installation](#installation)
+      * [Usage](#usage)
+      * [Other pages](#other-pages)
+      * [Development](#development)
 
-<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+<!-- Added by: aburov, at: 2019-01-16T17:11+07:00 -->
 
 <!--te-->
 
@@ -129,4 +129,14 @@ Other pages
 Development
 --------
 
-Run `bash toc.sh` to create Table of content. We use modified https://github.com/ekalinin/github-markdown-toc
+We use modified script for generate Table of content: https://github.com/ekalinin/github-markdown-toc
+```bash
+# Process single file
+export GH_TOC_TOKEN="$(pwd)/token.txt" # or other path to token.txt with your github token
+BASE=$(pwd) # crosspm git folder
+cd ./docs/path/to/file
+$BASE/gh-md-toc FILENAME.MD
+
+# Process all files
+bash toc.sh
+```

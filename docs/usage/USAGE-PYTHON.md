@@ -1,10 +1,10 @@
 <!--ts-->
-   * [Usage as Python module](./docs/usage/USAGE-PYTHON.md#usage-as-python-module)
-         * [Usage](./docs/usage/USAGE-PYTHON.md#usage)
-         * [Package](./docs/usage/USAGE-PYTHON.md#package)
-         * [Logging](./docs/usage/USAGE-PYTHON.md#logging)
+   * [Usage as Python module](#usage-as-python-module)
+         * [Usage](#usage)
+         * [Package](#package)
+         * [Logging](#logging)
 
-<!-- Added by: aburov, at: 2019-01-16T16:33+07:00 -->
+<!-- Added by: aburov, at: 2019-01-16T17:11+07:00 -->
 
 <!--te-->
 Usage as Python module

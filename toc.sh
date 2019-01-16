@@ -1,2 +1,12 @@
 #!/usr/bin/env bash
-find ./docs/ -name "*.md" | xargs bash gh-md-toc --insert
+set -e
+FILES=$(find ./docs/ -name "*.md")
+BASE=$(pwd)
+for f in ${FILES}:
+do
+    dir=$(dirname ${f})
+    filename=$(basename ${f})
+    pushd ${dir}
+    ${BASE}/gh-md-toc --insert ${filename}
+    popd
+done

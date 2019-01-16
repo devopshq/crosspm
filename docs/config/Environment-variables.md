@@ -1,10 +1,10 @@
 Переменные окружения
 =======
 <!--ts-->
-   * [Переменные окружения](./docs/config/Environment-variables.md#переменные-окружения)
-         * [CROSSPM_CONFIG_PATH](./docs/config/Environment-variables.md#crosspm_config_path)
+   * [Переменные окружения](#переменные-окружения)
+         * [CROSSPM_CONFIG_PATH](#crosspm_config_path)
 
-<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+<!-- Added by: aburov, at: 2019-01-16T17:10+07:00 -->
 
 <!--te-->
 

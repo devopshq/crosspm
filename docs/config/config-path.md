@@ -1,8 +1,8 @@
 <!--ts-->
-   * [Path to package](./docs/config/config-path.md#path-to-package)
-      * [Поддержка wildcard](./docs/config/config-path.md#поддержка-wildcard)
+   * [Path to package](#path-to-package)
+      * [Поддержка wildcard](#поддержка-wildcard)
 
-<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+<!-- Added by: aburov, at: 2019-01-16T17:10+07:00 -->
 
 <!--te-->
 

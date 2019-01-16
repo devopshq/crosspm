@@ -1,15 +1,15 @@
 Output
 ======
 <!--ts-->
-   * [Output](./docs/config/OUTPUT.md#output)
-      * [shell](./docs/config/OUTPUT.md#shell)
-      * [cmd](./docs/config/OUTPUT.md#cmd)
-      * [json](./docs/config/OUTPUT.md#json)
-      * [python](./docs/config/OUTPUT.md#python)
-      * [stdout](./docs/config/OUTPUT.md#stdout)
-      * [lock](./docs/config/OUTPUT.md#lock)
+   * [Output](#output)
+      * [shell](#shell)
+      * [cmd](#cmd)
+      * [json](#json)
+      * [python](#python)
+      * [stdout](#stdout)
+      * [lock](#lock)
 
-<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+<!-- Added by: aburov, at: 2019-01-16T17:11+07:00 -->
 
 <!--te-->
 

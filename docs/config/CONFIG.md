@@ -2,9 +2,9 @@ CrossPM Config
 =======
 
 <!--ts-->
-   * [CrossPM Config](./docs/config/CONFIG.md#crosspm-config)
+   * [CrossPM Config](#crosspm-config)
 
-<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+<!-- Added by: aburov, at: 2019-01-16T17:10+07:00 -->
 
 <!--te-->
 

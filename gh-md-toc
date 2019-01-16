@@ -60,11 +60,11 @@ gh_toc_md2html() {
     if [ -f "$TOKEN" ]; then
         URL="$URL?access_token=$(cat $TOKEN)"
     fi
-    # echo $URL 1>&2
-    echo $URL
+#    echo $URL 1>&2
     OUTPUT="$(curl -s --user-agent "$gh_user_agent" \
         --data-binary @"$gh_file_md" -H "Content-Type:text/plain" \
         $URL)"
+#    echo $OUTPUT 1>&2
 
     if [ "$?" != "0" ]; then
         echo "XXNetworkErrorXX"
