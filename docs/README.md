@@ -117,7 +117,6 @@ Other pages
     - [CrossPM in Cmake](usage/USAGE-CMAKE)
     - [CrossPM used by (RU)](usage/USAGE-USEDBY)
 - [CrossPM Config](config/CONFIG)
-    - [Path to package (RU)](config/config-path)
     - [Import (RU)](config/IMPORT)
     - [Environment variables (RU)](config/Environment-variables)
     - [cpmconfig - Centralized distribution of configuration files](cpmconfig)

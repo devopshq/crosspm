@@ -34,6 +34,7 @@ import:
 - cred.yaml
 - template-config.yaml
 ```
+Read more about [`import` hacks (RU)](OUTPUT)
 
 # `cpm`
 Main configuration such as manifest file name and cache path.
@@ -177,6 +178,25 @@ https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1
 https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.zip
 https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.tar.gz
 ```
+
+Для того, чтобы задать любой путь, можно использовать `*`. Это пригодится, когда вам нужно выкачать пакеты, в оригинале не обращающие внимания на пути (`nupkg`, `deb`)
+```yaml
+# deb
+parsers:
+  common:
+    columns:
+      version: '{int}.{int}.{int}[.{int}]'
+  artifactory-deb:
+    path: '{server}/{repo}/pool/*/{package}.{version}.deb'
+
+# nupkg
+parsers:
+  common:
+    columns:
+      version: '{int}.{int}.{int}[.{int}][-{str}]'
+  artifactory-nupkg:
+    path: '{server}/{repo}/pool/*/{package}.{version}.nupkg'
+```
     
 - `properties` - Extra properties. i.e. object properties in Artifactory.
 
@@ -254,11 +274,10 @@ output:
 ```
 
 
-# Example
+# Full example
 We'll add some more examples soon. Here is one of configuration file examples for now.
 
-
- **crosspm.yaml**
+**crosspm.yaml**
 ```yaml
 import:
 - cred.yaml
