@@ -840,7 +840,8 @@ class Parser:
                     if line.startswith('#'):
                         line_tmp = [x.strip().strip('"').strip("'") for x in line.strip('#').split('=') if x]
                         if len(line_tmp) > 1:
-                            if line_tmp[0].lower() == 'cpmconfig' and line_tmp[1].lower() == self._config.config_file_name:
+                            if line_tmp[0].lower() == 'cpmconfig' and \
+                                    line_tmp[1].lower() == self._config.config_file_name:
                                 start_cpmconfig = True
                                 cpmconfig = True
                                 continue

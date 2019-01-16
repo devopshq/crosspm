@@ -117,7 +117,7 @@ class Config:
                     _override = False
             try:
                 _override = bool(_override)
-            except:
+            except Exception:
                 _override = True
         else:
             config_data = {}
