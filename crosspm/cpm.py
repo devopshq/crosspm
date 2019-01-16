@@ -148,7 +148,7 @@ class CrossPM:
         :return:
         """
         if isinstance(args, str):
-            args = shlex.split(args)
+            args = shlex.split(args, posix="win" not in sys.platform)
         elif isinstance(args, list):
             pass
         elif args is None:

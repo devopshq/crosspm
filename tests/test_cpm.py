@@ -9,7 +9,13 @@ from crosspm.cpm import CrossPM
 #
 
 @pytest.mark.parametrize("expect, raw", [
-    (['download', '--options', 'with quotes'],
+    (["command", "--config", "e:\\project\\config.yaml"],
+     "command --config e:\\project\\config.yaml"),
+    
+    (["command", "--config", "/home/src/config.yml"],
+     "command --config /home/src/config.yml"),
+
+    (['download', '--options', '"with quotes"'],
      'download --options "with quotes"'),
 
     (["command"],
