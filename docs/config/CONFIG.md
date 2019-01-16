@@ -1,5 +1,13 @@
 CrossPM Config
 =======
+
+<!--ts-->
+   * [CrossPM Config](./docs/config/CONFIG.md#crosspm-config)
+
+<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+
+<!--te-->
+
 We'll add some more examples soon. Here is one of configuration file examples for now.
 
  **crosspm.yaml**

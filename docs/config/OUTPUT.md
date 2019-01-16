@@ -1,5 +1,17 @@
 Output
 ======
+<!--ts-->
+   * [Output](./docs/config/OUTPUT.md#output)
+      * [shell](./docs/config/OUTPUT.md#shell)
+      * [cmd](./docs/config/OUTPUT.md#cmd)
+      * [json](./docs/config/OUTPUT.md#json)
+      * [python](./docs/config/OUTPUT.md#python)
+      * [stdout](./docs/config/OUTPUT.md#stdout)
+      * [lock](./docs/config/OUTPUT.md#lock)
+
+<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+
+<!--te-->
 
 Как скачать пакеты понятно, как теперь их дальше использовать? Для этого в **crosspm** есть несколько видов **output**.
 

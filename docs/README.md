@@ -6,6 +6,17 @@ Cross Package Manager (CrossPM)
 [![pypi](https://img.shields.io/pypi/v/crosspm.svg)](https://pypi.python.org/pypi/crosspm)
 [![license](https://img.shields.io/pypi/l/crosspm.svg)](https://github.com/devopshq/crosspm/blob/master/LICENSE)
 
+<!--ts-->
+   * [Cross Package Manager (CrossPM)](./docs/README.md#cross-package-manager-crosspm)
+      * [Introduction](./docs/README.md#introduction)
+      * [Installation](./docs/README.md#installation)
+      * [Usage](./docs/README.md#usage)
+      * [Other pages](./docs/README.md#other-pages)
+      * [Development](./docs/README.md#development)
+
+<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+
+<!--te-->
 
 Introduction
 ------------
@@ -95,7 +106,7 @@ You'll see something like this:
       --output=FILE                        Output file name (required if --out_format is not stdout)
       --output-template=FILE               Template path, e.g. nuget.packages.config.j2 (required if --out_format=jinja)
       --no-fails                           Ignore fails config if possible.
-      --recursive                          Process all packages recursively to find and lock all dependencies
+      --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
       --prefer-local                       Do not search package if exist in cache
 ```
 
@@ -114,3 +125,8 @@ Other pages
     - [Output - template (RU)](config/output-template)
 - [FAQ (RU)](FAQ)
 - [Changelog](https://github.com/devopshq/crosspm/blob/master/CHANGELOG.md)
+
+Development
+--------
+
+Run `bash toc.sh` to create Table of content. We use modified https://github.com/ekalinin/github-markdown-toc

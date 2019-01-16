@@ -1,3 +1,9 @@
+<!--ts-->
+   * [Usage](./docs/usage/USAGE-CMAKE.md#usage)
+
+<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+
+<!--te-->
 Usage
 =======
 You can use Crosspm in cmake. It will help to download the libraries recursively and connect them to the project.

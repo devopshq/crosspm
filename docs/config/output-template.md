@@ -1,5 +1,17 @@
 Output template
 ===============
+<!--ts-->
+   * [Output template](./docs/config/output-template.md#output-template)
+      * [Доступные встроенные шаблоны](./docs/config/output-template.md#доступные-встроенные-шаблоны)
+         * [crosspm.template.ALL_YAML](./docs/config/output-template.md#crosspmtemplateall_yaml)
+         * [crosspm.template.GUS - Global Update Server](./docs/config/output-template.md#crosspmtemplategus---global-update-server)
+      * [Вызов для своего шаблона](./docs/config/output-template.md#вызов-для-своего-шаблона)
+      * [Распространение шаблонов через pypi](./docs/config/output-template.md#распространение-шаблонов-через-pypi)
+
+<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+
+<!--te-->
+
 `crosspm` умеет выводить информацию о скачанных\найденных пакетов в разные форматы, с помощью `jinja2`-шаблонов
 
 Генерация шаблонов доступна в командах `lock` и `download`

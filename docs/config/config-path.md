@@ -1,3 +1,11 @@
+<!--ts-->
+   * [Path to package](./docs/config/config-path.md#path-to-package)
+      * [Поддержка wildcard](./docs/config/config-path.md#поддержка-wildcard)
+
+<!-- Added by: aburov, at: 2019-01-16T16:32+07:00 -->
+
+<!--te-->
+
 # Path to package
 Тут описываются разные варианты указания `path` в config-файле
 
