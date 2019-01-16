@@ -4,9 +4,9 @@ from crosspm.helpers.locker import Locker
 
 
 class Usedby(Locker):
-    def __init__(self, config, do_load):
+    def __init__(self, config, do_load, recursive):
         # Ignore do_load flag
-        super(Usedby, self).__init__(config, False)
+        super(Usedby, self).__init__(config, False, recursive)
 
     def usedby_packages(self, deps_file_path=None, depslock_file_path=None, packages=None):
         """

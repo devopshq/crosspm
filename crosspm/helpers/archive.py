@@ -94,6 +94,12 @@ class Archive:
                 else:
                     zf.extractall(path=dst_dir_path)
 
+        elif archive_name.endswith('.rar'):
+            if not os.path.exists(dst_dir_path):
+                os.makedirs(dst_dir_path)
+            from pyunpack import Archive
+            Archive(archive_name).extractall(dst_dir_path)
+
         elif archive_name.endswith('.deb'):
             # We unpack above
             pass

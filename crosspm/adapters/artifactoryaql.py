@@ -253,12 +253,13 @@ class Adapter(BaseAdapter):
                 if downloader.do_load:
                     _package.download()
                     _deps_file = _package.get_file(self._config.deps_lock_file_name)
-                    if _deps_file:
-                        _package.find_dependencies(_deps_file, property_validate=False)
-                    elif self._config.deps_file_name:
-                        _deps_file = _package.get_file(self._config.deps_file_name)
-                        if _deps_file and os.path.isfile(_deps_file):
+                    if downloader.recursive:
+                        if _deps_file:
                             _package.find_dependencies(_deps_file, property_validate=False)
+                        elif self._config.deps_file_name:
+                            _deps_file = _package.get_file(self._config.deps_file_name)
+                            if _deps_file and os.path.isfile(_deps_file):
+                                _package.find_dependencies(_deps_file, property_validate=False)
 
         # HACK for not found packages
         _package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]

@@ -79,9 +79,12 @@ parsers:
   artifactory:
     path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
     properties: "some.org.quality = {quality}"
+    
 defaults:
   branch: master
   quality: stable
+  # default support python format, like this:
+  otherparams: "{package}/{version}"
 
 solid:
   ext: *.deb

@@ -21,7 +21,7 @@ class Command(object):
 
 
 class Downloader(Command):
-    def __init__(self, config, do_load):
+    def __init__(self, config, do_load, recursive):
         self._log = logging.getLogger('crosspm')
         self._config = config  # type: Config
         self.cache = config.cache
@@ -29,6 +29,7 @@ class Downloader(Command):
         self.common_parser = Parser('common', {}, config)
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
                                      self.common_parser)
+        self.recursive = recursive
 
         if not config.deps_path:
             config.deps_path = \
@@ -155,8 +156,8 @@ class Downloader(Command):
                 from crosspm.helpers.locker import Locker
                 depslock_path = os.path.realpath(
                     os.path.join(os.path.dirname(depslock_file_path), self._config.deps_lock_file_name))
-                Locker(self._config, do_load=self.do_load).lock_packages(depslock_file_path, depslock_path,
-                                                                         packages=self._root_package.packages)
+                Locker(self._config, do_load=self.do_load, recursive=self.recursive).lock_packages(
+                    depslock_file_path, depslock_path, packages=self._root_package.packages)
 
         return self._root_package.all_packages
 
@@ -165,7 +166,7 @@ class Downloader(Command):
 
     def search_dependencies(self, depslock_file_path, deps_content=None):
         self._log.info('Check dependencies ...')
-        self._root_package.find_dependencies(depslock_file_path, property_validate=True, deps_content=deps_content)
+        self._root_package.find_dependencies(depslock_file_path, property_validate=True, deps_content=deps_content, )
         self._log.info('')
         self.set_duplicated_flag()
         self._log.info('Dependency tree:')
