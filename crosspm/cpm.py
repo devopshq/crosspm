@@ -140,15 +140,18 @@ class CrossPM:
             self.command_ = None
 
     @staticmethod
-    def prepare_args(args):
+    def prepare_args(args, windows=None):
         """
         Prepare args - add support for old interface, e.g:
             - --recursive was "flag" and for now it support True or False value
         :param args:
         :return:
         """
+        if windows is None:
+            windows = "win" in sys.platform
+
         if isinstance(args, str):
-            args = shlex.split(args, posix="win" not in sys.platform)
+            args = shlex.split(args, posix=not windows)
         elif isinstance(args, list):
             pass
         elif args is None:
