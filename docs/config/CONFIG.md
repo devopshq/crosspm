@@ -109,16 +109,135 @@ values:
 
 # `options`
 Here we can define commandline options and environment variable names from which we will get some of columns values. We can define default values for those columns here too. Each option must be configured with this parameters:
-- `options:cmdline` - 
+- `cmdline` - Command line option name with option's value
+- `env` - Environment variable name with option's value. Used if command line option is not set
+- `default` - Default option's value. Used if command line option and environment variable are not set
+
+# `parsers`
+Rules for parsing columns, paths, properties, etc.
+```yaml
+parsers:
+  common:
+    columns:
+      version: "{int}.{int}.{int}[.{int}][-{str}]"
+    sort:
+      - version
+      - '*'
+    index: -1
+    usedby:
+      AQL:
+        "@dd.{package}.version": "{version}"
+        "@dd.{package}.operator": "="
+
+      property-parser:
+        "deb.name": "package"
+        "deb.version": "version"
+        "qaverdict": "qaverdict"
+
+  artifactory:
+    path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
+    properties: "some.org.quality = {quality}"
+```
+- `columns` - Dictionary with column name as a key and template as a value.
+Means that version column contains three numeric parts divided by a dot, followed by numeric or string or numeric and string parts with dividers or nothing at all:
+```yaml
+version: "{int}.{int}.{int}[.{int}][-{str}]"
+```
+- `sort` - List of column names in sorting order. Used for sorting packages if more than one version found 
+for defined parameters. Asterisk can be one of values of a list representing all columns not mentioned here.
+- `index` - Used for picking one element from sorted list. It's just a list index as in python.
+- `path` - Path template for searching packages in repository. Here {} is column, [|] is variation. 
+```yaml
+path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]
+```
+these paths will be searched:
+    
+```yaml
+https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.zip
+https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.tar.gz
+https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.zip
+https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.tar.gz
+```
+    
+- `properties` - Extra properties. i.e. object properties in Artifactory.
+
+# `defaults`
+Default values for columns not defined in "options".
+```yaml
+defaults:
+  branch: master
+  quality: stable
+  # default support python format, like this:
+  otherparams: "{package}/{version}"
+```
+
+# `solid:ext`
+Set of rules pointing to packages which doesn't need to be unpacked. File name extension (i.e. ".tgz", ".tar.gz", or more real example ".deb").
+```yaml
+solid:
+  ext: *.deb
+```
+
+# `fails:unique`
+Here we can define some rules for failing CrossPM jobs. `fails:unique` - List of columns for generating unique index.
+```yaml
+fails:
+  unique:
+  - package
+  - version
+```
 
 
-  - `cmdline` - Command line option name with option's value.
-  - `env` - Environment variable name with option's value. Used if command line option is not set.
-  - `default` - Default option's value. Used if command line option and environment variable are not set.
+# `common`
+Common parameters for all or several of sources.
+```yaml
+common:
+  server: https://repo.some.org/artifactory
+  parser: artifactory
+  type: jfrog-artifactory
+  auth_type: simple
+  auth:
+  - username
+  - password
+```
+
+# `sources`
+Sources definition. Here we define parameters for repositories access.
+- `type` - Source type. Available types list depends on existing adapter modules.
+- `parser` - Available parsers defined in parsers.
+- `server` - Root URL of repository server.
+- `repo` - Subpath to specific part of repository on server.
+- `auth_type` - Authorization type. For example "simple".
+- `auth` - Authorization data. For "simple" here we define login and password.
+```yaml
+sources:
+    - repo:
+      - libs-release.snapshot
+      - libs-release/extlibs
+    - type: jfrog-artifactory
+      parser: artifactory
+      server: https://repo.some.org/artifactory
+      repo: project.snapshot/temp-packages
+      auth_type: simple
+      auth:
+      - username2
+      - password2
+```
 
 
-# Examples
+# `output:tree`
+Report output format definition. `tree` - columns and widths for tree output, printed in the end of CrossPM job.
+```yaml
+output:
+  tree:
+  - package: 25
+  - version: 0
+```
+
+
+# Example
 We'll add some more examples soon. Here is one of configuration file examples for now.
+
 
  **crosspm.yaml**
 ```yaml
@@ -236,74 +355,3 @@ output:
   - package: 25
   - version: 0
 ```
-
-
-***parsers*** - Rules for parsing columns, paths, properties, etc.
-    
-
-  - `columns` - Dictionary with column name as a key and template as a value.
-     
-  - Example:
-        
-        version: "{int}.{int}.{int}[.{int}][-{str}]"
-    
-  
-  -   
-    means that version column contains three numeric parts divided by a dot, followed by numeric or string 
-    or numeric and string parts with dividers or nothing at all.
-  
-  
-  
-  - `sort` - List of column names in sorting order. Used for sorting packages if more than one version found 
-    for defined parameters. Asterisk can be one of values of a list representing all columns not mentioned here.
-  - `index` - Used for picking one element from sorted list. It's just a list index as in python.
-  - `path` - Path template for searching packages in repository. Here {} is column, [|] is variation.
-  
-  - Example: <b>path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]"</b>
-    
-  
-  - these paths will be searched:
-    
-        https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.zip
-        https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.tar.gz
-        https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.zip
-        https://repo.some.org/artifactory/libs-release.snapshot/boost/any/linux/boost.1.60.204.tar.gz
-    
-  
-  
-  
-  - `properties` - Extra properties. i.e. object properties in Artifactory.
-
-
-***defaults*** - Default values for columns not defined in "options".
-
-***solid*** - Set of rules pointing to packages which doesn't need to be unpacked.
-    
-
-  - `ext` - File name extension (i.e. ".tgz", ".tar.gz", or more real example ".deb").
-
-
-***fails*** - Here we can define some rules for failing CrossPM jobs.
-
-
-  - `unique` - List of columns for generating unique index.
-
-
-***common*** - Common parameters for all or several of sources.
-
-***sources*** - Sources definition. Here we define parameters for repositories access.
-
-
-  - `type` - Source type. Available types list depends on existing adapter modules.
-  - `parser` - Available parsers defined in parsers.
-  - `server` - Root URL of repository server.
-  - `repo` - Subpath to specific part of repository on server.
-  - `auth_type` - Authorization type. For example "simple".
-  - `auth` - Authorization data. For "simple" here we define login and password.
-
-
-***output*** - Report output format definition.
-    
-
-  - `tree - columns and widths for tree output, printed in the end of CrossPM job.
-
