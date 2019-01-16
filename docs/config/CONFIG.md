@@ -3,8 +3,27 @@ CrossPM Config
 
 <!--ts-->
    * [CrossPM Config](#crosspm-config)
+   * [import](#import)
+   * [cpm](#cpm)
+      * [cpm:dependencies and cpm:dependencies-lock](#cpmdependencies-and-cpmdependencies-lock)
+      * [cpm:lock-on-success](#cpmlock-on-success)
+      * [cpm: prefer-local](#cpm-prefer-local)
+   * [cache](#cache)
+      * [cache:storage](#cachestorage)
+      * [cache:clear - NOT used](#cacheclear---not-used)
+   * [columns](#columns)
+   * [values](#values)
+   * [options](#options)
+   * [parsers](#parsers)
+   * [defaults](#defaults)
+   * [solid:ext](#solidext)
+   * [fails:unique](#failsunique)
+   * [common](#common)
+   * [sources](#sources)
+   * [output:tree](#outputtree)
+   * [Example](#example)
 
-<!-- Added by: aburov, at: 2019-01-16T17:37+07:00 -->
+<!-- Added by: aburov, at: 2019-01-16T18:08+07:00 -->
 
 <!--te-->
 
