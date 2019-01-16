@@ -827,6 +827,8 @@ class Parser:
                     'File not found: [{}]'.format(list_or_file_path),
                 )
 
+            cpmconfig = False
+            start_cpmconfig = False
             with open(list_or_file_path, 'r') as f:
                 for i, line in enumerate(f):
                     line = line.strip()
@@ -835,10 +837,21 @@ class Parser:
                     if i == 0 and line.startswith(chr(1087) + chr(187) + chr(1111)):  # TODO: why?
                         line = line[3:]
 
-                    if not line or line.startswith(('#', '[',)):
+                    if line.startswith('#'):
+                        line_tmp = [x.strip().strip('"').strip("'") for x in line.strip('#').split('=') if x]
+                        if len(line_tmp) > 1:
+                            if line_tmp[0].lower() == 'cpmconfig' and line_tmp[1].lower() == self._config.config_file_name:
+                                start_cpmconfig = True
+                                cpmconfig = True
+                                continue
+                            else:
+                                start_cpmconfig = False
+
+                    if not line or (not cpmconfig and line.startswith(('#', '[',))):
                         continue
 
-                    yield self.get_package_params(i, line)
+                    if start_cpmconfig or not cpmconfig:
+                        yield self.get_package_params(i, line)
         elif (isinstance(list_or_file_path, dict)) and ('raw' in list_or_file_path):
             for _item in list_or_file_path['raw']:
                 _tmp_item = {k: self.parse_by_mask(k, v, False, True) for k, v in _item.items()}

@@ -86,8 +86,8 @@ class CrossPM:
     _ready = False
 
     def __init__(self, args=None, throw_exceptions=None, return_result=False):
-        self._config = None
-        self._output = None
+        self._configs = []
+        self._outputs = []
         self._return_result = return_result
 
         if throw_exceptions is None:
@@ -186,10 +186,18 @@ class CrossPM:
                 _deps_path = self._args['DEPS']
             if self._args['DEPSLOCK']:
                 _depslock_path = self._args['DEPSLOCK']
-        self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
-                              _deps_path, self._args['--lock-on-success'],
-                              self._args['--prefer-local'])
-        self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
+
+        config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
+                        _deps_path, self._args['--lock-on-success'],
+                        self._args['--prefer-local'])
+
+        for config_name in config.cpm_conf_names:
+            conf = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
+                          _deps_path, self._args['--lock-on-success'],
+                          self._args['--prefer-local'])
+            self._configs.append(conf.init_config(config_name))
+
+            self._outputs.append(Output(conf.output('result', None), conf.name_column, conf))
 
     def exit(self, code, msg):
         self._log.critical(msg)
@@ -341,27 +349,32 @@ class CrossPM:
                                        "Can not find template '{}'".format(output_template))
 
         do_load = not self._args['--list']
-        # hack for Locker
-        if command_ is Locker:
-            do_load = self.recursive
+        output_packages = {}
+        for config in self._configs:
+            # hack for Locker
+            if command_ is Locker:
+                do_load = self.recursive
 
-        cpm_ = command_(self._config, do_load, self.recursive)
-        cpm_.entrypoint()
+            cpm_ = command_(config, do_load, self.recursive)
+            cpm_.entrypoint()
+            output = [output for output in self._outputs if config == output._config][0]
+            output_packages[output] = cpm_.get_tree_packages()
 
-        if self._return_result:
-            return self._return(cpm_)
-        else:
-            # self._output.write(params, packages)
-            self._output.write_output(params, cpm_.get_tree_packages())
+            if self._return_result:
+                return self._return(cpm_, output)
+
+        for output, package in output_packages.items():
+            output.write_output(params, package)
+
         return ''
 
-    def _return(self, cpm_downloader):
+    def _return(self, cpm_downloader, output):
         if str(self._return_result).lower() == 'raw':
             return cpm_downloader.get_raw_packages()
         if str(self._return_result).lower() == 'tree':
             return cpm_downloader.get_tree_packages()
         else:
-            return self._output.output_type_module(cpm_downloader.get_tree_packages())
+            return output.output_type_module(cpm_downloader.get_tree_packages())
 
     @do_run
     def pack(self):
@@ -369,14 +382,15 @@ class CrossPM:
 
     @do_run
     def cache(self):
-        if self._args['clear']:
-            self._config.cache.clear(self._args['hard'])
-        elif self._args['size']:
-            self._config.cache.size()
-        elif self._args['age']:
-            self._config.cache.age()
-        else:
-            self._config.cache.info()
+        for config in self._configs:
+            if self._args['clear']:
+                config.cache.clear(self._args['hard'])
+            elif self._args['size']:
+                config.cache.size()
+            elif self._args['age']:
+                config.cache.age()
+            else:
+                config.cache.info()
 
 
 if __name__ == '__main__':

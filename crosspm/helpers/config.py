@@ -77,42 +77,37 @@ class Config:
         self.cache_config = {}
         self.init_env_config_path()
         self.secret_variables = []
+        self.cpm_conf_names = ''
+        self.no_fails = no_fails
+        self.config_file_name = config_file_name
+        self.cmdline = cmdline
 
-        cpm_conf_name = ''
         if deps_path:
-            if deps_path.__class__ is DependenciesContent:
-                # HACK
-                self.deps_path = deps_path
-            else:
-                deps_path = deps_path.strip().strip('"').strip("'")
-                self.deps_path = os.path.realpath(os.path.expanduser(deps_path))
-            if not cpm_conf_name:
-                cpm_conf_name = self.get_cpm_conf_name(deps_path)
-            if os.path.isfile(deps_path):
-                config_path_tmp = os.path.dirname(deps_path)
-            else:
-                config_path_tmp = deps_path
-            if config_path_tmp not in DEFAULT_CONFIG_PATH:
-                DEFAULT_CONFIG_PATH.append(config_path_tmp)
+            self.init_deps(deps_path)
 
         if depslock_path:
-            if depslock_path.__class__ is DependenciesContent:
-                # HACK
-                self.depslock_path = depslock_path
-            else:
-                depslock_path = depslock_path.strip().strip('"').strip("'")
-                self.depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
+            self.init_deps(depslock_path)
 
-            if not cpm_conf_name:
-                cpm_conf_name = self.get_cpm_conf_name(depslock_path)
-            if os.path.isfile(depslock_path):
-                config_path_tmp = os.path.dirname(depslock_path)
-            else:
-                config_path_tmp = depslock_path
-            if config_path_tmp not in DEFAULT_CONFIG_PATH:
-                DEFAULT_CONFIG_PATH.append(config_path_tmp)
+    def init_deps(self, deps_path):
+        if deps_path.__class__ is DependenciesContent:
+            # HACK
+            self.deps_path = deps_path
+        else:
+            deps_path = deps_path.strip().strip('"').strip("'")
+            self.deps_path = os.path.realpath(os.path.expanduser(deps_path))
+        if not self.cpm_conf_names:
+            self.cpm_conf_names = self.get_cpm_conf_name(deps_path)  # список имен конфиг файлов
+        if not self.cpm_conf_names:
+            self.cpm_conf_names.append(self.config_file_name)
+        if os.path.isfile(deps_path):
+            config_path_tmp = os.path.dirname(deps_path)
+        else:
+            config_path_tmp = deps_path
+        if config_path_tmp not in DEFAULT_CONFIG_PATH:
+            DEFAULT_CONFIG_PATH.append(config_path_tmp)
 
-        self._config_file_name = self.find_config_file(config_file_name, cpm_conf_name)
+    def init_config(self, cpm_conf_name):
+        self._config_file_name = self.find_config_file(self.config_file_name, cpm_conf_name)  # путь до конфиг файла
         self._global_config_file_name = self.find_global_config_file()
         if self._global_config_file_name:
             config_data = self.read_config_file(True)
@@ -122,7 +117,7 @@ class Config:
                     _override = False
             try:
                 _override = bool(_override)
-            except Exception:
+            except:
                 _override = True
         else:
             config_data = {}
@@ -139,15 +134,15 @@ class Config:
                 if property.get('secret', False):
                     self.secret_variables.append(variable)
 
-        self.no_fails = no_fails
-        self.parse_config(config_data, cmdline)
+        self.parse_config(config_data, self.cmdline)
         self.cache = Cache(self, self.cache_config)
-        # self._fails = {}
+        self.config_file_name = cpm_conf_name
+        return self
 
     def get_cpm_conf_name(self, deps_filename=''):
         if not deps_filename:
             deps_filename = self.depslock_path
-        result = ''
+        result = []
         if os.path.isfile(deps_filename):
             try:
                 with open(deps_filename, 'r') as f:
@@ -157,8 +152,7 @@ class Config:
                             line = [x.strip().strip('"').strip("'") for x in line.strip('#').split('=') if x]
                             if len(line) > 1:
                                 if line[0].lower() == 'cpmconfig':
-                                    result = line[1].split('#')[0].strip('"').strip("'")
-                                    break
+                                    result.append(line[1].split('#')[0].strip('"').strip("'"))
             except Exception:
                 pass
         return result
