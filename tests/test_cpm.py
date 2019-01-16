@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import pytest
 
 from crosspm.cpm import CrossPM
@@ -9,8 +10,9 @@ from crosspm.cpm import CrossPM
 #
 
 @pytest.mark.parametrize("expect, raw", [
-    (['download', '--options', 'with quotes'],
-     'download --options "with quotes"'),
+
+    (["command", "--config", "/home/src/config.yml"],
+     "command --config /home/src/config.yml"),
 
     (["command"],
      "command"),
@@ -40,8 +42,27 @@ from crosspm.cpm import CrossPM
      "command --recursive false"),
 
 ])
-def test_prepare_args(expect, raw):
-    assert CrossPM.prepare_args(raw) == expect, "Error when pass as string"
+def test_prepare_args_any(expect, raw):
+    assert CrossPM.prepare_args(raw, windows=False) == expect, "Error when pass as string, on Linux-system"
+    assert CrossPM.prepare_args(raw, windows=True) == expect, "Error when pass as string, on Windows-system"
+
+
+@pytest.mark.parametrize("expect, raw", [
+    (["command", "--config", "e:\\project\\config.yaml"],
+     "command --config e:\\project\\config.yaml"),
+    (['download', '--options', '"with quotes"'],
+     'download --options "with quotes"'),
+])
+def test_prepare_args_windows(expect, raw):
+    assert CrossPM.prepare_args(raw, windows=True) == expect, "Error when pass as string, on Windows-system"
+
+
+@pytest.mark.parametrize("expect, raw", [
+    (['download', '--options', 'with quotes'],
+     'download --options "with quotes"'),
+])
+def test_prepare_args_linux(expect, raw):
+    assert CrossPM.prepare_args(raw, windows=False) == expect, "Error when pass as string, on Linux-system"
 
 
 #

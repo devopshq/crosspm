@@ -1,8 +1,17 @@
+<!--ts-->
+   * [Usage as Python module](#usage-as-python-module)
+         * [Usage](#usage)
+         * [Package](#package)
+         * [Logging](#logging)
+
+<!-- Added by: aburov, at: 2019-01-16T17:11+07:00 -->
+
+<!--te-->
 Usage as Python module
 ======================
 
 ### Usage
-You can use CrossPM in python-code:
+Use `crosspm` as python-module:
 ```python
 from crosspm import CrossPM
 config_name = 'myconfig.yaml'

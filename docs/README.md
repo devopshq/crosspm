@@ -6,6 +6,17 @@ Cross Package Manager (CrossPM)
 [![pypi](https://img.shields.io/pypi/v/crosspm.svg)](https://pypi.python.org/pypi/crosspm)
 [![license](https://img.shields.io/pypi/l/crosspm.svg)](https://github.com/devopshq/crosspm/blob/master/LICENSE)
 
+<!--ts-->
+   * [Cross Package Manager (CrossPM)](#cross-package-manager-crosspm)
+      * [Introduction](#introduction)
+      * [Installation](#installation)
+      * [Usage](#usage)
+      * [Other pages](#other-pages)
+      * [Development](#development)
+
+<!-- Added by: aburov, at: 2019-01-16T17:11+07:00 -->
+
+<!--te-->
 
 Introduction
 ------------
@@ -95,7 +106,7 @@ You'll see something like this:
       --output=FILE                        Output file name (required if --out_format is not stdout)
       --output-template=FILE               Template path, e.g. nuget.packages.config.j2 (required if --out_format=jinja)
       --no-fails                           Ignore fails config if possible.
-      --recursive                          Process all packages recursively to find and lock all dependencies
+      --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
       --prefer-local                       Do not search package if exist in cache
 ```
 
@@ -106,7 +117,6 @@ Other pages
     - [CrossPM in Cmake](usage/USAGE-CMAKE)
     - [CrossPM used by (RU)](usage/USAGE-USEDBY)
 - [CrossPM Config](config/CONFIG)
-    - [Path to package (RU)](config/config-path)
     - [Import (RU)](config/IMPORT)
     - [Environment variables (RU)](config/Environment-variables)
     - [cpmconfig - Centralized distribution of configuration files](cpmconfig)
@@ -114,3 +124,18 @@ Other pages
     - [Output - template (RU)](config/output-template)
 - [FAQ (RU)](FAQ)
 - [Changelog](https://github.com/devopshq/crosspm/blob/master/CHANGELOG.md)
+
+Development
+--------
+
+We use modified script for generate Table of content: https://github.com/ekalinin/github-markdown-toc
+```bash
+# Process single file
+export GH_TOC_TOKEN="$(pwd)/token.txt" # or other path to token.txt with your github token
+BASE=$(pwd) # crosspm git folder
+cd ./docs/path/to/file
+$BASE/gh-md-toc --insert FILENAME.MD
+
+# Process all files
+bash toc.sh
+```
