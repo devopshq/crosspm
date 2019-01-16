@@ -30,6 +30,7 @@ CrossPM Config
 
 # import
 If defined, imports yaml config parts from other files. Must be the first parameter in config file.
+
 ```yaml
 import:
 - cred.yaml
@@ -71,6 +72,7 @@ Work only with:
 
 # `cache`
 Parameters for cache handling
+
 ```yaml
 cache:
   cmdline: cache
@@ -93,6 +95,7 @@ Local storage setting, how `crosspm` will be stored files:
 - `storage:unpacked` - path to unpacked file 
 
 ## `cache:clear` - NOT used
+
 ```yaml
 cache:
   ...
@@ -107,6 +110,7 @@ cache:
 ```
 
 # `columns`
+
 ```yaml
 columns: "*package, version, branch"
 ```
@@ -233,6 +237,7 @@ fails:
 
 # `common`
 Common parameters for all or several of sources.
+
 ```yaml
 common:
   server: https://repo.some.org/artifactory
@@ -252,6 +257,7 @@ Sources definition. Here we define parameters for repositories access.
 - `repo` - Subpath to specific part of repository on server.
 - `auth_type` - Authorization type. For example "simple".
 - `auth` - Authorization data. For "simple" here we define login and password.
+
 ```yaml
 sources:
     - repo:
@@ -266,7 +272,6 @@ sources:
       - username2
       - password2
 ```
-
 
 # `output:tree`
 Report output format definition. `tree` - columns and widths for tree output, printed in the end of CrossPM job.
