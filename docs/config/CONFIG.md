@@ -15,15 +15,16 @@ CrossPM Config
    * [values](#values)
    * [options](#options)
    * [parsers](#parsers)
+      * [parsers:path](#parserspath)
    * [defaults](#defaults)
    * [solid:ext](#solidext)
    * [fails:unique](#failsunique)
    * [common](#common)
    * [sources](#sources)
    * [output:tree](#outputtree)
-   * [Example](#example)
+   * [Full example](#full-example)
 
-<!-- Added by: aburov, at: 2019-01-16T18:08+07:00 -->
+<!-- Added by: aburov, at: 2019-01-16T18:15+07:00 -->
 
 <!--te-->
 
@@ -166,7 +167,11 @@ version: "{int}.{int}.{int}[.{int}][-{str}]"
 - `sort` - List of column names in sorting order. Used for sorting packages if more than one version found 
 for defined parameters. Asterisk can be one of values of a list representing all columns not mentioned here.
 - `index` - Used for picking one element from sorted list. It's just a list index as in python.
-- `path` - Path template for searching packages in repository. Here {} is column, [|] is variation. 
+- `properties` - Extra properties. i.e. object properties in Artifactory.
+
+## `parsers:path`
+Path template for searching packages in repository. Here {} is column, [|] is variation. 
+
 ```yaml
 path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]
 ```
@@ -198,7 +203,6 @@ parsers:
     path: '{server}/{repo}/pool/*/{package}.{version}.nupkg'
 ```
     
-- `properties` - Extra properties. i.e. object properties in Artifactory.
 
 # `defaults`
 Default values for columns not defined in "options".
