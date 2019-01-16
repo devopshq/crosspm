@@ -14,4 +14,4 @@ README.rst
 .coverage
 coverage.xml
 test.py
-
+token.txt

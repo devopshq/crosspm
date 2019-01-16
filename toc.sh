@@ -1,2 +1,12 @@
 #!/usr/bin/env bash
-python -mmarkdown_toclify ./docs/FAQ.md -e 1 -o ./docs/FAQ.md
+set -e
+FILES=$(find ./docs/ -name "*.md")
+BASE=$(pwd)
+for f in ${FILES}:
+do
+    dir=$(dirname ${f})
+    filename=$(basename ${f})
+    pushd ${dir}
+    ${BASE}/gh-md-toc --insert ${filename}
+    popd
+done
