@@ -135,7 +135,7 @@ We use modified script for generate Table of content: https://github.com/ekalini
 export GH_TOC_TOKEN="$(pwd)/token.txt" # or other path to token.txt with your github token
 BASE=$(pwd) # crosspm git folder
 cd ./docs/path/to/file
-$BASE/gh-md-toc FILENAME.MD
+$BASE/gh-md-toc --insert FILENAME.MD
 
 # Process all files
 bash toc.sh
