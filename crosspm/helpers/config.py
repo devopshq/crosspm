@@ -99,6 +99,8 @@ class Config:
             self.cpm_conf_names = self.get_cpm_conf_name(deps_path)  # список имен конфиг файлов
         if self.config_file_name:
             self.cpm_conf_names.append(self.config_file_name)
+        if not self.config_file_name and not self.cpm_conf_names:
+            self.cpm_conf_names.append(self.find_config_file())
         if os.path.isfile(deps_path):
             config_path_tmp = os.path.dirname(deps_path)
         else:
