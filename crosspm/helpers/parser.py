@@ -848,10 +848,13 @@ class Parser:
                             else:
                                 start_cpmconfig = False
 
+                            if line_tmp[0].lower() == 'cpmconfig':
+                                cpmconfig = True
+
                     if not line or (not cpmconfig and line.startswith(('#', '[',))):
                         continue
 
-                    if start_cpmconfig or not cpmconfig:
+                    if start_cpmconfig or (not cpmconfig and self._config.config_file_name.endswith("yaml")):
                         yield self.get_package_params(i, line)
         elif (isinstance(list_or_file_path, dict)) and ('raw' in list_or_file_path):
             for _item in list_or_file_path['raw']:

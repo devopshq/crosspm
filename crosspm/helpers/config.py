@@ -97,7 +97,7 @@ class Config:
             self.deps_path = os.path.realpath(os.path.expanduser(deps_path))
         if not self.cpm_conf_names:
             self.cpm_conf_names = self.get_cpm_conf_name(deps_path)  # список имен конфиг файлов
-        if not self.cpm_conf_names:
+        if self.config_file_name:
             self.cpm_conf_names.append(self.config_file_name)
         if os.path.isfile(deps_path):
             config_path_tmp = os.path.dirname(deps_path)
@@ -221,7 +221,7 @@ class Config:
         return conf_path, conf_path_add
 
     def find_config_file(self, config_file_name='', cpm_conf_name=''):
-        if not config_file_name:
+        if not config_file_name or cpm_conf_name != config_file_name:
             ind = 0
             for config_path_env in self._config_path_env:
                 if os.path.isfile(config_path_env):
