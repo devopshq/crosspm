@@ -1,8 +1,5 @@
 <!--ts-->
    * [Usage](#usage)
-
-<!-- Added by: aburov, at: 2019-01-16T17:11+07:00 -->
-
 <!--te-->
 Usage
 =======

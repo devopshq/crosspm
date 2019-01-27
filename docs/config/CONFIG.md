@@ -12,6 +12,8 @@ CrossPM Config
       * [cache:storage](#cachestorage)
       * [cache:clear - NOT used](#cacheclear---not-used)
    * [columns](#columns)
+      * [parser column](#parser-column)
+      * [repo column](#repo-column)
    * [values](#values)
    * [options](#options)
    * [parsers](#parsers)
@@ -23,9 +25,6 @@ CrossPM Config
    * [sources](#sources)
    * [output:tree](#outputtree)
    * [Full example](#full-example)
-
-<!-- Added by: aburov, at: 2019-01-16T18:15+07:00 -->
-
 <!--te-->
 
 # import

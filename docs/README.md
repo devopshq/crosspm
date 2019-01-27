@@ -13,9 +13,6 @@ Cross Package Manager (CrossPM)
       * [Usage](#usage)
       * [Other pages](#other-pages)
       * [Development](#development)
-
-<!-- Added by: aburov, at: 2019-01-16T17:11+07:00 -->
-
 <!--te-->
 
 Introduction
