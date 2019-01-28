@@ -12,6 +12,8 @@ CrossPM Config
       * [cache:storage](#cachestorage)
       * [cache:clear - NOT used](#cacheclear---not-used)
    * [columns](#columns)
+      * [parser column](#parser-column)
+      * [repo column](#repo-column)
    * [values](#values)
    * [options](#options)
    * [parsers](#parsers)
@@ -23,13 +25,11 @@ CrossPM Config
    * [sources](#sources)
    * [output:tree](#outputtree)
    * [Full example](#full-example)
-
-<!-- Added by: aburov, at: 2019-01-16T18:15+07:00 -->
-
 <!--te-->
 
 # import
 If defined, imports yaml config parts from other files. Must be the first parameter in config file.
+
 ```yaml
 import:
 - cred.yaml
@@ -71,6 +71,7 @@ Work only with:
 
 # `cache`
 Parameters for cache handling
+
 ```yaml
 cache:
   cmdline: cache
@@ -93,6 +94,7 @@ Local storage setting, how `crosspm` will be stored files:
 - `storage:unpacked` - path to unpacked file 
 
 ## `cache:clear` - NOT used
+
 ```yaml
 cache:
   ...
@@ -107,6 +109,7 @@ cache:
 ```
 
 # `columns`
+
 ```yaml
 columns: "*package, version, branch"
 ```
@@ -115,6 +118,72 @@ columns: "*package, version, branch"
 Let's keep in mind that any value we use in path, properties and columns description, called `column` in CrossPM.
 
 Manifest file columns definition. Asterisk here points to name column (column of manifest file with package name). CrossPM uses it for building list with unique packages (i.e. by package name)
+
+Некоторые колонки в `crosspm` имеют специальное значение
+
+## parser column
+Чтобы явно задать какой пакет каким парсером искать - используйте `parser`-колонку в dependencies-файле.
+
+Этот подход позволяет ускорить поиск, если у вас много `parser`.
+
+config.yaml content:
+```yaml
+# Часть пропущена
+columns: "*package, version, parser"
+parsers:
+  release_packages:
+    columns:
+      version: '{int}.{int}.{int}'
+    path: '{server}/{repo}/{name}/{name}.{version}.[msi|exe]'
+  feature_packages:
+    columns:
+      version: '{int}.{int}.{int}'
+    path: '{server}/{repo}/{name}/{name}.{version}.[msi|exe]'
+```
+
+dependencies.txt content:
+```
+# package version parser
+package1 1.0.* release_packages
+package2 1.0.* release_packages
+
+# Указывайте несколько через запятую, без пробела:
+package2 1.0.* feature_packages,release_packages
+
+# Варианты для поиска по всем парсерам: *, -, пустая колонка
+package3 1.0.* -
+package3 1.0.* *
+package3 1.0.*
+```
+
+## repo column
+Можно указать в каких репозиториях искать пакет - используйте колонку `repo`. Все используемые `repo` должны быть явно заданы в [sources](#sources).
+
+Указание `repo` не ускоряет поиск, т.к. запрос идет по определенным в `sources` репозиториям. Но позволяет точнее определить пакет.
+
+`config.yaml` content:
+```yaml
+columns: "*package, version, repo"
+sources:
+  - repo: repo.snapshot
+    parser: artifactory-parser
+  - repo: repo.release
+    parser: artifactory-parser
+```
+
+`dependencies.txt` content:
+```
+# package version repo
+package1 1.0.* repo.snapshot
+package1 1.0.* repo.release
+
+# Указывайте несколько через запятую, без пробела:
+package1 1.0.* repo.snapshot,repo.release
+
+# Поиск во всех репозиториях:
+package1 1.0.* *
+package1 1.0.* -
+```
 
 # `values`
 Lists or dicts of available values for some columns (if we need it).
@@ -233,6 +302,7 @@ fails:
 
 # `common`
 Common parameters for all or several of sources.
+
 ```yaml
 common:
   server: https://repo.some.org/artifactory
@@ -245,6 +315,7 @@ common:
 ```
 
 # `sources`
+
 Sources definition. Here we define parameters for repositories access.
 - `type` - Source type. Available types list depends on existing adapter modules.
 - `parser` - Available parsers defined in parsers.
@@ -252,6 +323,8 @@ Sources definition. Here we define parameters for repositories access.
 - `repo` - Subpath to specific part of repository on server.
 - `auth_type` - Authorization type. For example "simple".
 - `auth` - Authorization data. For "simple" here we define login and password.
+
+
 ```yaml
 sources:
     - repo:
@@ -267,9 +340,9 @@ sources:
       - password2
 ```
 
-
 # `output:tree`
 Report output format definition. `tree` - columns and widths for tree output, printed in the end of CrossPM job.
+
 ```yaml
 output:
   tree:

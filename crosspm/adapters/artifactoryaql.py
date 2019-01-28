@@ -71,6 +71,15 @@ class Adapter(BaseAdapter):
         self._log.info('parser: {}'.format(parser._name))
         for _paths in parser.get_paths(list_or_file_path, source):
 
+            # If "parser"-column specified - find only in this parser
+            parser_names = _paths['params'].get('parser')
+            if parser_names and parser_names != "*":
+                self._log.info("Specified parsers: {}".format(parser_names))
+                parsers = parser_names.split(',')
+                if parser._name not in parsers:
+                    self._log.info("Skip parser: {}".format(parser._name))
+                    continue
+
             _packages = []
             _params_found = {}
             _params_found_raw = {}
@@ -167,6 +176,7 @@ class Adapter(BaseAdapter):
                                     _packages += [_repo_path]
                                     _params_found[_repo_path].update({k: v for k, v in _params.items()})
                                     _params_found[_repo_path]['filename'] = str(_repo_path.name)
+                                    _params_found[_repo_path]['parser'] = parser._name
                             self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
                     except RuntimeError as e:
                         try:
