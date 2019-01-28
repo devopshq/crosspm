@@ -144,11 +144,11 @@ parsers:
 dependencies.txt content:
 ```
 # package version parser
-package1 1.0.* release_branch
-package2 1.0.* feature_branch
+package1 1.0.* release_packages
+package2 1.0.* release_packages
 
 # Указывайте несколько через запятую, без пробела:
-package2 1.0.* feature_branch,release_branch
+package2 1.0.* feature_packages,release_packages
 
 # Варианты для поиска по всем парсерам: *, -, пустая колонка
 package3 1.0.* -
@@ -166,9 +166,9 @@ package3 1.0.*
 columns: "*package, version, repo"
 sources:
   - repo: repo.snapshot
-    parser: feature_packages
+    parser: artifactory-parser
   - repo: repo.release
-    parser: release_packages
+    parser: artifactory-parser
 ```
 
 `dependencies.txt` content:
