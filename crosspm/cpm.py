@@ -33,6 +33,7 @@ Options:
     --no-fails                           Ignore fails config if possible.
     --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
     --prefer-local                       Do not search package if exist in cache
+    --stdout                             Print info and debug message to STDOUT, error to STDERR. Otherwise - all messages to STDERR
 
 """  # noqa
 
@@ -113,6 +114,7 @@ class CrossPM:
         self._args = docopt(docopt_str,
                             argv=args,
                             version=version)
+
         if self._args['--recursive']:
             recursive_str = self._args['--recursive']
             if recursive_str.lower() == 'true':
@@ -138,6 +140,25 @@ class CrossPM:
             self.command_ = Usedby
         else:
             self.command_ = None
+
+    @property
+    def stdout(self):
+        """
+        Флаг --stdout может быть взят из переменной окружения CROSSPM_STDOUT.
+        Если есть любое значение в CROSSPM_STDOUT - оно понимается как True
+        :return:
+        """
+        # --stdout
+        stdout = self._args['--stdout']
+        if stdout:
+            return True
+
+        # CROSSPM_STDOUT
+        stdout_env = os.getenv('CROSSPM_STDOUT', None)
+        if stdout_env is not None:
+            return True
+
+        return False
 
     @staticmethod
     def prepare_args(args, windows=None):
@@ -255,10 +276,20 @@ class CrossPM:
             formatter = logging.Formatter(format_str, datefmt="%Y-%m-%d %H:%M:%S")
 
             if level:
-                sh = logging.StreamHandler(stream=sys.stderr)
-                sh.setLevel(level)
-                # sh.setFormatter(formatter)
-                self._log.addHandler(sh)
+                # legacy way - Cmake catch message from stdout and parse PACKAGE_ROOT
+                # So, crosspm print debug and info message to stderr for debug purpose
+                if not self.stdout:
+                    sh = logging.StreamHandler(stream=sys.stderr)
+                    sh.setLevel(level)
+                    self._log.addHandler(sh)
+                # If --stdout flag enabled
+                else:
+                    sh = logging.StreamHandler(stream=sys.stderr)
+                    sh.setLevel(logging.WARNING)
+                    self._log.addHandler(sh)
+                    sh = logging.StreamHandler(stream=sys.stdout)
+                    sh.setLevel(level)
+                    self._log.addHandler(sh)
 
             if log_abs:
                 if not level_str:
