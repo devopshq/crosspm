@@ -74,37 +74,37 @@ To see commandline parameters help, run:
 
 You'll see something like this:
 ```
-  CrossPM (Cross Package Manager) version: *** The MIT License (MIT)
+Usage:
+    crosspm download [options]
+    crosspm lock [DEPS] [DEPSLOCK] [options]
+    crosspm usedby [DEPS] [options]
+    crosspm pack <OUT> <SOURCE> [options]
+    crosspm cache [size | age | clear [hard]]
+    crosspm -h | --help
+    crosspm --version
 
-  Usage:
-      crosspm download [options]
-      crosspm lock [DEPS] [DEPSLOCK] [options]
-      crosspm pack <OUT> <SOURCE> [options]
-      crosspm cache [size | age | clear [hard]]
-      crosspm -h | --help
-      crosspm --version
-
-  options:
-      <OUT>                                Output file.
-      <SOURCE>                             Source directory path.
-      -h, --help                           Show this screen.
-      --version                            Show version.
-      -L, --list                           Do not load packages and its dependencies. Just show what's found.
-      -v LEVEL, --verbose=LEVEL            Set output verbosity: ({verb_level}) [default: ].
-      -l LOGFILE, --log=LOGFILE            File name for log output. Log level is '{log_default}' if set when verbose doesn't.
-      -c FILE, --config=FILE               Path to configuration file.
-      -o OPTIONS, --options OPTIONS        Extra options.
-      --deps-path=FILE                     Path to file with dependencies [./{deps_default}]
-      --depslock-path=FILE                 Path to file with locked dependencies [./{deps_lock_default}]
-      --dependencies-content=CONTENT       Content for dependencies.txt file
-      --dependencies-lock-content=CONTENT  Content for dependencies.txt.lock file
-      --lock-on-success                    Save file with locked dependencies next to original one if download succeeds
-      --out-format=TYPE                    Output data format. Available formats:({out_format}) [default: {out_format_default}]
-      --output=FILE                        Output file name (required if --out_format is not stdout)
-      --output-template=FILE               Template path, e.g. nuget.packages.config.j2 (required if --out_format=jinja)
-      --no-fails                           Ignore fails config if possible.
-      --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
-      --prefer-local                       Do not search package if exist in cache
+Options:
+    <OUT>                                Output file.
+    <SOURCE>                             Source directory path.
+    -h, --help                           Show this screen.
+    --version                            Show version.
+    -L, --list                           Do not load packages and its dependencies. Just show what's found.
+    -v LEVEL, --verbose=LEVEL            Set output verbosity: ({verb_level}) [default: ].
+    -l LOGFILE, --log=LOGFILE            File name for log output. Log level is '{log_default}' if set when verbose doesn't.
+    -c FILE, --config=FILE               Path to configuration file.
+    -o OPTIONS, --options OPTIONS        Extra options.
+    --deps-path=FILE                     Path to file with dependencies [./{deps_default}]
+    --depslock-path=FILE                 Path to file with locked dependencies [./{deps_lock_default}]
+    --dependencies-content=CONTENT       Content for dependencies.txt file
+    --dependencies-lock-content=CONTENT  Content for dependencies.txt.lock file
+    --lock-on-success                    Save file with locked dependencies next to original one if download succeeds
+    --out-format=TYPE                    Output data format. Available formats:({out_format}) [default: {out_format_default}]
+    --output=FILE                        Output file name (required if --out_format is not stdout)
+    --output-template=FILE               Template path, e.g. nuget.packages.config.j2 (required if --out_format=jinja)
+    --no-fails                           Ignore fails config if possible.
+    --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
+    --prefer-local                       Do not search package if exist in cache
+    --stdout                             Print info and debug message to STDOUT, error to STDERR. Otherwise - all messages to STDERR
 ```
 
 Other pages
@@ -127,10 +127,12 @@ Development
 
 We use modified script for generate Table of content: https://github.com/ekalinin/github-markdown-toc
 ```bash
-# Process single file
+# Prepare
 export GH_TOC_TOKEN="$(pwd)/token.txt" # or other path to token.txt with your github token
 BASE=$(pwd) # crosspm git folder
-cd ./docs/path/to/file
+
+# Process one file, eg FAQ.md
+cd ./docs/kA
 $BASE/gh-md-toc --insert FILENAME.MD
 
 # Process all files

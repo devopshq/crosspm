@@ -188,6 +188,20 @@ crosspm usedby -c config.yaml --dependencies-content "packagename 1.2.* master"
 
 Подробнее можно [почитать тут](usage/USAGE-CREDS.md)
 
+## crosspm пишит все сообщения в stderr
+При выполнении команды `crosspm download` печатает сообщения в `stderr` (стандартный потом вывода ошибок). Из-за этого сложно понять правильно работает `crosspm` или там есть ошибки.
 
-##
-```Table of content auto generated: https://github.com/rasbt/markdown-toclify```
+`crosspm` ведет себя так для поддержки совместимости с cmakepm (старой версии `crosspm`). `Cmake` ищет в `stdout` пути до пакетов в последних строках - вида `PACKAGENAME_ROOT=e:\cache\package\1.2.123`. Поэтому все диагностические сообщения пишем в другой поток - `stderr`.
+
+Чтобы сделать поведение "как у других программ" - запустите `crosspm` с флагом `--stdout`. Тогда диагностические сообщения будут выводиться в `stdout`, а ошибки - в `stderr`
+```bash
+crosspm download --stdout
+
+# ИЛИ можно задать переменную окружения CROSSPM_STDOUT с любым значением
+set CROSSPM_STDOUT=1
+# set CROSSPM_STDOUT=true
+crosspm download # аналогично --stdout
+```
+В конфигурационный файл задать этот параметр нельзя, т.к. логгирование происходит до прочтения конфигурационного файла.
+
+

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 import pytest
 
@@ -115,6 +116,21 @@ def test_lock_recursive_false():
 
 def test_lock_recursive_unknown():
     try:
-        cpm = CrossPM("lock --recursive Trololo")
+        _ = CrossPM("lock --recursive Trololo")
     except Exception as e:
         assert "Trololo" in str(e)
+
+
+# --stdout
+
+def test_stdout_flag():
+    cpm = CrossPM("download")
+    assert cpm.stdout is False
+
+    cpm = CrossPM("download --stdout")
+    assert cpm.stdout is True
+
+    os.environ['CROSSPM_STDOUT'] = '1'
+    cpm = CrossPM("download")
+    assert cpm.stdout is True
+
