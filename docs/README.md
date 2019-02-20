@@ -132,8 +132,8 @@ export GH_TOC_TOKEN="$(pwd)/token.txt" # or other path to token.txt with your gi
 BASE=$(pwd) # crosspm git folder
 
 # Process one file, eg FAQ.md
-cd ./docs/kA
-$BASE/gh-md-toc --insert FILENAME.MD
+cd ./docs
+$BASE/gh-md-toc --insert FAQ.md
 
 # Process all files
 bash toc.sh
