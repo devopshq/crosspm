@@ -10,8 +10,6 @@ from crosspm.helpers.package import Package
 from crosspm.helpers.parser import Parser
 
 
-
-
 class Command(object):
     def entrypoint(self, *args, **kwargs):
         assert NotImplemented
