@@ -2,10 +2,12 @@
 import contextlib
 import os
 import shutil
+import sys
 import tarfile
 import zipfile
 
-from crosspm.helpers.exceptions import *  # noqa
+from crosspm.helpers.exceptions import CrosspmException, CROSSPM_ERRORCODE_NO_FILES_TO_PACK, \
+    CROSSPM_ERRORCODE_UNKNOWN_ARCHIVE
 
 WINDOWS = True if sys.platform == 'win32' else False
 
