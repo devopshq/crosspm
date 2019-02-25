@@ -10,11 +10,6 @@ from crosspm.helpers.package import Package
 from crosspm.helpers.parser import Parser
 
 
-def update_progress(msg, progress):
-    sys.stderr.write('\r{0} [{1:10}] {2}%'.format(msg, '#' * int(float(progress) / 10.0), int(progress)))
-    sys.stderr.flush()
-
-
 class Command(object):
     def entrypoint(self, *args, **kwargs):
         assert NotImplemented
@@ -55,6 +50,9 @@ class Downloader(Command):
             self._depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
 
         self.do_load = do_load
+
+    def update_progress(self, msg, progress):
+        self._log.info('\r{0} [{1:10}] {2}%'.format(msg, '#' * int(float(progress) / 10.0), int(progress)))
 
     # Get list of all packages needed to resolve all the dependencies.
     # List of Package class instances.
@@ -141,16 +139,13 @@ class Downloader(Command):
 
             total = len(self._root_package.all_packages)
             for i, _pkg in enumerate(self._root_package.all_packages):
-                update_progress('Download/Unpack:', float(i) / float(total) * 100.0)
+                self.update_progress('Download/Unpack:', float(i) / float(total) * 100.0)
                 if _pkg.download():  # self.packed_path):
                     _pkg.unpack()  # self.unpacked_path)
 
-            update_progress('Download/Unpack:', 100)
-            print_stdout('')
+            self.update_progress('Download/Unpack:', 100)
+            self._log.info('')
             self._log.info('Done!')
-            sys.stdout.write('\n')
-            sys.stdout.write('\n')
-            sys.stdout.flush()
 
             if self._config.lock_on_success:
                 from crosspm.helpers.locker import Locker

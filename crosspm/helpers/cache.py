@@ -143,7 +143,7 @@ class Cache:
         return item['time']
 
     def info(self):
-        print_stdout('Cache info:')
+        print("Cache info:")
 
     def _delete_dir(self, _dirs, max_time=None, del_size=None):
         cleared = [0]

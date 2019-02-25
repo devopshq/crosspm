@@ -40,6 +40,7 @@ Options:
 import logging
 import os
 import shlex
+import sys
 import time
 
 from docopt import docopt
@@ -71,11 +72,9 @@ def do_run(func):
             return self.exit(e.error_code, e.msg)
 
         except CrosspmException as e:
-            print_stdout('')
             return self.exit(e.error_code, e.msg)
 
         except Exception as e:
-            print_stdout('')
             self._log.exception(e)
             return self.exit(CROSSPM_ERRORCODE_UNKNOWN_ERROR, 'Unknown error occurred!')
         return 0, res

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
 
 CROSSPM_ERRORCODES = (
     CROSSPM_ERRORCODE_SUCCESS,
@@ -21,16 +20,6 @@ CROSSPM_ERRORCODES = (
     CROSSPM_ERRORCODE_ADAPTER_ERROR,
     CROSSPM_ERRORCODE_UNKNOWN_ARCHIVE,
 ) = range(18)
-
-
-# Workaround for async stuff (something weird happens with plain print)
-def print_stdout(*args, **kwargs):
-    # verbose = kwargs.get('verbose', -1)
-    # kwargs.update({'file': sys.stdout})
-    # print(*args, **kwargs)
-    prn_str = ''.join(*args)
-    sys.stderr.write('{}\n'.format(prn_str))
-    sys.stderr.flush()
 
 
 class CrosspmException(Exception):
