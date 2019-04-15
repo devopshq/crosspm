@@ -151,7 +151,7 @@ class Config:
         result = ''
         if os.path.isfile(deps_filename):
             try:
-                with open(deps_filename, 'r') as f:
+                with open(deps_filename, 'r', encoding="utf-8-sig") as f:
                     for line in f:
                         line = line.strip()
                         if line.startswith('#'):
@@ -292,7 +292,7 @@ class Config:
         elif _ext == '.json':
             _is_yaml = False
         else:
-            with open(_config_file_name) as f:
+            with open(_config_file_name, encoding="utf-8-sig") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -305,7 +305,7 @@ class Config:
             if _is_yaml:
                 result = self.load_yaml(_config_file_name)
             else:
-                with open(_config_file_name) as f:
+                with open(_config_file_name, encoding="utf-8-sig") as f:
                     result = json.loads(f.read())
 
         except Exception as e:
@@ -343,11 +343,12 @@ class Config:
 
         return res_file_name
 
-    def load_yaml(self, _config_file_name):
+    @staticmethod
+    def load_yaml(_config_file_name):
         result = {}
         yaml_imports = ''
         yaml_content = ''
-        with open(_config_file_name) as f:
+        with open(_config_file_name, encoding="utf-8-sig") as f:
             for line in f:
                 if (not yaml_imports) and (not yaml_content):
                     line_one = line.strip().replace(' ', '').lower()
@@ -370,9 +371,9 @@ class Config:
                     data_imports['import'] = [data_imports['import']]
                 if isinstance(data_imports['import'], (list, tuple)):
                     for _import_file_name in data_imports['import']:
-                        _import_file_name = self.find_import_file(_import_file_name)
+                        _import_file_name = Config.find_import_file(_import_file_name)
                         if _import_file_name:
-                            with open(_import_file_name) as f:
+                            with open(_import_file_name, encoding="utf-8-sig") as f:
                                 for line in f:
                                     yaml_content_pre += line
                             yaml_content_pre += '\n'
