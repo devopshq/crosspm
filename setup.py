@@ -82,7 +82,7 @@ setup(
     ],
     install_requires=[
         'requests',
-        'urllib3',
+        'urllib3<1.25,>=1.21.1',
         'docopt',
         'pyyaml',
         'dohq-artifactory',
