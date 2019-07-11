@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-# from crosspm.helpers.package import Package
-from crosspm.helpers.exceptions import *  # noqa
-from datetime import datetime, timedelta
 import time
+# from crosspm.helpers.package import Package
+from datetime import datetime, timedelta
 
 
 class Cache:
@@ -321,6 +320,10 @@ class Cache:
     def exists_unpacked(self, package, filename=None, params=None, pkg_path=''):
         # TODO: Check if file exists and size and time match
         path = self.path_unpacked(package, params) if not pkg_path else pkg_path
-        res = os.path.exists(path)
+        if os.path.isdir(path):
+            # check that dir is not empty
+            res = bool(os.listdir(path))
+        else:
+            res = os.path.exists(path)
 
         return res, path
