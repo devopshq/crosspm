@@ -88,6 +88,7 @@ class Archive:
                     tf.extract(file_name, path=dst_dir_path)
                 else:
                     # Quick hack for unpack tgz on Windows with PATH like \\?\C:
+                    # Internal issue: CM-39214
                     try:
                         tf.extractall(path=dst_dir_path)
                     except OSError:
