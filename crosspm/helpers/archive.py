@@ -87,7 +87,13 @@ class Archive:
                 if file_name:
                     tf.extract(file_name, path=dst_dir_path)
                 else:
-                    tf.extractall(path=dst_dir_path)
+                    # Quick hack for unpack tgz on Windows with PATH like \\?\C:
+                    # Internal issue: CM-39214
+                    try:
+                        tf.extractall(path=dst_dir_path)
+                    except OSError:
+                        dst_dir_path = dst_dir_path.replace("\\\\?\\", '')
+                        tf.extractall(path=dst_dir_path)
 
         elif zipfile.is_zipfile(archive_name):
             with contextlib.closing(zipfile.ZipFile(archive_name, mode='r')) as zf:
