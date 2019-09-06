@@ -484,7 +484,7 @@ class Adapter(BaseAdapter):
             _src = session.get(str(package), verify=package.verify, stream=True)
             _src.raise_for_status()
 
-            with open(dest_path, 'wb+', encoding="utf-8-sig") as _dest:
+            with open(dest_path, 'wb+') as _dest:
                 for chunk in _src.iter_content(CHUNK_SIZE):
                     if chunk:  # filter out keep-alive new chunks
                         _dest.write(chunk)
