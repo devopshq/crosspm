@@ -827,7 +827,7 @@ class Parser:
                     'File not found: [{}]'.format(list_or_file_path),
                 )
 
-            with open(list_or_file_path, 'r') as f:
+            with open(list_or_file_path, 'r', encoding="utf-8-sig") as f:
                 for i, line in enumerate(f):
                     line = line.strip()
 
