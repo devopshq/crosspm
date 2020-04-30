@@ -26,7 +26,7 @@ def test_config(filename):
 ])
 def test_config_comment_before_import_handle(filename):
     start_wd = os.getcwd()
-    os.chdir(f'{Path(__file__).parent}/data')
+    os.chdir('{}/data'.format(Path(__file__).parent))
     result = Config.load_yaml(str(DATA / '{}.yaml'.format(filename)))
     os.chdir(start_wd)
     assert '.aliases' in result
