@@ -3,6 +3,7 @@ python:
   - '3.4'
   - '3.5'
   - '3.6'
+  - '3.7'
 
 branches:
   only:
@@ -12,7 +13,7 @@ before_install:
   - export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
 
 install:
-  - pip install dohq-artifactory docopt pyyaml==5.1 requests pypandoc coverage==4.5 codacy-coverage jinja2
+  - pip install -r requirements.txt
   - pip install flake8
 
 before_script:
