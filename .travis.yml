@@ -12,6 +12,7 @@ before_install:
   - export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
 
 install:
+  - pip install -U pip
   - pip install dohq-artifactory docopt pyyaml requests pypandoc coverage codacy-coverage jinja2
   - pip install flake8
 
