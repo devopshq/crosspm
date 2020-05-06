@@ -1,3 +1,4 @@
 flake8
-pytest>=5.2
+pytest<=4.6.9; python_version < '3.5'
+pytest>=5.2; python_version >= '3.5'
 pytest-flask
