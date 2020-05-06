@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from pathlib import Path
-import os
 
 import pytest
 
@@ -24,9 +23,7 @@ def test_config(filename):
     ('config_import_without_comment'),
     ('config_import_with_comment'),
 ])
-def test_config_comment_before_import_handle(filename):
-    start_wd = os.getcwd()
-    os.chdir('{}/data'.format(Path(__file__).parent))
+def test_config_comment_before_import_handle(filename, monkeypatch):
+    monkeypatch.chdir('{}/data'.format(Path(__file__).parent))
     result = Config.load_yaml(str(DATA / '{}.yaml'.format(filename)))
-    os.chdir(start_wd)
     assert '.aliases' in result
