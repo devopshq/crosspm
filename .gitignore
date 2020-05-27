@@ -8,7 +8,10 @@ docs/_build/
 /tests_old/
 .cache
 .eggs
+.tests
 README.rst
 /htmlcov
 .coverage
 coverage.xml
+test.py
+token.txt

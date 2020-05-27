@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
-import os
-import logging
 import json
+import logging
+import os
 import platform
+import sys
+
+import requests
 import yaml
+
+from crosspm.helpers.cache import Cache
+from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
 from crosspm.helpers.source import Source
-from crosspm.helpers.cache import Cache
 
-from requests.packages.urllib3 import disable_warnings
+requests.packages.urllib3.disable_warnings()
 
 WINDOWS = (platform.system().lower() == 'windows') or (os.name == 'nt')
 DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.yml', 'crosspm.json',)
@@ -43,14 +48,12 @@ CROSSPM_DEPENDENCY_LOCK_FILENAME = CROSSPM_DEPENDENCY_FILENAME  # 'dependencies.
 CROSSPM_ADAPTERS_NAME = 'adapters'
 CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
 
-disable_warnings()
-
 
 class Config:
     windows = WINDOWS
 
     def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path='',
-                 lock_on_success=False, recursive=False):
+                 lock_on_success=False, prefer_local=False):
         self._log = logging.getLogger('crosspm')
         self._config_path_env = []
         self._sources = []
@@ -68,17 +71,22 @@ class Config:
         self.deps_file_name = ''
         self.deps_lock_file_name = ''
         self.lock_on_success = lock_on_success
-        self.recursive = recursive
+        self.prefer_local = prefer_local
         self.crosspm_cache_root = ''
         self.deps_path = ''
         self.depslock_path = ''
         self.cache_config = {}
         self.init_env_config_path()
+        self.secret_variables = []
 
         cpm_conf_name = ''
         if deps_path:
-            deps_path = deps_path.strip().strip('"').strip("'")
-            self.deps_path = os.path.realpath(os.path.expanduser(deps_path))
+            if deps_path.__class__ is DependenciesContent:
+                # HACK
+                self.deps_path = deps_path
+            else:
+                deps_path = deps_path.strip().strip('"').strip("'")
+                self.deps_path = os.path.realpath(os.path.expanduser(deps_path))
             if not cpm_conf_name:
                 cpm_conf_name = self.get_cpm_conf_name(deps_path)
             if os.path.isfile(deps_path):
@@ -89,8 +97,13 @@ class Config:
                 DEFAULT_CONFIG_PATH.append(config_path_tmp)
 
         if depslock_path:
-            depslock_path = depslock_path.strip().strip('"').strip("'")
-            self.depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
+            if depslock_path.__class__ is DependenciesContent:
+                # HACK
+                self.depslock_path = depslock_path
+            else:
+                depslock_path = depslock_path.strip().strip('"').strip("'")
+                self.depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
+
             if not cpm_conf_name:
                 cpm_conf_name = self.get_cpm_conf_name(depslock_path)
             if os.path.isfile(depslock_path):
@@ -110,7 +123,7 @@ class Config:
                     _override = False
             try:
                 _override = bool(_override)
-            except:
+            except Exception:
                 _override = True
         else:
             config_data = {}
@@ -120,6 +133,12 @@ class Config:
             self._log.debug('Overriding config file values with global config.')
         else:
             config_data.update(self.read_config_file())
+
+        # Add secret variables to special list in config
+        if 'options' in config_data:
+            for variable, property in config_data['options'].items():
+                if property.get('secret', False):
+                    self.secret_variables.append(variable)
 
         self.no_fails = no_fails
         self.parse_config(config_data, cmdline)
@@ -132,7 +151,7 @@ class Config:
         result = ''
         if os.path.isfile(deps_filename):
             try:
-                with open(deps_filename, 'r') as f:
+                with open(deps_filename, 'r', encoding="utf-8-sig") as f:
                     for line in f:
                         line = line.strip()
                         if line.startswith('#'):
@@ -141,7 +160,7 @@ class Config:
                                 if line[0].lower() == 'cpmconfig':
                                     result = line[1].split('#')[0].strip('"').strip("'")
                                     break
-            except:
+            except Exception:
                 pass
         return result
 
@@ -172,7 +191,7 @@ class Config:
         for config_path in GLOBAL_CONFIG_PATH:
             try:
                 _path = config_path.format(**args).strip().strip("'").strip('"')
-            except:
+            except Exception:
                 _path = ''
             if _path:
                 for config_name in GLOBAL_CONFIG_FILE:
@@ -200,7 +219,7 @@ class Config:
             if conf_name:
                 conf_path_add = cpm_find(None, conf_name)[2]
 
-        except:
+        except Exception:
             conf_path = ''
         if conf_path and not os.path.isfile(conf_path):
             conf_path = ''
@@ -273,7 +292,7 @@ class Config:
         elif _ext == '.json':
             _is_yaml = False
         else:
-            with open(_config_file_name) as f:
+            with open(_config_file_name, encoding="utf-8-sig") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -286,7 +305,7 @@ class Config:
             if _is_yaml:
                 result = self.load_yaml(_config_file_name)
             else:
-                with open(_config_file_name) as f:
+                with open(_config_file_name, encoding="utf-8-sig") as f:
                     result = json.loads(f.read())
 
         except Exception as e:
@@ -324,12 +343,15 @@ class Config:
 
         return res_file_name
 
-    def load_yaml(self, _config_file_name):
+    @staticmethod
+    def load_yaml(_config_file_name):
         result = {}
         yaml_imports = ''
         yaml_content = ''
-        with open(_config_file_name) as f:
+        with open(_config_file_name, encoding="utf-8-sig") as f:
             for line in f:
+                if line.strip().startswith('#'):
+                    continue
                 if (not yaml_imports) and (not yaml_content):
                     line_one = line.strip().replace(' ', '').lower()
                     if line_one.startswith('import:'):
@@ -351,9 +373,9 @@ class Config:
                     data_imports['import'] = [data_imports['import']]
                 if isinstance(data_imports['import'], (list, tuple)):
                     for _import_file_name in data_imports['import']:
-                        _import_file_name = self.find_import_file(_import_file_name)
+                        _import_file_name = Config.find_import_file(_import_file_name)
                         if _import_file_name:
-                            with open(_import_file_name) as f:
+                            with open(_import_file_name, encoding="utf-8-sig") as f:
                                 for line in f:
                                     yaml_content_pre += line
                             yaml_content_pre += '\n'
@@ -389,7 +411,8 @@ class Config:
         # init default values for columns
         if 'defaults' in config_data:
             self._defaults = config_data['defaults']
-        self._defaults.update({k: v['default'] for k, v in self._options.items() if k not in self._defaults})
+        self._defaults.update(
+            {k: v['default'] for k, v in self._options.items() if k not in self._defaults and 'default' in v})
 
         # init solid
         if 'solid' in config_data:
@@ -461,7 +484,7 @@ class Config:
 
         try:
             _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
-        except:
+        except Exception:
             _cmdline = {}
 
         # init cpm parameters
@@ -508,6 +531,8 @@ class Config:
             if 'dependencies-lock' not in crosspm:
                 self.deps_lock_file_name = self.deps_file_name
 
+        if not self.prefer_local:
+            self.prefer_local = crosspm.get('prefer-local', False)
         if not self.lock_on_success:
             lock_on_success = crosspm.get('lock-on-success', False)
             if isinstance(lock_on_success, str):
@@ -515,7 +540,7 @@ class Config:
                     self.lock_on_success = True
             try:
                 self.lock_on_success = bool(lock_on_success)
-            except:
+            except Exception:
                 self.lock_on_success = False
 
         # Cache init
@@ -604,7 +629,7 @@ class Config:
     def parse_options(options, cmdline, check_default=False):
         # try:
         #     _cmdline = {x[0]: x[1] for x in [x.strip().split('=') for x in cmdline.split(',')] if len(x) > 1}
-        # except:
+        # except Exception:
         #     _cmdline = {}
         _remove = []
         for k, v in options.items():
@@ -733,7 +758,7 @@ class Config:
                 result = _temp.GetSystemDirectory()
                 if result:
                     result = os.path.splitdrive(result)[0]
-            except:
+            except Exception:
                 pass
         if not result:
             result = 'C:'

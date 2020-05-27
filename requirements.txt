@@ -1,0 +1,11 @@
+docopt
+dohq-artifactory
+Jinja2<2.11; python_version < '3.5'
+Jinja2>=2.11; python_version >= '3.5'
+patool
+pyunpack
+PyYAML<5.2; python_version < '3.5'
+PyYAML>=5.2; python_version >= '3.5'
+requests<2.22; python_version < '3.5'
+requests>=2.22; python_version >= '3.5'
+urllib3

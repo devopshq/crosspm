@@ -10,4 +10,5 @@ else:
     else:
         version = '{} build {}'.format('.'.join(version[:3]), version[3])
 
-from crosspm.cpm import CrossPM
+# import not in top, because use version
+from crosspm.cpm import CrossPM  # noqa

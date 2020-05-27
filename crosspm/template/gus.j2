@@ -1,0 +1,9 @@
+artifacts:
+{% for package in packages.values() %}
+  - src_path : "{{package.pkg.path_in_repo}}"
+    dest_path: "{{package.pkg.name}}"
+    md5hash: "{{package.md5}}"
+    version: "{{package.get_params(merged=True)['version']}}"
+    src_repo_name: "{{package.pkg.repo}}"
+{% endfor %}
+

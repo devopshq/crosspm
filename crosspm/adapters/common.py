@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from crosspm.helpers.exceptions import *
 import logging
 
 
@@ -8,7 +7,7 @@ class BaseAdapter:
         self._config = config
         self._log = logging.getLogger('crosspm')
 
-    def get_packages(self, source, parser, downloader, list_or_file_path):
+    def get_packages(self, source, parser, downloader, list_or_file_path, property_validate=True):
         # Here must be function
         self._log.info('Get packages')
         return None

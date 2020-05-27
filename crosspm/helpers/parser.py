@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
-import re
+import copy
 import fnmatch
+import itertools
+import logging
 import os
+import re
+
+from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 
 
@@ -16,13 +21,35 @@ class Parser:
         self._name = name
         self._sort = data.get('sort', [])
         self._index = data.get('index', -1)
-        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults']}
+
+        # Должно быть вида key: str_value
+        self._rules = {k: v for k, v in data.items() if k not in ['columns', 'index', 'sort', 'defaults', 'usedby']}
+
         if 'columns' in data:
             self._columns = {k: self.parse_value_template(v) for k, v in data['columns'].items() if v != ''}
         self._config = config
         self.init_rules_vars()
         if 'defaults' in data:
             self.init_defaults(data['defaults'])
+        self._usedby = data.get('usedby', None)
+
+    def get_usedby_aql(self, params):
+        """
+        Возвращает запрос AQL (без репозитория), из файла конфигурации
+        :param params:
+        :return:
+        """
+        if self._usedby is None:
+            return None
+
+        _result = {}
+        params = self.merge_valued(params)
+        for k, v in self._usedby['AQL'].items():
+            if isinstance(v, str):
+                k = k.format(**params)
+                v = v.format(**params)
+            _result[k] = v
+        return _result
 
     def get_vars(self):
         _vars = []
@@ -86,6 +113,7 @@ class Parser:
                         #     _rules = _rules[0]
 
     def parse_by_mask(self, column, value, types=False, ext_mask=False):
+        # см https://habrahabr.ru/post/269759/
         if column not in self._columns:
             return value  # nothing to parse
         if isinstance(value, list):
@@ -172,6 +200,8 @@ class Parser:
         if column not in self._columns:
             if isinstance(value, (list, tuple)):
                 # TODO: Check for value is not None - if it is, raise "column value not set"
+                # if None in value:
+                #     value = ['' if x is None else x for x in value]
                 value = ''.join(value)
             return value  # nothing to parse
         if not isinstance(value, (list, tuple)):
@@ -232,7 +262,7 @@ class Parser:
                 if tp == 'int':
                     try:
                         _tmp = int(_tmp)
-                    except:
+                    except Exception:
                         _tmp = str(_tmp)
                 if not self.validate_atom(_tmp, param[i]):
                     _res = False
@@ -263,7 +293,7 @@ class Parser:
                 var2 = int(var2)
                 if not _sign:
                     _sign = '=='
-            except:
+            except Exception:
                 var1 = str(var1)
 
         if _sign:
@@ -450,6 +480,25 @@ class Parser:
                                 _new_path += _atom
                                 _res = True
                                 break
+                            else:
+                                # HACK for * in path when more than one folder use
+                                # e.g.:
+                                # _sym = /pool/*/
+                                # _path = /pool/detects/e/filename.deb
+                                try:
+                                    if '*' in _sym:
+                                        re_str = fnmatch.translate(_sym)
+                                        # \/pool\/.*\/\Z(?ms) => \/pool\/.*\/
+                                        if re_str.endswith('\\Z(?ms)'):
+                                            re_str = re_str[:-7]
+                                        found_str = re.match(re_str, _path).group()
+                                        _path = _path[len(found_str):]
+                                        _new_path += found_str
+                                        _res = True
+                                        break
+                                except Exception as e:
+                                    logging.error("Something wrong when parse '{}' in '{}'".format(_sym, _path))
+                                    logging.exception(e)
 
                         if not _res:
                             return False, {}, {}
@@ -470,41 +519,34 @@ class Parser:
         return _result, _result_params, _result_params_raw
 
     def validate(self, value, rule_name, params, return_params=False):
+
+        # Если правила для валидации не заданы - говорим что пакет нам подходит
         if rule_name not in self._rules:
             return (True, {}) if return_params else True
-            # raise CrosspmException(
-            #     CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR,
-            #     'Parser rule for [{}] not found in config.'.format(rule_name)
-            # )
         if len(self._rules[rule_name]) == 0:
             return (True, {}) if return_params else True
         if self._rules[rule_name] is None:
             return (True, {}) if return_params else True
-        _res = True
-        _res_params = {}
-        # _dirty = self._rules[rule_name].format(**params)
+
+        _valid = True
+        _result_params = {}
+
+        # Все возможные вариант rule. Для properties - bad, snapshot, etc...
+        # Но содержим массив массивов
         _all_dirties = self.fill_rule(rule_name, params, return_params=True, return_defaults=True)
-        # _all_defaults = []
-        # if self._defaults:
-        #     if isinstance(value, dict):
-        #         for _default in self.fill_rule(rule_name, self._defaults, return_params=False):
-        #             _tmp = [x.strip() for x in _default.split('=')]
-        #             _tmp = [x if len(x) > 0 else '*' for x in _tmp]
-        #             for _key in fnmatch.filter(value.keys(), _tmp[0]):
-        #                 if len(_tmp) > 1:
-        #                     _tmp_val = value[_key]
-        #             if _tmp[0] not in value:
-        #                 value[_tmp[0]] = _tmp[1]
 
         for _dirties in _all_dirties:
+            # _dirties - набор конкретных правил для валидации
             _res_sub = False
             _res_sub_params = {}
             for _dirt in _dirties:
+                # _dirty - Одно "возможное" правило?
                 _res_var = False
                 # TODO: Use split_with_regexp() instead
                 _dirty = [x.split(']') for x in _dirt['var'].split('[')]
                 _dirty = self.list_flatter(_dirty)
                 _variants = self.get_variants(_dirty, [])
+
                 if isinstance(value, str):
                     _res_var = value in _variants
                 elif isinstance(value, (list, tuple)):
@@ -553,10 +595,10 @@ class Parser:
                 if _res_sub:
                     _res_sub_params = _dirt['params']
                     break
-            _res = _res and _res_sub
-            if _res:
-                _res_params.update(_res_sub_params)
-        return (_res, _res_params) if return_params else _res
+            _valid = _valid and _res_sub
+            if _valid:
+                _result_params.update(_res_sub_params)
+        return (_valid, _result_params) if return_params else _valid
 
     def iter_matched_values(self, column_name, value):
         _values = self._config.get_values(column_name)
@@ -594,7 +636,7 @@ class Parser:
                 var2a = int(var2)
                 if not _sign:
                     _sign = '=='
-            except:
+            except Exception:
                 var1a = str(var1)
                 var2a = str(var2)
             var1, var2 = var1a, var2a
@@ -624,8 +666,6 @@ class Parser:
         for z in range(len(self._rules_vars[rule_name])):
             _res_part = []
             _params = {k: v for k, v in params.items()}
-            _default = ''
-            _mask = ''
             _columns = []
             for _col, _valued in self._config.iter_valued_columns2(self._rules_vars[rule_name][z]):
                 if _valued:
@@ -683,6 +723,42 @@ class Parser:
                 result[k] = self.merge_with_mask(k, params[k])
         return result
 
+    def get_params_with_extra(self, rule_name, params):
+        """
+        Get params with extra, like 'any'
+        :param rule_name: 'path'
+        :param params: default params
+        :return: list of combination params
+        """
+        # HACK for prefer-local
+        result = []
+        extra_params = self._rules_vars_extra.get(rule_name, {})[0]
+        _tmp_params = copy.deepcopy(params)
+        _fixed_params = {}
+
+        # Save params with list type - this type not changed
+        for key, value in _tmp_params.items():
+            if isinstance(value, list):
+                _fixed_params[key] = value
+        _tmp_params = {k: v for k, v in _tmp_params.items() if k not in _fixed_params}
+
+        # extend with extra_vars - like 'any'
+        for key, value in _tmp_params.items():
+            if not isinstance(value, list) and key:
+                _tmp_params[key] = list([value])
+            if key in extra_params:
+                _tmp_params[key].extend(extra_params[key])
+
+        # get combinations
+        keys = sorted(_tmp_params)
+        combinations = itertools.product(*(_tmp_params[x] for x in keys))
+        for comb in combinations:
+            _dict = dict(zip(keys, comb))
+            _dict.update(_fixed_params)
+            result.append(_dict)
+
+        return result
+
     def get_paths(self, list_or_file_path, source):
         if 'path' not in self._rules:
             return None
@@ -735,15 +811,23 @@ class Parser:
                     break
         return paths
 
-    def iter_packages_params(self, list_or_file_path):
-        if isinstance(list_or_file_path, str):
+    def iter_packages_params(self, list_or_file_path, deps_content=None):
+        if deps_content is not None:
+            # HACK for download with --dependencies-content and existed file dependencies.txt.lock
+            list_or_file_path = deps_content
+
+        if list_or_file_path.__class__ is DependenciesContent:
+            # Даёт возможность передать сразу контекнт файла, а не файл
+            for i, line in enumerate(list_or_file_path.splitlines()):
+                yield self.get_package_params(i, line)
+        elif isinstance(list_or_file_path, str):
             if not os.path.exists(list_or_file_path):
                 raise CrosspmException(
                     CROSSPM_ERRORCODE_FILE_DEPS_NOT_FOUND,
                     'File not found: [{}]'.format(list_or_file_path),
                 )
 
-            with open(list_or_file_path, 'r') as f:
+            with open(list_or_file_path, 'r', encoding="utf-8-sig") as f:
                 for i, line in enumerate(f):
                     line = line.strip()
 
@@ -779,9 +863,17 @@ class Parser:
                 'Nothing parsed at line {}: [{}]'.format(line_no, line.strip())
             )
 
-        _vars.update(
-            {k: self.parse_by_mask(k, v, False, True) for k, v in self._config.complete_params(_vars, False).items()}
-        )
+        update_items = self._config.complete_params(_vars, False)
+        update_vars = {k: self.parse_by_mask(k, v, False, True) for k, v in update_items.items()}
+        # Expend default params to passed params
+        try:
+            update_vars = {k: v.format(**_vars) if isinstance(v, str) else v for k, v in update_vars.items()}
+        except Exception as e:
+            pass
+            self._config._log.info(
+                "We catch exception when try update defaults Params, don't use this functional. Message:\n {}".format(
+                    repr(e)))
+        _vars.update(update_vars)
 
         return _vars
 
@@ -806,7 +898,7 @@ class Parser:
 
     def parse_value_template(self, value):
         # _regexp = ''
-        must_not = self.split_with_regexp('\[.*?\]', value)
+        must_not = self.split_with_regexp(r'\[.*?\]', value)
         for i, x in enumerate(must_not):
             must_not[i] = [self.split_with_regexp('{.*?}', x[0]), x[1]]
             # _atom = '(?P<_1_int>[\\w*><=]+)'
@@ -816,10 +908,11 @@ class Parser:
     def split_fixed_pattern(path):
         """
         Split path into fixed and masked parts
-        :param path: e.g https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
+        :param path: e.g
+        https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
         :return:
             _path_fixed: https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/
-            _path_pattern: *.*.*/vc100/x86/win/boost.*.*.*.tar.gz
+            _path_pattern: *.*.*/vc110/x86/win/boost.*.*.*.tar.gz
         """
         _first_pattern_pos = path.find('*')
         _path_separator_pos = path.rfind('/', 0, _first_pattern_pos) + 1
@@ -831,7 +924,8 @@ class Parser:
     def split_fixed_pattern_with_file_name(path):
         """
         Split path into fixed, masked parts and filename
-        :param path: e.g https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
+        :param path: e.g
+https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*.*/vc110/x86/win/boost.*.*.*.tar.gz
         :return:
             _path_fixed: https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/
             _path_pattern: *.*.*/vc100/x86/win
@@ -939,18 +1033,16 @@ class Parser:
 
         try:
             result = sorted_packages[self._index]
-        except:
+        except Exception:
             result = []
         return result
 
     def get_full_package_name(self, package):
-        pkg_name = package.get_name_and_path(True)
-        if self._config.no_fails:
-            param_list = [x for x in self._config.get_fails('unique', {})]
-            if self._config.name_column not in param_list:
-                param_list.insert(0, self._config.name_column)
-            params = package.get_params(param_list)
-            pkg_name = '/'.join(self.merge_with_mask(x, params[x]) for x in param_list)
+        param_list = [x for x in self._config.get_fails('unique', {})]
+        if self._config.name_column not in param_list:
+            param_list.insert(0, self._config.name_column)
+        params = package.get_params(param_list)
+        pkg_name = '/'.join(self.merge_with_mask(x, params[x]) for x in param_list)
 
         return pkg_name
 
@@ -959,3 +1051,17 @@ class Parser:
         if self._rules.get(rule_name, False):
             res = True
         return res
+
+    def get_params_from_properties(self, properties):
+        # Парсит свойства артефакта и выдаёт параметры
+        result = {y: properties.get(x, '') for x, y in self._usedby.get('property-parser', {}).items()}
+        return result
+
+    def get_params_from_path(self, path):
+        pattern = self._usedby.get('path-parser', None)
+        if pattern is None:
+            return {}
+        match = re.match(pattern, path)
+        if match is None:
+            return {}
+        return match.groupdict()

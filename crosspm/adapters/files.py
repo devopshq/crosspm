@@ -3,7 +3,7 @@ import json
 import shutil
 import pathlib
 from crosspm.adapters.common import BaseAdapter
-from crosspm.helpers.exceptions import *
+from crosspm.helpers.exceptions import *  # noqa
 from crosspm.helpers.package import Package
 import os
 
@@ -139,7 +139,7 @@ class Adapter(BaseAdapter):
                     except RuntimeError as e:
                         try:
                             err = json.loads(e.args[0])
-                        except:
+                        except Exception:
                             err = {}
                         if isinstance(err, dict):
                             # TODO: Check errors
@@ -199,7 +199,7 @@ class Adapter(BaseAdapter):
             else:
                 _added = False
             if _package is not None:
-                _pkg_name = _package.get_name_and_path(True)
+                _pkg_name = _package.name
             if _added or (_package is not None):
                 if (_package is not None) or (not self._config.no_fails):
                     if (_package is not None) or (_packages_found.get(_pkg_name, None) is None):
@@ -209,11 +209,11 @@ class Adapter(BaseAdapter):
                 if downloader.do_load:
                     _package.download()
 
-                    _deps_file = _package.get_file(self._config.deps_lock_file_name, downloader.cache.temp_path)
+                    _deps_file = _package.get_file(self._config.deps_lock_file_name)
                     if _deps_file:
                         _package.find_dependencies(_deps_file)
                     elif self._config.deps_file_name:
-                        _deps_file = _package.get_file(self._config.deps_file_name, downloader.cache.temp_path)
+                        _deps_file = _package.get_file(self._config.deps_file_name)
                         if _deps_file and os.path.isfile(_deps_file):
                             _package.find_dependencies(_deps_file)
 
