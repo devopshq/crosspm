@@ -99,6 +99,10 @@ parsers:
   common:
     columns:
       version: '{int}.{int}.{int}[.{int}][-{str}]'
+
+  repo:
+    path: '{server}/{repo}/{package}_{version}_[all|amd64].deb'
+    properties: 'build.contract={contract}'
 ```
 Под контрактом мы понимаем любые теги в свойстве артефакта с именем "contract". Например, тут можно указать совместимость с другими артефактами по этому свойству - билд-контракты. Тогда CrossPM сможет искать пакеты из dependencies и фильтровать по этому свойству, указанному в отдельном столбце:
 ```
