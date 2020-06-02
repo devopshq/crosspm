@@ -72,8 +72,8 @@ setup(
         'crosspm.template',
     ],
     setup_requires=[
-        'wheel',
-        'pypandoc',
+        'wheel==0.34.2',
+        'pypandoc==1.5',
     ],
     tests_require=[
         "pytest<=4.6.9; python_version < '3.5'",
