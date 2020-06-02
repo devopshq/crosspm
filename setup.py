@@ -87,7 +87,7 @@ setup(
         "requests>=2.22; python_version >= '3.5'",
         'urllib3==1.24.3',
         'docopt==0.6.2',
-        "PyYAML<5.2; python_version < '3.5'",
+        "PyYAML==5.1.2; python_version < '3.5'",
         "PyYAML>=5.2; python_version >= '3.5'",
         'dohq-artifactory==0.7.377',
         "Jinja2<2.11; python_version < '3.5'",
