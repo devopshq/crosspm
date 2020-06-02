@@ -12,7 +12,7 @@ before_install:
   - export GH_TOKEN_FILE=$(mktemp); echo $GH_TOKEN > $GH_TOKEN_FILE; GH_TOKEN=""
 
 install:
-  - pip install requirements-ci.txt
+  - pip install -r requirements-ci.txt
 
 before_script:
   - git config --global user.email "ak@alkov.pro"
