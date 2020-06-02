@@ -85,11 +85,10 @@ setup(
         'urllib3',
         'docopt',
         'pyyaml',
-        'dohq-artifactory',
+        'dohq-artifactory==0.7.377',
         'jinja2',
         'patool',  # need for pyunpack
         'pyunpack',
-        'PyJWT',
         # 'pyopenssl>=16.2.0',
         # 'cryptography>=1.7',
     ],
