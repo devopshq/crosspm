@@ -89,6 +89,7 @@ setup(
         'jinja2',
         'patool',  # need for pyunpack
         'pyunpack',
+        'PyJWT',
         # 'pyopenssl>=16.2.0',
         # 'cryptography>=1.7',
     ],
