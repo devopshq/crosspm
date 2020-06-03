@@ -350,6 +350,8 @@ class Config:
         yaml_content = ''
         with open(_config_file_name, encoding="utf-8-sig") as f:
             for line in f:
+                if line.strip().startswith('#'):
+                    continue
                 if (not yaml_imports) and (not yaml_content):
                     line_one = line.strip().replace(' ', '').lower()
                     if line_one.startswith('import:'):
