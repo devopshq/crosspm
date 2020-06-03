@@ -78,7 +78,8 @@ setup(
     tests_require=[
         "pytest<=4.6.9; python_version < '3.5'",
         "pytest>=5.2; python_version >= '3.5'",
-        'pytest-flask==1.0.0',
+        "pytest-flask<1.0.0; python_version < '3.5'",
+        "pytest-flask>=1.0.0; python_version >= '3.5'",
         "PyYAML<5.2; python_version < '3.5'",
         "PyYAML>=5.2; python_version >= '3.5'",
     ],
