@@ -90,7 +90,6 @@ setup(
         'docopt==0.6.2',
         "PyYAML==5.1.2; python_version < '3.5'",
         "PyYAML>=5.2; python_version >= '3.5'",
-        'dohq-artifactory==0.7.377',
         "dohq-artifactory==0.4.112; python_version < '3.5'",
         "dohq-artifactory>=0.7.377; python_version >= '3.5'",
         "Jinja2<2.11; python_version < '3.5'",
