@@ -488,8 +488,8 @@ class Parser:
                                 try:
                                     if '*' in _sym:
                                         _new_path, _path, _res = self.validate_glob_pattern_match(_new_path,
-                                                                                                      _path, _res,
-                                                                                                         _sym)
+                                                                                                  _path, _res,
+                                                                                                  _sym)
                                         break
                                 except Exception as e:
                                     logging.error("Something wrong when parse '{}' in '{}'".format(_sym, _path))
@@ -498,7 +498,6 @@ class Parser:
                         if not _res:
                             return False, {}, {}
             return _res, _res_params, _res_params_raw
-
 
         _result = False
         _result_params = {}
@@ -1062,20 +1061,6 @@ https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*
             return {}
         return match.groupdict()
 
-
-# def validate_path_pattern_match(pattern, path):
-#     re_str = fnmatch.translate(pattern)
-#     # \/pool\/.*\/\Z(?ms) => \/pool\/.*\/
-#     if re_str.endswith('\\Z(?ms)'):
-#         re_str = re_str[:-7]
-#     found_str = re.match(re_str, _path).group()
-#
-#     res =
-#
-#     _path = _path[len(found_str):]
-#     _new_path += found_str
-#     _res = True
-#
     def validate_glob_pattern_match(self, _new_path, _path, _res, _sym):
         re_str = fnmatch.translate(_sym)
         # \/pool\/.*\/\Z(?ms) => \/pool\/.*\/
