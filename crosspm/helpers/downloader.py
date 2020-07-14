@@ -16,12 +16,12 @@ class Command(object):
 
 
 class Downloader(Command):
-    def __init__(self, config, do_load, recursive):
+    def __init__(self, config, do_load, recursive, parser_class = Parser):
         self._log = logging.getLogger('crosspm')
         self._config = config  # type: Config
         self.cache = config.cache
         self.solid = config.solid
-        self.common_parser = Parser('common', {}, config)
+        self.common_parser = parser_class('common', {}, config)
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
                                      self.common_parser)
         self.recursive = recursive

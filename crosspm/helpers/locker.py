@@ -5,16 +5,16 @@ from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
 from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.output import Output
+from crosspm.helpers.parser import Parser
 
 
 class Locker(Downloader):
-    def __init__(self, config, do_load, recursive):
+    def __init__(self, config, do_load, recursive, parser_cls = Parser):
         # TODO: revise logic to allow recursive search without downloading
-        super(Locker, self).__init__(config, do_load, recursive)
+        super(Locker, self).__init__(config, do_load, recursive, parser_cls)
 
         if not getattr(config, 'deps_path', ''):
             config.deps_path = config.deps_file_name or CROSSPM_DEPENDENCY_FILENAME
-
         deps_path = config.deps_path
         if deps_path.__class__ is DependenciesContent:
             # HACK

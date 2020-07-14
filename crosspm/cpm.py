@@ -6,6 +6,7 @@
 Usage:
     crosspm download [options]
     crosspm lock [DEPS] [DEPSLOCK] [options]
+    crosspm lock2 [DEPS] [DEPSLOCK] [options]
     crosspm usedby [DEPS] [options]
     crosspm pack <OUT> <SOURCE> [options]
     crosspm cache [size | age | clear [hard]]
@@ -56,6 +57,7 @@ from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.exceptions import *  # noqa
 from crosspm.helpers.locker import Locker
+from crosspm.helpers.locker2 import Locker2
 from crosspm.helpers.output import Output
 from crosspm.helpers.python import get_object_from_string
 from crosspm.helpers.usedby import Usedby
@@ -135,6 +137,8 @@ class CrossPM:
             self.command_ = Downloader
         elif self._args['lock']:
             self.command_ = Locker
+        elif self._args['lock2']:
+            self.command_ = Locker2
         elif self._args['usedby']:
             self.command_ = Usedby
         else:
@@ -313,6 +317,8 @@ class CrossPM:
                         errorcode, msg = self.command(self.command_)
                     elif self._args['lock']:
                         errorcode, msg = self.command(self.command_)
+                    elif self._args['lock2']:
+                        errorcode, msg = self.command(self.command_)
                     elif self._args['usedby']:
                         errorcode, msg = self.command(self.command_)
                     elif self._args['pack']:
@@ -375,7 +381,7 @@ class CrossPM:
 
         do_load = not self._args['--list']
         # hack for Locker
-        if command_ is Locker:
+        if issubclass(command_, Locker):
             do_load = self.recursive
 
         cpm_ = command_(self._config, do_load, self.recursive)
