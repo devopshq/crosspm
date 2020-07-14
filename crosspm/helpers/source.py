@@ -20,7 +20,7 @@ class Source:
         return self._adapter.get_packages(self, self._parser, downloader, list_or_file_path, property_validate)
 
     def get_usedby(self, downloader, list_or_file_path, property_validate=True):
-        return self._usadapter.get_usedby(self, self._parser, downloader, list_or_file_path, property_validate)
+        return self._adapter.get_usedby(self, self._parser, downloader, list_or_file_path, property_validate)
 
     def __getattr__(self, item):
         return self.args.get(item, None)
