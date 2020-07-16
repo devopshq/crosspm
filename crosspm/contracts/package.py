@@ -53,6 +53,10 @@ class Package:
         return {c[0]: Contract(c[0], c[1]) for c in contracts}
 
     @staticmethod
+    def create_contracts_from_dict(contracts):
+        return {k: Contract(k, v) for k, v in contracts.items()}
+
+    @staticmethod
     def create_package(package):
 
         if len(package) == 3:
@@ -70,7 +74,8 @@ class Package:
 
 class ArtifactoryPackage(Package):
     def __init__(self, name, version, contracts, art_path, params, params_raw, paths_params):
-        super(ArtifactoryPackage, self).__init__(name, version, Package.create_contracts(contracts))
+        super(ArtifactoryPackage, self).__init__(name, version,
+                                                 Package.create_contracts_from_dict(contracts))
         self.art_path = art_path
         self.params = params
         self.params_raw = params_raw
