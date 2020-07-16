@@ -16,6 +16,7 @@ from crosspm.adapters import artifactoryaql
 from crosspm.contracts.bundle import Bundle
 from crosspm.helpers.exceptions import *  # noqa
 import crosspm.contracts.package
+from crosspm.helpers.package import Package
 
 CHUNK_SIZE = 1024
 
@@ -80,14 +81,14 @@ class Adapter(artifactoryaql.Adapter):
                     _tmp_params['repo'] = _sub_paths['repo']
 
                     _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
-                    _packages = self.find_package_versions(_art_auth_etc, _file_name_pattern, _packages, _params_found,
+                    _packages, _package_versions_with_contracts = self.find_package_versions(_art_auth_etc, _file_name_pattern, _packages, _params_found,
                                                            _params_found_raw, _path_pattern, _tmp_params, last_error,
-                                                           parser)
+                                                           parser, _paths['params'])
 
             _package = None
 
             if _packages:
-                repo_returned_packages_all += _packages
+                repo_returned_packages_all += _package_versions_with_contracts
                 # _tmp = copy.deepcopy(_params_found)
                 # _packages = parser.filter_one(_packages, _paths['params'], _tmp)
                 # if isinstance(_packages, dict):
@@ -145,17 +146,24 @@ class Adapter(artifactoryaql.Adapter):
 
         package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
 
+        bundle = Bundle(package_names, repo_returned_packages_all, None)
 
-        repos_packages = self.convert_artifactory_path_packages_to_contracts_packages(repo_returned_packages_all)
-
-        bundle = Bundle(package_names, repos_packages, None)
-
-        packages = bundle.calculate().values()
-        for p in packages:
-            _packages_found[p.name] = Package(p.name, _packages[0]['path'], _paths['params'], downloader, self, parser,
-                                _params_tmp, _params_raw, _stat_pkg)
+        bundle_packages = bundle.calculate().values()
+        for p in bundle_packages:
+            _stat_pkg = self.pkg_stat(p.art_path)
+            _packages_found[p.name] = Package(p.name, p.art_path, p.paths_params, downloader, self, parser,
+                                p.params, p.params_raw, _stat_pkg)
 
         return _packages_found
+
+    def parse_contracts_from_artifactory_results(self, properties):
+        contracts = []
+
+        for p in properties:
+            if p['key'].startswith('c.'):
+                contracts.append((p['key'], p['value'][0]))
+
+        return contracts
 
     def convert_artifactory_path_packages_to_contracts_packages(self, artifactory_paths):
         result = []
@@ -169,8 +177,9 @@ class Adapter(artifactoryaql.Adapter):
 
 
     def find_package_versions(self, _art_auth_etc, _file_name_pattern, _packages, _params_found, _params_found_raw,
-                              _path_pattern, _tmp_params, last_error, parser):
+                              _path_pattern, _tmp_params, last_error, parser, paths_params):
         try:
+            package_versions_with_contracts = []
             _artifactory_server = _tmp_params['server']
             _search_repo = _tmp_params['repo']
 
@@ -212,6 +221,17 @@ class Adapter(artifactoryaql.Adapter):
                 _mark = 'found'
                 _matched, _params, _params_raw = parser.validate_path(str(_repo_path), _tmp_params)
                 if _matched:
+                    contracts = self.parse_contracts_from_artifactory_results(_found['properties'])
+
+                    package_with_contracts = crosspm.contracts.package.ArtifactoryPackage(_params['package'],
+                                                                                          _params_raw['version'],
+                                                                                          contracts, _repo_path,
+                                                                                          _params, _params_raw,
+                                                                                          paths_params
+                                                                                          )
+
+                    package_versions_with_contracts.append(package_with_contracts)
+
                     _params_found[_repo_path] = {k: v for k, v in _params.items()}
                     _params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
 
@@ -249,7 +269,7 @@ class Adapter(artifactoryaql.Adapter):
                     if last_error != msg:
                         self._log.error(msg)
                     last_error = msg
-        return _packages
+        return _packages, package_versions_with_contracts
 
     def get_auth_params(self, list_or_file_path, source):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'

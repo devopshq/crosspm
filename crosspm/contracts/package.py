@@ -67,3 +67,11 @@ class Package:
             res.add(Package.create_package(p))
 
         return res
+
+class ArtifactoryPackage(Package):
+    def __init__(self, name, version, contracts, art_path, params, params_raw, paths_params):
+        super(ArtifactoryPackage, self).__init__(name, version, Package.create_contracts(contracts))
+        self.art_path = art_path
+        self.params = params
+        self.params_raw = params_raw
+        self.paths_params = paths_params
