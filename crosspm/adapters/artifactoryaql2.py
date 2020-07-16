@@ -107,6 +107,10 @@ class Adapter(artifactoryaql.Adapter):
             _packages_found[p.name] = Package(p.name, p.art_path, p.paths_params, downloader, self, parser,
                                 p.params, p.params_raw, _stat_pkg)
 
+        for p in package_names:
+            if p not in _packages_found.keys():
+                _packages_found[package] = None
+
         return _packages_found
 
     def parse_contracts_from_artifactory_results(self, properties):
