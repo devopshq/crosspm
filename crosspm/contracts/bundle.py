@@ -56,7 +56,7 @@ class Bundle:
         raise BaseException("cant select next package for current contracts:\n"
                             "next_packages_out_of_current_contracts : {}\n"
                             "rest_packages_to_find : {}"
-                            .format(next_packages_out_of_current_contracts, self._rest_packages_to_find))
+                            .format(next_packages_out_of_current_contracts, rest_packages_to_find))
 
     def select_next_microservice_package_out_of_current_contracts(self, next_packages_out_of_current_contracts, select_order):
         for i in select_order:
