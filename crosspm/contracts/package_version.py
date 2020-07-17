@@ -43,6 +43,3 @@ class PackageVersion(Version):
     # cant use base Version.__str__, because 'local' placeholder normalized, and all '[-_]' are changed with '.'
     def __str__(self):
         return self._version_original_str
-
-
-

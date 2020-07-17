@@ -64,9 +64,9 @@ class Package:
     def create_package(package):
 
         if len(package) == 3:
-            return Package(package[0], package[1], Package.create_contracts(package[2]))
+            return Package(package[0], str(package[1]), Package.create_contracts(package[2]))
 
-        return Package(package[0], package[1], Package.create_contracts([]))
+        return Package(package[0], str(package[1]), Package.create_contracts([]))
 
     @staticmethod
     def create_packages(*packages):

@@ -12,3 +12,4 @@ requests>=2.22; python_version >= '3.5'
 urllib3==1.24.3
 ordered-set>=4.0.2
 packaging==20.4
+pytest

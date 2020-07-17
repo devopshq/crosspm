@@ -69,9 +69,6 @@ class Adapter(artifactoryaql.Adapter):
                     self._log.info("Skip parser: {}".format(parser._name))
                     continue
 
-            _packages = []
-            _params_found = {}
-            _params_found_raw = {}
             last_error = ''
             _pkg_name = _paths['params'][_pkg_name_column]
             for _sub_paths in _paths['paths']:
@@ -81,13 +78,14 @@ class Adapter(artifactoryaql.Adapter):
                     _tmp_params['repo'] = _sub_paths['repo']
 
                     _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
-                    _packages, _package_versions_with_contracts = self.find_package_versions(_art_auth_etc, _file_name_pattern, _packages, _params_found,
-                                                           _params_found_raw, _path_pattern, _tmp_params, last_error,
-                                                           parser, _paths['params'])
+                    _package_versions_with_contracts = self.find_package_versions(_art_auth_etc, _file_name_pattern,
+                                                                                  _path_pattern, _tmp_params,
+                                                                                  last_error,
+                                                                                  parser, _paths['params'])
 
             _package = None
 
-            if _packages:
+            if _package_versions_with_contracts:
                 repo_returned_packages_all += _package_versions_with_contracts
 
         package_names = [x[self._config.name_column] for x in list_or_file_path['raw']]
@@ -98,7 +96,7 @@ class Adapter(artifactoryaql.Adapter):
         for p in bundle_packages:
             _stat_pkg = self.pkg_stat(p.art_path)
             _packages_found[p.name] = Package(p.name, p.art_path, p.paths_params, downloader, self, parser,
-                                p.params, p.params_raw, _stat_pkg)
+                                              p.params, p.params_raw, _stat_pkg)
 
         for p in package_names:
             if p not in _packages_found.keys():
@@ -115,8 +113,7 @@ class Adapter(artifactoryaql.Adapter):
 
         return contracts
 
-
-    def find_package_versions(self, _art_auth_etc, _file_name_pattern, _packages, _params_found, _params_found_raw,
+    def find_package_versions(self, _art_auth_etc, _file_name_pattern,
                               _path_pattern, _tmp_params, last_error, parser, paths_params):
         try:
             package_versions_with_contracts = []
@@ -172,13 +169,7 @@ class Adapter(artifactoryaql.Adapter):
 
                     package_versions_with_contracts.append(package_with_contracts)
 
-                    _params_found[_repo_path] = {k: v for k, v in _params.items()}
-                    _params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
-
                     _mark = 'valid'
-                    _packages += [_repo_path]
-                    _params_found[_repo_path]['filename'] = str(_repo_path.name)
-                    _params_found[_repo_path]['parser'] = parser._name
 
                 self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
         except RuntimeError as e:
@@ -209,7 +200,7 @@ class Adapter(artifactoryaql.Adapter):
                     if last_error != msg:
                         self._log.error(msg)
                     last_error = msg
-        return _packages, package_versions_with_contracts
+        return package_versions_with_contracts
 
     def get_auth_params(self, list_or_file_path, source):
         _auth_type = source.args['auth_type'].lower() if 'auth_type' in source.args else 'simple'
