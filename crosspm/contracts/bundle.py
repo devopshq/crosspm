@@ -1,13 +1,13 @@
 from ordered_set import OrderedSet
-
+from operator import itemgetter, attrgetter
 
 class Bundle:
     def __init__(self, deps, packages_repo, trigger_package):
         # it is vital for deps to be list, orderedset (or something with insertion order savings),
-        # we need the order of packages in depenedeies.txt to take next package
+        # we need the order of packages in dependencies.txt to take next package
         # when no contracts satisfied
         self._deps = OrderedSet(deps)
-        self._packages_repo = packages_repo
+        self._packages_repo = sorted(packages_repo, reverse=True)
         self._trigger_package = trigger_package
 
         self._packages = dict()

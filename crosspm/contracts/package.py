@@ -1,11 +1,12 @@
 from crosspm.contracts.contracts import Contract
+from crosspm.contracts.package_version import PackageVersion
 
 
 class Package:
 
     def __init__(self, name, version, contracts):
         self.name = name
-        self.version = int(version)
+        self.version = PackageVersion(version)
         self.contracts = contracts
 
     def __hash__(self):
@@ -22,6 +23,9 @@ class Package:
 
     def __ne__(self, other):
         return not (self == other)
+
+    def __lt__(self, other):
+        return (self.name, self.version) < (other.name, other.version)
 
     def is_microservice(self, microservice):
         return self.name == microservice
