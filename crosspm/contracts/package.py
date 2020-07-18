@@ -4,7 +4,7 @@ from crosspm.contracts.package_version import PackageVersion
 
 class Package:
 
-    def __init__(self, name, version, contracts):
+    def __init__(self, name: str, version: str, contracts: dict):
         self.name = name
         self.version = PackageVersion(version)
         self.contracts = contracts

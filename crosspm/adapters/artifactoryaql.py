@@ -74,7 +74,7 @@ class Adapter(BaseAdapter):
             # If "parser"-column specified - find only in this parser
             parser_names = _paths['params'].get('parser')
             if parser_names and parser_names != "*":
-                self._log.info("Specified parsers: {}".format(parser_names))
+                self._log.info("Specified package_parsers: {}".format(parser_names))
                 parsers = parser_names.split(',')
                 if parser._name not in parsers:
                     self._log.info("Skip parser: {}".format(parser._name))

@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
-import copy
 import fnmatch
-import itertools
-import logging
-import os
 import re
 
-from crosspm.helpers.content import DependenciesContent
-from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
 
 

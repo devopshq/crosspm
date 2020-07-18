@@ -403,7 +403,7 @@ class Config:
         return result
 
     def parse_config(self, config_data, cmdline):
-        # init parsers
+        # init package_parsers
         if 'parsers' in config_data:
             self.init_parsers(config_data['parsers'])
 
@@ -577,7 +577,7 @@ class Config:
         # gather items from defaults
         self._not_columns.update({k: v for k, v in self._defaults.items() if k not in self._not_columns})
 
-        # gather items from parsers
+        # gather items from package_parsers
         for _parser in self._parsers.values():
             self._not_columns.update({k: None for k in _parser.get_vars() if k not in self._not_columns})
 
@@ -597,7 +597,7 @@ class Config:
                     raise CrosspmException(code, msg)
         if len(self._parsers) == 0:
             code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
-            msg = 'Config file does not contain parsers! Unable to process any further.'
+            msg = 'Config file does not contain package_parsers! Unable to process any further.'
             self._log.exception(msg)
             raise CrosspmException(code, msg)
 

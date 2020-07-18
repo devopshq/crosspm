@@ -24,7 +24,7 @@ class BaseParserTest:
         if len(self._parsers) == 0:
             return False
             # code = CROSSPM_ERRORCODE_CONFIG_FORMAT_ERROR
-            # msg = 'Config file does not contain parsers! Unable to process any further.'
+            # msg = 'Config file does not contain package_parsers! Unable to process any further.'
             # self._log.exception(msg)
             # raise CrosspmException(code, msg)
         return True
@@ -32,7 +32,7 @@ class BaseParserTest:
 
 class TestParser(BaseParserTest):
     config = r"""
-    parsers:
+    package_parsers:
       common:
         columns:
           version: "{int}.{int}.{int}[.{int}][-{str}]"
@@ -63,7 +63,7 @@ class TestParser(BaseParserTest):
     @pytest.fixture(scope='class', autouse=True)
     def init(self):
         config = yaml.safe_load(self.config)
-        assert self.init_parser(config.get('parsers', {})) is True
+        assert self.init_parser(config.get('package_parsers', {})) is True
 
     def test__init(self):
         assert isinstance(self._parsers.get('artifactory', None), Parser)
