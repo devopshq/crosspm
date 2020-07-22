@@ -34,6 +34,7 @@ CROSSPM_VERSION_PATTERN = r"""
 """
 
 class PackageVersion(Version):
+
     _regex = re.compile(r"^\s*" + CROSSPM_VERSION_PATTERN + r"\s*$", re.VERBOSE | re.IGNORECASE)
 
     def __init__(self, version):

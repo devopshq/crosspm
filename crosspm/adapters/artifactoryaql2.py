@@ -7,6 +7,7 @@ import http.client
 from collections import OrderedDict
 
 import requests
+from addict import Dict
 from artifactory import ArtifactoryPath
 from requests.auth import HTTPBasicAuth
 
@@ -16,6 +17,7 @@ from crosspm.helpers.exceptions import *  # noqa
 import crosspm.contracts.package
 from crosspm.helpers.package import Package
 
+PACKAGE_PROPERTY_CONTRACT_PREFFIX = 'c.'
 CHUNK_SIZE = 1024
 
 setup = {
@@ -56,30 +58,18 @@ class Adapter(artifactoryaql.Adapter):
 
         repo_returned_packages_all = []
 
-        for _paths in parser.get_paths(list_or_file_path, source):
-
-            # If "parser"-column specified - find only in this parser
-            parser_names = _paths['params'].get('parser')
-            if parser_names and parser_names != "*":
-                self._log.info("Specified package_parsers: {}".format(parser_names))
-                parsers = parser_names.split(',')
-                if parser._name not in parsers:
-                    self._log.info("Skip parser: {}".format(parser._name))
-                    continue
+        for _path in source.get_paths(list_or_file_path['raw']):
 
             last_error = ''
-            _pkg_name = _paths['params'][_pkg_name_column]
-            for _sub_paths in _paths['paths']:
-                _tmp_params = dict(_paths['params'])
-                self._log.info('repo: {}'.format(_sub_paths['repo']))
-                for _path in _sub_paths['paths']:
-                    _tmp_params['repo'] = _sub_paths['repo']
 
-                    _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
-                    _package_versions_with_contracts = self.find_package_versions(_art_auth_etc, _file_name_pattern,
-                                                                                  _path_pattern, _tmp_params,
-                                                                                  last_error,
-                                                                                  parser, _paths['params'])
+            _tmp_params = Dict(_path.params)
+            self._log.info('repo: {}'.format(_tmp_params.repo))
+
+            _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path.path)
+            _package_versions_with_contracts = self.find_package_versions(_art_auth_etc, _file_name_pattern,
+                                                                          _path_pattern, _tmp_params,
+                                                                          last_error,
+                                                                          parser, _tmp_params)
 
             _package = None
 
@@ -92,22 +82,21 @@ class Adapter(artifactoryaql.Adapter):
 
         bundle_packages = bundle.calculate().values()
         for p in bundle_packages:
-            _stat_pkg = self.pkg_stat(p.art_path)
             _packages_found[p.name] = Package(p.name, p.art_path, p.paths_params, downloader, self, parser,
-                                              p.params, p.params_raw, _stat_pkg)
+                                              p.params, p.params_raw, p.pkg_stat())
 
         for p in package_names:
             if p not in _packages_found.keys():
-                _packages_found[package] = None
+                _packages_found[p.name] = None
 
         return _packages_found
 
-    def parse_contracts_from_artifactory_results(self, properties):
-        contracts = dict()
+    def parse_contracts_from_items_find_results(self, properties):
+        contracts = Dict()
 
         for p in properties:
-            if p['key'].startswith('c.'):
-                contracts[p['key']] = p['value'][0]
+            if p.key.startswith(PACKAGE_PROPERTY_CONTRACT_PREFFIX):
+                contracts[p.key] = p.value[0]
 
         return contracts
 
@@ -115,8 +104,8 @@ class Adapter(artifactoryaql.Adapter):
                               _path_pattern, _tmp_params, last_error, parser, paths_params):
         try:
             package_versions_with_contracts = []
-            _artifactory_server = _tmp_params['server']
-            _search_repo = _tmp_params['repo']
+            _artifactory_server = _tmp_params.server
+            _search_repo = _tmp_params.repo
 
             # Get AQL path pattern, with fixed part path, without artifactory url and repository name
             _aql_path_pattern = ""
@@ -144,25 +133,26 @@ class Adapter(artifactoryaql.Adapter):
             r = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
             r.raise_for_status()
 
-            _found_paths = r.json()
-            for _found in _found_paths['results']:
+            _found_paths = Dict(r.json())
+            for _found in _found_paths.results:
                 _repo_path = "{artifactory}/{repo}/{path}/{file_name}".format(
                     artifactory=_artifactory_server,
-                    repo=_found['repo'],
-                    path=_found['path'],
-                    file_name=_found['name'])
+                    repo=_found.repo,
+                    path=_found.path,
+                    file_name=_found.name)
                 _repo_path = ArtifactoryPath(_repo_path, **_art_auth_etc)
 
                 _mark = 'found'
                 _matched, _params, _params_raw = parser.validate_path(str(_repo_path), _tmp_params)
                 if _matched:
-                    contracts = self.parse_contracts_from_artifactory_results(_found['properties'])
+                    contracts = self.parse_contracts_from_items_find_results(_found.properties)
 
-                    package_with_contracts = crosspm.contracts.package.ArtifactoryPackage(_params['package'],
-                                                                                          _params_raw['version'],
+                    package_with_contracts = crosspm.contracts.package.ArtifactoryPackage(_params.package,
+                                                                                          _params_raw.version,
                                                                                           contracts, _repo_path,
                                                                                           _params, _params_raw,
-                                                                                          paths_params
+                                                                                          paths_params,
+                                                                                          _found
                                                                                           )
 
                     package_versions_with_contracts.append(package_with_contracts)

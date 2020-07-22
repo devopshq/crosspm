@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 # from crosspm.helpers.exceptions import *
+import itertools
+from string import Template
+
+from addict import Dict
 
 
 class Source:
@@ -11,6 +15,7 @@ class Source:
         if isinstance(data['repo'], str):
             data['repo'] = [data['repo']]
         self.args = {k: v for k, v in data.items() if k not in ['type', 'parser']}
+        self.path_patterns = parser._rules['path']
 
     @property
     def repos(self):
@@ -27,3 +32,17 @@ class Source:
 
     def __getitem__(self, item):
         return self.args.get(item, None)
+
+    def get_paths(self, packages_to_find):
+        paths = []
+
+        for package, repo, path_pattern in itertools.product(packages_to_find, self.repos, self.path_patterns):
+            params = {
+                'server' : self.args['server'],
+                'repo' : repo,
+                'package' : package['package'],
+                'version' : package['version']
+            }
+            paths.append(Dict({'path':path_pattern.format(**params), 'params':params}))
+
+        return paths

@@ -1062,7 +1062,10 @@ https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*
         return match.groupdict()
 
     def validate_glob_pattern_match(self, _new_path, _path, _res, _sym):
-        re_str = fnmatch.translate(_sym)
+        if '/**/' == _sym:
+            re_str = '(.*)\/'
+        else:
+            re_str = fnmatch.translate(_sym)
         # \/pool\/.*\/\Z(?ms) => \/pool\/.*\/
         if re_str.endswith('\\Z(?ms)'):
             re_str = re_str[:-7]
@@ -1071,3 +1074,5 @@ https://repo.example.com/artifactory/libs-cpp-release.snapshot/boost/1.60-pm/*.*
         _new_path += found_str
         _res = True
         return _new_path, _path, _res
+
+

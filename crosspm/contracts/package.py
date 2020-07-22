@@ -1,3 +1,9 @@
+from datetime import datetime
+
+import dateutil
+import time
+from addict import Dict
+
 from crosspm.contracts.contracts import Contract
 from crosspm.contracts.package_version import PackageVersion
 
@@ -77,10 +83,23 @@ class Package:
         return res
 
 class ArtifactoryPackage(Package):
-    def __init__(self, name, version, contracts, art_path, params, params_raw, paths_params):
+    def __init__(self, name, version, contracts, art_path, params, params_raw, paths_params, arti_item_find_results):
         super(ArtifactoryPackage, self).__init__(name, version,
                                                  Package.create_contracts_from_dict(contracts))
         self.art_path = art_path
         self.params = params
         self.params_raw = params_raw
         self.paths_params = paths_params
+        self.arti_item_find_results = arti_item_find_results
+
+    def strisodate_to_timestamp(self, date):
+        return dateutil.parser.parse(date).timestamp()
+
+    def pkg_stat(self):
+        stat_pkg = {
+            'ctime': self.strisodate_to_timestamp(self.arti_item_find_results.created),
+            'mtime': self.strisodate_to_timestamp(self.arti_item_find_results.modified),
+            'size': int(self.arti_item_find_results.size)
+        }
+        return stat_pkg
+

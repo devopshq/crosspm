@@ -208,11 +208,15 @@ class CrossPM:
         _depslock_path = self._args['--depslock-path']
         if _depslock_path is None and self._args['--dependencies-lock-content'] is not None:
             _depslock_path = DependenciesContent(self._args['--dependencies-lock-content'])
-        if self._args['lock']:
+        if self._args['lock'] or self._args['lock2']:
             if self._args['DEPS']:
                 _deps_path = self._args['DEPS']
             if self._args['DEPSLOCK']:
                 _depslock_path = self._args['DEPSLOCK']
+
+        if not _depslock_path:
+            _depslock_path = _deps_path + '.lock'
+
         self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
                               _deps_path, self._args['--lock-on-success'],
                               self._args['--prefer-local'])

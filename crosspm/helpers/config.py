@@ -506,13 +506,20 @@ class Config:
             _cmdline = {}
 
         # init cpm parameters
+        cpm_init_done = False
+
         for x in ['cpm', 'crosspm']:
             if x in config_data:
                 # init cache:
                 if 'cache' not in config_data:
                     config_data['cache'] = {}
                 self.init_cpm_and_cache(config_data[x], _cmdline, config_data['cache'])
+                cpm_init_done = True
                 break
+        if not cpm_init_done:
+            if 'cache' not in config_data:
+                config_data['cache'] = {}
+            self.init_cpm_and_cache({}, _cmdline, config_data['cache'])
 
         self._options = self.parse_options(self._options, _cmdline)
 

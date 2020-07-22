@@ -1,6 +1,6 @@
 import pytest
 
-from package_parsers.tad_package_name_parser import TadPackageNameParser
+from package_parsers.debian_package_name_parser import DebianPackageNameParser
 
 
 class TestTadPackage:
@@ -13,7 +13,7 @@ class TestTadPackage:
         ]
     )
     def test_parse_from_package_name(self, test_case):
-        p = TadPackageNameParser.parse_from_package_name(test_case[0])
+        p = DebianPackageNameParser.parse_from_package_name(test_case[0])
         assert p.package == test_case[1]
         assert p.version == test_case[2]
         assert p.arch == test_case[3]

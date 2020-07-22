@@ -12,4 +12,6 @@ requests>=2.22; python_version >= '3.5'
 urllib3==1.24.3
 ordered-set>=4.0.2
 packaging==20.4
-pytest
+python-dateutil==2.8.1
+addict==2.2.1
+pytest==5.4.3
