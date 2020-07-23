@@ -22,7 +22,7 @@ class Downloader(Command):
         self.cache = config.cache
         self.solid = config.solid
         self.common_parser = parser_class('common', {}, config)
-        self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
+        self._root_package = Package('<root>', 0, None, {self._config.name_column: '<root>'}, self, None,
                                      self.common_parser)
         self.recursive = recursive
 

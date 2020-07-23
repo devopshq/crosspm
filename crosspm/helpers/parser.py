@@ -197,6 +197,7 @@ class Parser:
         return _res
 
     def merge_with_mask(self, column, value):
+
         if column not in self._columns:
             if isinstance(value, (list, tuple)):
                 # TODO: Check for value is not None - if it is, raise "column value not set"

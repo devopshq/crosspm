@@ -82,7 +82,7 @@ class Adapter(artifactoryaql.Adapter):
 
         bundle_packages = bundle.calculate().values()
         for p in bundle_packages:
-            _packages_found[p.name] = Package(p.name, p.art_path, p.paths_params, downloader, self, parser,
+            _packages_found[p.name] = Package(p.name, p.art_path, p, p.paths_params, downloader, self, parser,
                                               p.params, p.params_raw, p.pkg_stat())
 
         for p in package_names:

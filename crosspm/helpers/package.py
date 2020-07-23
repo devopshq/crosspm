@@ -18,7 +18,7 @@ except ImportError:
 
 
 class Package:
-    def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, params_found_raw=None,
+    def __init__(self, name, pkg, art_package, params, downloader, adapter, parser, params_found=None, params_found_raw=None,
                  stat=None, in_cache=False):
         self.name = name
         self.package_name = name
@@ -30,6 +30,8 @@ class Package:
         self.pkg = pkg  # type: ArtifactoryPath
         # Someone use this internal object, do not remove  them :)
         self._pkg = self.pkg
+
+        self.art_package = art_package
 
         if isinstance(pkg, int):
             if pkg == 0:
@@ -53,6 +55,7 @@ class Package:
         if params_found_raw:
             self._params_found_raw = params_found_raw
         self.stat = stat
+
 
     def download(self, force=False):
         """

@@ -31,3 +31,7 @@ class Parser2(Parser):
         res_params_raw.version = debian_package.version
 
         return True, res_params, res_params_raw
+
+    def merge_with_mask(self, column, value):
+        return value
+
