@@ -164,7 +164,7 @@ class Adapter(BaseAdapter):
                                 # Check if it's `root` packages or from `lock` file
                                 # ALSO, if from `lock` and have * in name - validate with property
                                 property_validate_tmp = property_validate or '*' in _file_name_pattern
-                                property_found = True if 'properties' in _found.keys() else False
+                                property_found = 'properties' in _found.keys()
                                 # If have not rule in config, skip this part
                                 if parser.has_rule('properties') and property_validate_tmp and property_found:
                                     _found_properties = {x['key']: x.get('value', '') for x in _found['properties']}
