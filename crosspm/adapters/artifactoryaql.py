@@ -104,9 +104,16 @@ class Adapter(BaseAdapter):
                     if self._config.prefer_local and not parser.has_rule('properties'):
                         params = parser.get_params_with_extra('path', _paths['params'])
                         for param in params:
+                            _repo_path = ArtifactoryPath(_path, **_art_auth_etc)
                             param['repo'] = _tmp_params['repo']
-                            _path_packed = downloader.cache.path_packed(None, param)
-                            _packed_exist = os.path.isfile(_path_packed)
+                            param['filename'] = str(_repo_path.name)
+                            # downloader.cache.path_any doesn't work with wildcards.
+                            # without unnecessary checks search will be faster
+                            if '*' in param['filename']:
+                                _packed_exist = False
+                            else:
+                                _path_packed = downloader.cache.path_packed(None, param)
+                                _packed_exist = os.path.isfile(_path_packed)
                             if _packed_exist:
                                 self._log.info("Skip searching, use package cache in path {}".format(_path_packed))
                                 _packed_cache_params = param
