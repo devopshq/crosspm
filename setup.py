@@ -86,7 +86,7 @@ setup(
     install_requires=[
         "requests<2.22; python_version < '3.5'",
         "requests>=2.22; python_version >= '3.5'",
-        'urllib3==1.24.3',
+        'urllib3==1.26.5',
         'docopt==0.6.2',
         "PyYAML==5.1.2; python_version < '3.5'",
         "PyYAML>=5.2; python_version >= '3.5'",
