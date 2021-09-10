@@ -97,7 +97,7 @@ class Package:
             self.unpack()
         _dest_file = os.path.normpath(self.get_file_path(file_name))
         _dest_file = _dest_file if os.path.isfile(_dest_file) else None
-        _dest_file = _dest_file if not re.match(".*txt.lock", _dest_file) else None
+        _dest_file = _dest_file if os.path.isfile(_dest_file) and not re.match(".*txt.lock", _dest_file) else None
         return _dest_file
 
     def get_file_path(self, file_name):
