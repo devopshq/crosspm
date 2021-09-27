@@ -18,12 +18,23 @@ except ImportError:
 
 
 class Package:
-    def __init__(self, name, pkg, params, downloader, adapter, parser, params_found=None, params_found_raw=None,
-                 stat=None, in_cache=False):
+    def __init__(
+        self,
+        name,
+        pkg,
+        params,
+        downloader,
+        adapter,
+        parser,
+        params_found=None,
+        params_found_raw=None,
+        stat=None,
+        in_cache=False,
+    ):
         self.name = name
         self.package_name = name
-        self.packed_path = ''
-        self.unpacked_path = ''
+        self.packed_path = ""
+        self.unpacked_path = ""
         self.duplicated = False
         self.packages = OrderedDict()
 
@@ -40,7 +51,7 @@ class Package:
         self._params_found = {}
         self._params_found_raw = {}
         self._not_cached = True
-        self._log = logging.getLogger('crosspm')
+        self._log = logging.getLogger("crosspm")
 
         self._params = params
         self._adapter = adapter
@@ -60,9 +71,12 @@ class Package:
         :param force: Force download even if it seems file already exists
         :return: Full path with filename of downloaded package file.
         """
-        exists, dest_path = self._downloader.cache.exists_packed(package=self, pkg_path=self.packed_path,
-                                                                 check_stat=not self._in_cache)
-        unp_exists, unp_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self.unpacked_path)
+        exists, dest_path = self._downloader.cache.exists_packed(
+            package=self, pkg_path=self.packed_path, check_stat=not self._in_cache
+        )
+        unp_exists, unp_path = self._downloader.cache.exists_unpacked(
+            package=self, pkg_path=self.unpacked_path
+        )
 
         # Если архива нет, то и кешу доверять не стоит
         if not exists:
@@ -95,14 +109,20 @@ class Package:
         if unpack_force:
             self.unpack()
         _dest_file = os.path.normpath(self.get_file_path(file_name))
-        _dest_file = _dest_file if os.path.isfile(_dest_file) else None
+        _dest_file = (
+            _dest_file
+            if os.path.isfile(_dest_file) and not _dest_file.endswith("txt.lock")
+            else None
+        )
         return _dest_file
 
     def get_file_path(self, file_name):
         _dest_file = os.path.join(self.unpacked_path, file_name)
         return _dest_file
 
-    def find_dependencies(self, depslock_file_path, property_validate=True, deps_content=None):
+    def find_dependencies(
+        self, depslock_file_path, property_validate=True, deps_content=None
+    ):
         """
         Find all dependencies by package
         :param depslock_file_path:
@@ -111,10 +131,15 @@ class Package:
         we can skip validate part
         :return:
         """
-        self._raw = [x for x in
-                     self._downloader.common_parser.iter_packages_params(depslock_file_path, deps_content=deps_content)]
-        self.packages = self._downloader.get_dependency_packages({'raw': self._raw},
-                                                                 property_validate=property_validate)
+        self._raw = [
+            x
+            for x in self._downloader.common_parser.iter_packages_params(
+                depslock_file_path, deps_content=deps_content
+            )
+        ]
+        self.packages = self._downloader.get_dependency_packages(
+            {"raw": self._raw}, property_validate=property_validate
+        )
 
     def find_usedby(self, depslock_file_path, property_validate=True):
         """
@@ -126,18 +151,26 @@ class Package:
         """
         if depslock_file_path is None:
             self._raw = [self._params]
-            self._raw[0]['repo'] = None
-            self._raw[0]['server'] = None
+            self._raw[0]["repo"] = None
+            self._raw[0]["server"] = None
         else:
-            self._raw = [x for x in self._downloader.common_parser.iter_packages_params(depslock_file_path)]
-        self.packages = self._downloader.get_usedby_packages({'raw': self._raw},
-                                                             property_validate=property_validate)
+            self._raw = [
+                x
+                for x in self._downloader.common_parser.iter_packages_params(
+                    depslock_file_path
+                )
+            ]
+        self.packages = self._downloader.get_usedby_packages(
+            {"raw": self._raw}, property_validate=property_validate
+        )
 
     def unpack(self, force=False):
         if self._downloader.solid(self):
             self.unpacked_path = self.packed_path
         else:
-            exists, dest_path = self._downloader.cache.exists_unpacked(package=self, pkg_path=self.unpacked_path)
+            exists, dest_path = self._downloader.cache.exists_unpacked(
+                package=self, pkg_path=self.unpacked_path
+            )
             if exists and not self.unpacked_path:
                 self.unpacked_path = dest_path
 
@@ -148,7 +181,9 @@ class Package:
             # temp_path = os.path.realpath(os.path.join(dest_path, self._name))
             # _exists = os.path.exists(temp_path)
             if not self._not_cached:
-                self.unpacked_path = dest_path if exists else ''  # temp_path if exists else ''
+                self.unpacked_path = (
+                    dest_path if exists else ""
+                )  # temp_path if exists else ''
             if force or self._not_cached or (not exists):
                 Archive.extract(self.packed_path, dest_path)  # temp_path)
                 self.unpacked_path = dest_path  # temp_path
@@ -159,43 +194,45 @@ class Package:
 
     def print(self, level=0, output=None):
         def do_print(left):
-            res_str = ''
+            res_str = ""
             for out_item in output:
                 for k, v in out_item.items():
-                    cur_str = self.get_params(merged=True).get(k, '')
+                    cur_str = self.get_params(merged=True).get(k, "")
                     if not res_str:
-                        cur_str = self._params.get(k, '')
+                        cur_str = self._params.get(k, "")
                     if not res_str:
-                        res_str = '{}{}'.format(left, cur_str)
+                        res_str = "{}{}".format(left, cur_str)
                         continue
-                    cur_format = ' {}'
+                    cur_format = " {}"
                     if v > 0:
-                        cur_format = '{:%s}' % (v if len(cur_str) <= v else v + len(left))
+                        cur_format = "{:%s}" % (
+                            v if len(cur_str) <= v else v + len(left)
+                        )
                     res_str += cur_format.format(cur_str)
                     break
             self._log.info(res_str)
 
-        _sign = ' '
+        _sign = " "
         if not self._root:
             if self.duplicated:
-                _sign = '!'
+                _sign = "!"
             elif self.unpacked_path:
-                _sign = '+'
+                _sign = "+"
             elif self.packed_path:
-                _sign = '>'
+                _sign = ">"
             else:
-                _sign = '-'
-        _left = '{}{}'.format(' ' * 4 * level, _sign)
+                _sign = "-"
+        _left = "{}{}".format(" " * 4 * level, _sign)
         do_print(_left)
         for _pkg_name in self.packages:
             _pkg = self.packages[_pkg_name]
             if not _pkg:
-                _left = '{}-'.format(' ' * 4 * (level + 1))
-                self._log.info('{}{}'.format(_left, _pkg_name))
+                _left = "{}-".format(" " * 4 * (level + 1))
+                self._log.info("{}{}".format(_left, _pkg_name))
             else:
                 _pkg.print(level + 1, output)
         if self._root:
-            self._log.info('')
+            self._log.info("")
 
     def get_params(self, param_list=None, get_path=False, merged=False, raw=False):
         """
@@ -211,12 +248,18 @@ class Package:
             param_list = [param_list]
         if param_list and isinstance(param_list, (list, tuple)):
             result = {k: v for k, v in self._params_found.items() if k in param_list}
-            result.update({k: v for k, v in self._params.items() if (k in param_list and k not in result)})
+            result.update(
+                {
+                    k: v
+                    for k, v in self._params.items()
+                    if (k in param_list and k not in result)
+                }
+            )
         else:
             result = {k: v for k, v in self._params_found.items()}
             result.update({k: v for k, v in self._params.items() if k not in result})
         if get_path:
-            result['path'] = self.unpacked_path
+            result["path"] = self.unpacked_path
         if merged:
             result.update(self._parser.merge_valued(result))
         if raw:
@@ -259,7 +302,10 @@ class Package:
             if not isinstance(check_ext, (list, tuple)):
                 check_ext = [check_ext]
             name = self._adapter.get_package_filename(self._pkg)
-            if any((fnmatch.fnmatch(name, x) or fnmatch.fnmatch(name, '*%s' % x)) for x in check_ext):
+            if any(
+                (fnmatch.fnmatch(name, x) or fnmatch.fnmatch(name, "*%s" % x))
+                for x in check_ext
+            ):
                 return True
         return False
 
@@ -276,7 +322,7 @@ def md5sum(filename):
     Calculates md5 hash of a file
     """
     md5 = hashlib.md5()
-    with open(filename, 'rb') as f:
-        for chunk in iter(lambda: f.read(128 * md5.block_size), b''):
+    with open(filename, "rb") as f:
+        for chunk in iter(lambda: f.read(128 * md5.block_size), b""):
             md5.update(chunk)
     return md5.hexdigest()
