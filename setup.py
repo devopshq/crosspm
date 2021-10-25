@@ -95,7 +95,7 @@ setup(
         "Jinja2<2.11; python_version < '3.5'",
         "Jinja2>=2.11; python_version >= '3.5'",
         'patool==1.12',  # need for pyunpack
-        'pyunpack==0.1.2',
+        'pyunpack==0.2',
         # 'pyopenssl>=16.2.0',
         # 'cryptography>=1.7',
     ],
