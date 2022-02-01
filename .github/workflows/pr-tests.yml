@@ -32,5 +32,6 @@ jobs:
         run: |
           python -mflake8 crosspm
           python -mcoverage run -m py.test tests
-  build:
+  build-artifact:
     uses: ./.github/workflows/build.yml
+    needs: tests
