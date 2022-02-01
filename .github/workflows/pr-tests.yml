@@ -1,9 +1,14 @@
 name: Tests
 
 on:
-  pull_request:
-    branches:
-      - '*'
+  push:
+    branches-ignore:
+      - master
+# Pull Requests can not reuse workflows from the source branch:
+# https://github.com/actions/toolkit/issues/932
+#  pull_request:
+#    branches:
+#      - '*'
 
 jobs:
   tests:
