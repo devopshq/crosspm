@@ -22,12 +22,14 @@ if is_gh_actions:
         version.append(build_number)
     else:
         version.append('{}{}'.format('dev' if branch == 'develop' else branch, build_number))
-    version = '.'.join(version)
-    with open('crosspm/config.py', 'w', encoding="utf-8") as f:
-        f.write("__version__ = '{}'".format(version))
 else:
     if len(version) < 4:
         version.append('dev0')
+
+version = '.'.join(version)
+if is_gh_actions:
+    with open('crosspm/config.py', 'w', encoding="utf-8") as f:
+        f.write("__version__ = '{}'".format(version))
 
 with open('README.md', encoding="utf-8") as f:
     long_description = f.read()
