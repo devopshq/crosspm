@@ -3,30 +3,31 @@
 import os
 
 from setuptools import setup
+
 from crosspm import config
 
-build_number = os.getenv('TRAVIS_BUILD_NUMBER', '')
-branch = os.getenv('TRAVIS_BRANCH', '')
-travis = any((build_number, branch,))
+build_id = int(os.getenv('GITHUB_RUN_ID', '0'))
+build_attempt = int(os.getenv('GITHUB_RUN_ATTEMPT', '0'))
+build_number = str(build_id + build_attempt)
+branch = os.getenv('GITHUB_REF_NAME', '')
+is_gh_actions = os.getenv('CI') == 'true'
 version = config.__version__.split('.')
 develop_status = '4 - Beta'
 url = 'http://devopshq.github.io/crosspm'
 
-if travis:
+if is_gh_actions:
     version = version[0:3]
     if branch == 'master':
         develop_status = '5 - Production/Stable'
         version.append(build_number)
     else:
         version.append('{}{}'.format('dev' if branch == 'develop' else branch, build_number))
+    version = '.'.join(version)
+    with open('crosspm/config.py', 'w', encoding="utf-8") as f:
+        f.write("__version__ = '{}'".format(version))
 else:
     if len(version) < 4:
         version.append('dev0')
-
-version = '.'.join(version)
-if travis:
-    with open('crosspm/config.py', 'w', encoding="utf-8") as f:
-        f.write("__version__ = '{}'".format(version))
 
 with open('README.md', encoding="utf-8") as f:
     long_description = f.read()
