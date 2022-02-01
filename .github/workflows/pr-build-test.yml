@@ -32,4 +32,4 @@ jobs:
       run: |
         python -mflake8 crosspm
         python -mcoverage run -m py.test tests
-    - uses: ./.github/actions/upload
+    - uses: ./.github/workflows/upload.yml
