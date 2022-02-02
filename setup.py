@@ -6,9 +6,7 @@ from setuptools import setup
 
 from crosspm import config
 
-build_id = int(os.getenv('GITHUB_RUN_ID', '0'))
-build_attempt = int(os.getenv('GITHUB_RUN_ATTEMPT', '0'))
-build_number = str(build_id + build_attempt)
+build_number = os.getenv('GITHUB_RUN_NUMBER', '0')
 branch = os.getenv('GITHUB_REF_NAME', '')
 is_gh_actions = os.getenv('CI') == 'true'
 version = config.__version__.split('.')
