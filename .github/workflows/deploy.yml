@@ -1,0 +1,27 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-packages:
+    uses: ./.github/workflows/build.yml
+#    Specify python version with this argument (same level as "uses"):
+#    with:
+#      py_version: '3.7'
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-packages
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: CrossPM packages
+          path: dist/
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
