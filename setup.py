@@ -6,9 +6,7 @@ from setuptools import setup
 
 from crosspm import config
 
-base_build_id = 609  # last successful travis CI build
-build_attempt = int(os.getenv('GITHUB_RUN_NUMBER', '0'))  # Workflow total run counter (different for build and deploy)
-build_number = str(base_build_id + build_attempt)
+build_number = os.getenv('GITHUB_RUN_NUMBER', '0')
 branch = os.getenv('GITHUB_REF_NAME', '')
 is_gh_actions = os.getenv('CI') == 'true'
 version = config.__version__.split('.')
