@@ -261,7 +261,10 @@ class Parser:
             for i, (_tmp, tp) in enumerate(self.parse_by_mask(column, value, True)):
                 if tp == 'int':
                     try:
-                        _tmp = int(_tmp)
+                        if len(_tmp) > 1 and _tmp.startswith('0'):
+                            _tmp = str(_tmp)
+                        else:
+                            _tmp = int(_tmp)
                     except Exception:
                         _tmp = str(_tmp)
                 if not self.validate_atom(_tmp, param[i]):
