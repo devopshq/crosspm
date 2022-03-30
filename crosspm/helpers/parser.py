@@ -260,26 +260,36 @@ class Parser:
             _res = True
             for i, (_tmp, tp) in enumerate(self.parse_by_mask(column, value, True)):
                 if tp == 'int':
-                    try:
-                        if len(_tmp) > 1 and _tmp.startswith('0'):
-                            _tmp = str(_tmp)
-                        else:
+                    if re.match(r"^[0-9]+$", _tmp):
+                        if not (len(_tmp) > 1 and _tmp.startswith('0')):
                             _tmp = int(_tmp)
-                    except Exception:
-                        _tmp = str(_tmp)
-                if not self.validate_atom(_tmp, param[i]):
-                    _res = False
-                    _res_value = []
-                    break
-                else:
-                    _res_value.append(_tmp)
+                        else:
+                            _tmp = str(_tmp)
+                        if self.validate_atom(_tmp, param[i]):
+                            _res_value.append(_tmp)
+                        else:
+                            _res = False
+                            _res_value = []
+                            break
+                    else:
+                        _res = False
+                        _res_value = []
+                        break
+                elif tp == 'str':
+                    _tmp = str(_tmp)
+                    if self.validate_atom(_tmp, param[i]):
+                        _res_value.append(_tmp)
+                    else:
+                        _res = False
+                        _res_value = []
+                        break
 
         return _res, _res_value
 
     @staticmethod
     def validate_atom(value, text):
         _sign = ''
-        if text:
+        if text is not None:
             if text.startswith(('>=', '<=', '==',)):
                 _sign = text[:2]
                 text = text[2:]
@@ -290,13 +300,13 @@ class Parser:
                     _sign = '=='
 
         var1 = value
-        var2 = text if text else '*'
+        var2 = text if text is not None else '*'
         if isinstance(var1, int):
             try:
                 var2 = int(var2)
                 if not _sign:
                     _sign = '=='
-            except Exception:
+            except ValueError:
                 var1 = str(var1)
 
         if _sign:
@@ -820,7 +830,7 @@ class Parser:
             list_or_file_path = deps_content
 
         if list_or_file_path.__class__ is DependenciesContent:
-            # Даёт возможность передать сразу контекнт файла, а не файл
+            # Даёт возможность передать сразу контент файла, а не файл
             for i, line in enumerate(list_or_file_path.splitlines()):
                 yield self.get_package_params(i, line)
         elif isinstance(list_or_file_path, str):
