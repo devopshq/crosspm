@@ -259,7 +259,8 @@ class Parser:
         else:
             _res = True
             for i, (_tmp, tp) in enumerate(self.parse_by_mask(column, value, True)):
-                if tp == 'int':
+                _is_empty_optional = (len(_tmp) == 0 and param[i] is None)
+                if tp == 'int' and not _is_empty_optional:
                     if re.match(r"^[0-9]+$", _tmp):
                         if not (len(_tmp) > 1 and _tmp.startswith('0')):
                             _tmp = int(_tmp)
@@ -275,7 +276,7 @@ class Parser:
                         _res = False
                         _res_value = []
                         break
-                elif tp == 'str':
+                elif tp == 'str' or _is_empty_optional:
                     _tmp = str(_tmp)
                     if self.validate_atom(_tmp, param[i]):
                         _res_value.append(_tmp)
