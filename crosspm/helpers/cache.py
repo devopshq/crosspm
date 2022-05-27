@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import hashlib
 import os
 import time
 from crosspm.helpers.package import md5sum
