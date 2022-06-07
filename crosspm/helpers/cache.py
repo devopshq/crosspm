@@ -2,7 +2,7 @@
 import logging
 import os
 import time
-# from crosspm.helpers.package import Package
+from crosspm.helpers.package import md5sum
 from datetime import datetime, timedelta
 
 
@@ -307,14 +307,10 @@ class Cache:
         path = self.path_packed(package, params) if not pkg_path else pkg_path
         res = os.path.exists(path)
         if res and package and check_stat:
-            _stat_attr = {'ctime': 'st_atime',
-                          'mtime': 'st_mtime',
-                          'size': 'st_size'}
-            _stat_file = os.stat(path)
-            if any(package.stat[k] != getattr(_stat_file, v, -999) for k, v in _stat_attr.items()):
+            md5file = md5sum(filename=path)
+            if package.md5 != md5file:
                 res = False
                 os.remove(path)
-
         return res, path
 
     def exists_unpacked(self, package, filename=None, params=None, pkg_path=''):
