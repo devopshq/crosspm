@@ -34,6 +34,7 @@ Options:
     --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
     --prefer-local                       Do not search package if exist in cache
     --stdout                             Print info and debug message to STDOUT, error to STDERR. Otherwise - all messages to STDERR
+    --altsearch=VALUE                    First search artifact in current branch repo then if not found in branch from config
 
 """  # noqa
 
@@ -84,6 +85,8 @@ def do_run(func):
 
 class CrossPM:
     _ready = False
+    altsearch = False
+    altsearch_branch = ''
 
     def __init__(self, args=None, throw_exceptions=None, return_result=False):
         self._config = None
@@ -122,6 +125,11 @@ class CrossPM:
                 self._args['--recursive'] = False
             else:
                 raise Exception("Unknown value to --recursive: {}".format(recursive_str))
+
+        if self._args['--altsearch']:
+           self.altsearch = True
+           self.altsearch_branch = self._args['--altsearch']
+           self._log.info("Alternative search is on. Priority searching in [%s] branch", self.altsearch_branch)
 
         if isinstance(self._args, str):
             if self._throw_exceptions:
