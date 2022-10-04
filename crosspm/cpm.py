@@ -127,8 +127,8 @@ class CrossPM:
                 raise Exception("Unknown value to --recursive: {}".format(recursive_str))
 
         if self._args['--altsearch']:
-            altsearch = True
-            altsearch_branch = self._args['--altsearch']
+            self.altsearch = True
+            self.altsearch_branch = self._args['--altsearch']
             self._log.info("Alternative search is on. Priority searching in [%s] branch", self.altsearch_branch)
 
         if isinstance(self._args, str):
