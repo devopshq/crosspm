@@ -354,7 +354,7 @@ class CrossPM:
                 'out_format': ['--out-format', ''],
                 'output': ['--output', ''],
                 'output_template': ['--output-template', ''],
-                'altsearch': ['--altsearch',''],
+                'altsearch': ['--altsearch', ''],
                 # 'out_prefix': ['--out-prefix', ''],
                 # 'depslock_path': ['--depslock-path', ''],
             }
