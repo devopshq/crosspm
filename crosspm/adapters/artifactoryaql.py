@@ -58,10 +58,10 @@ class Adapter(BaseAdapter):
             )
 
         if downloader.altsearch:
-            self._log.info('Alternative search is on. Packages will initially be searched in {} branch'.format(downloader.altsearchbranch))
+            msg = 'Alternative search is on. Packages will initially be searched in {0} branch'
+            self._log.info(msg.format(downloader.altsearchbranch))
         else:
             self._log.info('Alternative search is off.')
-
 
         if 'verify' in source.args:
             _art_auth_etc['verify'] = source.args['verify'].lower in ['true', 'yes', '1']

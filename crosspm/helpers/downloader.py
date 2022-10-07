@@ -18,6 +18,7 @@ class Command(object):
 class Downloader(Command):
     altsearch = False
     altsearchbranch = ''
+
     def __init__(self, config, do_load, recursive, altsearch, altsearchbranch):
         self._log = logging.getLogger('crosspm')
         self._config = config  # type: Config
@@ -28,9 +29,8 @@ class Downloader(Command):
                                      self.common_parser)
         self.recursive = recursive
         if altsearch:
-             self.altsearch = altsearch
-             self.altsearchbranch = altsearchbranch
-
+            self.altsearch = altsearch
+            self.altsearchbranch = altsearchbranch
 
         if not config.deps_path:
             config.deps_path = \
