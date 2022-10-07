@@ -354,6 +354,7 @@ class CrossPM:
                 'out_format': ['--out-format', ''],
                 'output': ['--output', ''],
                 'output_template': ['--output-template', ''],
+                'altsearch': ['--altsearch',''],
                 # 'out_prefix': ['--out-prefix', ''],
                 # 'depslock_path': ['--depslock-path', ''],
             }
@@ -386,7 +387,7 @@ class CrossPM:
         if command_ is Locker:
             do_load = self.recursive
 
-        cpm_ = command_(self._config, do_load, self.recursive)
+        cpm_ = command_(self._config, do_load, self.recursive, self.altsearch, self.altsearch_branch)
         cpm_.entrypoint()
 
         if self._return_result:

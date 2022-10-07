@@ -16,7 +16,9 @@ class Command(object):
 
 
 class Downloader(Command):
-    def __init__(self, config, do_load, recursive):
+    altsearch = False
+    altsearchbranch = ''
+    def __init__(self, config, do_load, recursive, altsearch, altsearchbranch):
         self._log = logging.getLogger('crosspm')
         self._config = config  # type: Config
         self.cache = config.cache
@@ -25,6 +27,10 @@ class Downloader(Command):
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
                                      self.common_parser)
         self.recursive = recursive
+        if altsearch:
+             self.altsearch = altsearch
+             self.altsearchbranch = altsearchbranch
+
 
         if not config.deps_path:
             config.deps_path = \
@@ -161,7 +167,7 @@ class Downloader(Command):
 
     def search_dependencies(self, depslock_file_path, deps_content=None):
         self._log.info('Check dependencies ...')
-        self._root_package.find_dependencies(depslock_file_path, property_validate=True, deps_content=deps_content, )
+        self._root_package.find_dependencies(depslock_file_path, property_validate=True, deps_content=deps_content,)
         self._log.info('')
         self.set_duplicated_flag()
         self._log.info('Dependency tree:')
