@@ -122,17 +122,17 @@ class Downloader(Command):
 
     # Download packages or just unpack already loaded (it's up to adapter to decide)
     def download_packages(self, depslock_file_path=None):
+        deps_content = self._deps_path if isinstance(self._deps_path, DependenciesContent) else None
         if depslock_file_path is None:
             depslock_file_path = self._depslock_path
         if depslock_file_path.__class__ is DependenciesContent:
             # HACK для возможности проставления контента файла, а не пути
             pass
         elif isinstance(depslock_file_path, str):
-            if not os.path.isfile(depslock_file_path):
-                depslock_file_path = self._deps_path
-
-        deps_content = self._deps_path if isinstance(self._deps_path, DependenciesContent) else None
-        self.search_dependencies(depslock_file_path, deps_content=deps_content)
+            if os.path.isfile(depslock_file_path):
+                self.search_dependencies(depslock_file_path, deps_content=deps_content)
+            else:
+                self.search_dependencies(self._deps_path, deps_content=deps_content)
 
         if self.do_load:
             self._log.info('Unpack ...')
@@ -149,10 +149,7 @@ class Downloader(Command):
 
             if self._config.lock_on_success:
                 from crosspm.helpers.locker import Locker
-                depslock_path = os.path.realpath(
-                    os.path.join(os.path.dirname(depslock_file_path), self._config.deps_lock_file_name))
-                Locker(self._config, do_load=self.do_load, recursive=self.recursive).lock_packages(
-                    depslock_file_path, depslock_path, packages=self._root_package.packages)
+                Locker(self._config, do_load=self.do_load, recursive=self.recursive).lock_packages()
 
         return self._root_package.all_packages
 
