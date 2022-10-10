@@ -24,31 +24,19 @@ class Locker(Downloader):
             deps_path = config.deps_path.strip().strip('"').strip("'")
             self._deps_path = os.path.realpath(os.path.expanduser(deps_path))
 
-    def lock_packages(self, deps_file_path=None, depslock_file_path=None, packages=None):
+    def lock_packages(self):
         """
         Lock packages. Downloader search packages
         """
-        if deps_file_path is None:
-            deps_file_path = self._deps_path
-        if depslock_file_path is None:
-            depslock_file_path = self._depslock_path
-        if deps_file_path == depslock_file_path:
-            depslock_file_path += '.lock'
-            # raise CrosspmException(
-            #     CROSSPM_ERRORCODE_WRONG_ARGS,
-            #     'Dependencies and Lock files are same: "{}".'.format(deps_file_path),
-            # )
 
-        if packages is None:
-            self.search_dependencies(deps_file_path)
-        else:
-            self._root_package.packages = packages
+        if len(self._root_package.packages) == 0:
+            self.search_dependencies(self._deps_path)
 
-        self._log.info('Writing lock file [{}]'.format(depslock_file_path))
+        self._log.info('Writing lock file [{}]'.format(self._depslock_path))
 
         output_params = {
             'out_format': 'lock',
-            'output': depslock_file_path,
+            'output': self._depslock_path,
         }
         Output(config=self._config).write_output(output_params, self._root_package.packages)
         self._log.info('Done!')
