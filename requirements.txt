@@ -1,12 +1,8 @@
 docopt==0.6.2
-dohq-artifactory==0.4.112; python_version < '3.5'
-dohq-artifactory>=0.7.377; python_version >= '3.5'
-Jinja2<2.11; python_version < '3.5'
-Jinja2>=2.11; python_version >= '3.5'
+dohq-artifactory>=0.8.3
+Jinja2>=2.11
 patool==1.12
 pyunpack==0.2
-PyYAML<5.2; python_version < '3.5'
-PyYAML>=5.2; python_version >= '3.5'
-requests<2.22; python_version < '3.5'
-requests>=2.22; python_version >= '3.5'
+PyYAML>=5.2
+requests>=2.27.1
 urllib3==1.24.3

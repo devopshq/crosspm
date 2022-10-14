@@ -774,7 +774,7 @@ class Parser:
         return result
 
     def get_paths(self, list_or_file_path, source):
-        if 'path' not in self._rules:
+        if 'path' not in self._rules.keys():
             return None
         _paths = []
         for _params in self.iter_packages_params(list_or_file_path):
@@ -826,6 +826,7 @@ class Parser:
         return paths
 
     def iter_packages_params(self, list_or_file_path, deps_content=None):
+        # TODO: need to separate `list_or_file_path` into two arguments: `deps_path` and `deps_content`
         if deps_content is not None:
             # HACK for download with --dependencies-content and existed file dependencies.txt.lock
             list_or_file_path = deps_content

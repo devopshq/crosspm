@@ -218,10 +218,9 @@ class Output:
         if result:
             out_file_path = os.path.realpath(os.path.expanduser(params['output']))
             self.write_to_file(result, out_file_path)
+            msg = 'Writing lock file' if params['out_format'] == 'lock' else 'Write packages info to file'
             self._log.info(
-                'Write packages info to file [%s]\ncontent:\n\n%s',
-                out_file_path,
-                result,
+                f'{msg} {out_file_path}\ncontent:\n\n{result}',
             )
 
     def format_column(self, column, name, value):
@@ -399,7 +398,7 @@ class Output:
                 else:  # str
                     res += "{},\n".format(get_value(dict_or_list[item]))
             else:
-                res += '{} = '.format(self.get_var_name(item), get_value(dict_or_list[item]))
+                res += '{} = '.format(self.get_var_name(item))  # , get_value(dict_or_list[item]))
                 if isinstance(dict_or_list[item], dict):
                     res += '{\n'
                     for k, v in dict_or_list[item].items():

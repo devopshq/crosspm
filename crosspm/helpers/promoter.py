@@ -26,8 +26,8 @@ class Promoter:
         self.temp_path = os.path.realpath(os.path.join(self._cache_path, 'tmp'))
 
         if not depslock_path:
-            depslock_path = config.deps_lock_file_name \
-                if config.deps_lock_file_name \
+            depslock_path = config.deps_lock_file_path \
+                if config.deps_lock_file_path \
                 else CROSSPM_DEPENDENCY_LOCK_FILENAME
         self._depslock_path = os.path.realpath(depslock_path)
 
