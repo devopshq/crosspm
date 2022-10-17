@@ -4,7 +4,8 @@ import hashlib
 import logging
 import os
 import shutil
-from typing import OrderedDict
+from collections import OrderedDict
+from typing import Dict
 
 from artifactory import ArtifactoryPath
 
@@ -25,7 +26,7 @@ class Package:
         self.packed_path = ''
         self.unpacked_path = ''
         self.duplicated = False
-        self.packages: OrderedDict[str, Package] = OrderedDict()
+        self.packages: Dict[str, Package] = OrderedDict()
 
         self.pkg = pkg  # type: ArtifactoryPath
         # Someone use this internal object, do not remove  them :)

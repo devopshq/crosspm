@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, OrderedDict
+from typing import Optional, Dict
 from crosspm.helpers.package import Package
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.output import Output
@@ -10,7 +10,7 @@ class Locker(Downloader):
         # TODO: revise logic to allow recursive search without downloading
         super(Locker, self).__init__(config, do_load, recursive)
 
-    def lock_packages(self, packages: Optional[OrderedDict[str, Package]] = None):
+    def lock_packages(self, packages: Optional[Dict[str, Package]] = None):
         """
         Lock packages. Downloader search packages
         """
