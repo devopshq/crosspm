@@ -78,10 +78,10 @@ setup(
         "PyYAML>=5.2",
     ],
     install_requires=[
-        "requests>=2.27.1",
-        'urllib3==1.24.3',
+        "requests>=2.25.1,<3.0.0",
+        'urllib3<1.25,>=1.21.1',
         'docopt==0.6.2',
-        "PyYAML>=5.2",
+        "PyYAML>=5.2,<6.0",
         "dohq-artifactory>=0.8.3",
         "Jinja2>=2.11",
         'patool==1.12',  # need for pyunpack
