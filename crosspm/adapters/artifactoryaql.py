@@ -273,8 +273,9 @@ class Adapter(BaseAdapter):
                 if downloader.do_load:
                     _package.download()
                     _deps_file = _package.get_file(self._config.deps_lock_file_name)
-                    if not _deps_file:
-                        _deps_file = _package.get_file(CROSSPM_DEPENDENCY_LOCK_FILENAME)
+                    # TODO: turn on this fallback after testing
+                    # if not _deps_file:
+                    #    _deps_file = _package.get_file(CROSSPM_DEPENDENCY_LOCK_FILENAME)
                     if downloader.recursive:
                         if _deps_file:
                             _package.find_dependencies(_deps_file, property_validate=False)
