@@ -9,12 +9,11 @@ import requests
 import yaml
 
 from crosspm.helpers.cache import Cache
-from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
 from crosspm.helpers.source import Source
 
-requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings()  # noqa
 
 WINDOWS = (platform.system().lower() == 'windows') or (os.name == 'nt')
 DEFAULT_CONFIG_FILE = ('crosspm.yaml', 'crosspm.yml', 'crosspm.json',)
@@ -44,7 +43,7 @@ GLOBAL_CONFIG_PATH = [
 
 ENVIRONMENT_CONFIG_PATH = 'CROSSPM_CONFIG_PATH'
 CROSSPM_DEPENDENCY_FILENAME = 'dependencies.txt'  # maybe 'cpm.manifest'
-CROSSPM_DEPENDENCY_LOCK_FILENAME = CROSSPM_DEPENDENCY_FILENAME  # 'dependencies.txt.lock'
+CROSSPM_DEPENDENCY_LOCK_FILENAME = CROSSPM_DEPENDENCY_FILENAME + ".lock"  # 'dependencies.txt.lock'
 CROSSPM_ADAPTERS_NAME = 'adapters'
 CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
 
@@ -52,8 +51,8 @@ CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
 class Config:
     windows = WINDOWS
 
-    def __init__(self, config_file_name='', cmdline='', no_fails=False, depslock_path='', deps_path='',
-                 lock_on_success=False, prefer_local=False):
+    def __init__(self, config_file_name='', cmdline='', no_fails=False, deps_lock_file_path='', deps_file_path='',
+                 lock_on_success=False, prefer_local=False, deps_content=None, deps_lock_content=None):
         self._log = logging.getLogger('crosspm')
         self._config_path_env = []
         self._sources = []
@@ -70,46 +69,42 @@ class Config:
         self.name_column = ''
         self.deps_file_name = ''
         self.deps_lock_file_name = ''
+        self.deps_file_path = ''
+        self.deps_lock_file_path = ''
         self.lock_on_success = lock_on_success
         self.prefer_local = prefer_local
         self.crosspm_cache_root = ''
-        self.deps_path = ''
-        self.depslock_path = ''
+        self.deps_content = deps_content
+        self.deps_lock_content = deps_lock_content
+
         self.cache_config = {}
         self.init_env_config_path()
         self.secret_variables = []
 
         cpm_conf_name = ''
-        if deps_path:
-            if deps_path.__class__ is DependenciesContent:
-                # HACK
-                self.deps_path = deps_path
-            else:
-                deps_path = deps_path.strip().strip('"').strip("'")
-                self.deps_path = os.path.realpath(os.path.expanduser(deps_path))
+
+        if deps_file_path:
+            self.deps_file_path = self._normalize_path(deps_file_path)
             if not cpm_conf_name:
-                cpm_conf_name = self.get_cpm_conf_name(deps_path)
-            if os.path.isfile(deps_path):
-                config_path_tmp = os.path.dirname(deps_path)
+                cpm_conf_name = self.get_cpm_conf_name(self.deps_file_path)
+            if not os.path.isdir(self.deps_file_path):
+                config_path_tmp = os.path.dirname(self.deps_file_path)
             else:
-                config_path_tmp = deps_path
+                config_path_tmp = self.deps_file_path
+                self.deps_file_path = os.path.join(self.deps_file_path, CROSSPM_DEPENDENCY_FILENAME)
             if config_path_tmp not in DEFAULT_CONFIG_PATH:
                 DEFAULT_CONFIG_PATH.append(config_path_tmp)
+            self.deps_lock_file_path = self.deps_file_path + '.lock'
 
-        if depslock_path:
-            if depslock_path.__class__ is DependenciesContent:
-                # HACK
-                self.depslock_path = depslock_path
-            else:
-                depslock_path = depslock_path.strip().strip('"').strip("'")
-                self.depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
-
+        if deps_lock_file_path:
+            self.deps_lock_file_path = self._normalize_path(deps_lock_file_path)
             if not cpm_conf_name:
-                cpm_conf_name = self.get_cpm_conf_name(depslock_path)
-            if os.path.isfile(depslock_path):
-                config_path_tmp = os.path.dirname(depslock_path)
+                cpm_conf_name = self.get_cpm_conf_name(self.deps_lock_file_path)
+            if not os.path.isdir(self.deps_lock_file_path):
+                config_path_tmp = os.path.dirname(self.deps_lock_file_path)
             else:
-                config_path_tmp = depslock_path
+                config_path_tmp = deps_lock_file_path
+                self.deps_lock_file_path = os.path.join(self.deps_lock_file_path, CROSSPM_DEPENDENCY_LOCK_FILENAME)
             if config_path_tmp not in DEFAULT_CONFIG_PATH:
                 DEFAULT_CONFIG_PATH.append(config_path_tmp)
 
@@ -145,9 +140,31 @@ class Config:
         self.cache = Cache(self, self.cache_config)
         # self._fails = {}
 
+    @property
+    def deps_file_name(self):
+        return os.path.basename(self.deps_file_path)
+
+    @property
+    def deps_lock_file_name(self):
+        return os.path.basename(self.deps_lock_file_path)
+
+    @deps_file_name.setter
+    def deps_file_name(self, file_name):
+        self.deps_file_path = self._normalize_path(file_name)
+
+    @deps_lock_file_name.setter
+    def deps_lock_file_name(self, file_name):
+        self.deps_lock_file_path = self._normalize_path(file_name)
+
+    @staticmethod
+    def _normalize_path(raw_path):
+        _path = raw_path.strip('"').strip("'")
+        _path = os.path.realpath(os.path.expanduser(_path))
+        return _path
+
     def get_cpm_conf_name(self, deps_filename=''):
         if not deps_filename:
-            deps_filename = self.depslock_path
+            deps_filename = self.deps_file_path
         result = ''
         if os.path.isfile(deps_filename):
             try:
@@ -525,11 +542,14 @@ class Config:
 
         crosspm = self.parse_options(crosspm, cmdline)
 
-        self.deps_lock_file_name = crosspm.get('dependencies-lock', CROSSPM_DEPENDENCY_LOCK_FILENAME)
-        if 'dependencies' in crosspm:
+        if not self.deps_file_name:
             self.deps_file_name = crosspm.get('dependencies', CROSSPM_DEPENDENCY_FILENAME)
-            if 'dependencies-lock' not in crosspm:
+        if not self.deps_lock_file_name:
+            self.deps_lock_file_name = crosspm.get('dependencies-lock', CROSSPM_DEPENDENCY_LOCK_FILENAME)
+            if 'dependencies-lock' not in crosspm and self.deps_file_name.endswith(".lock"):
                 self.deps_lock_file_name = self.deps_file_name
+            elif 'dependencies-lock' not in crosspm:
+                self.deps_lock_file_name = self.deps_file_name + ".lock"
 
         if not self.prefer_local:
             self.prefer_local = crosspm.get('prefer-local', False)

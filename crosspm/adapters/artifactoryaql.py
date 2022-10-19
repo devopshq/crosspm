@@ -14,6 +14,7 @@ from crosspm.adapters.common import BaseAdapter
 from crosspm.helpers.exceptions import *  # noqa
 from crosspm.helpers.package import Package
 
+
 CHUNK_SIZE = 1024
 
 setup = {
@@ -277,6 +278,9 @@ class Adapter(BaseAdapter):
                 if downloader.do_load:
                     _package.download()
                     _deps_file = _package.get_file(self._config.deps_lock_file_name)
+                    # TODO: turn on this fallback after testing
+                    # if not _deps_file:
+                    #    _deps_file = _package.get_file(CROSSPM_DEPENDENCY_LOCK_FILENAME)
                     if downloader.recursive:
                         if _deps_file:
                             _package.find_dependencies(_deps_file, property_validate=False)

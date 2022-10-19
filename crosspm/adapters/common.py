@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
+from crosspm.helpers.config import Config
 
 
 class BaseAdapter:
-    def __init__(self, config):
+    def __init__(self, config: Config):
         self._config = config
         self._log = logging.getLogger('crosspm')
 
