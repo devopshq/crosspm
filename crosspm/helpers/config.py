@@ -50,8 +50,6 @@ CROSSPM_ADAPTERS_DIR = os.path.join(CROSSPM_ROOT_DIR, CROSSPM_ADAPTERS_NAME)
 
 class Config:
     windows = WINDOWS
-    default_deps_file_name = CROSSPM_DEPENDENCY_FILENAME
-    default_deps_lock_file_name = CROSSPM_DEPENDENCY_LOCK_FILENAME
 
     def __init__(self, config_file_name='', cmdline='', no_fails=False, deps_lock_file_path='', deps_file_path='',
                  lock_on_success=False, prefer_local=False, deps_content=None, deps_lock_content=None):
