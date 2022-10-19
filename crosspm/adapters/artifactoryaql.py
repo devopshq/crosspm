@@ -13,7 +13,6 @@ from requests.auth import HTTPBasicAuth
 from crosspm.adapters.common import BaseAdapter
 from crosspm.helpers.exceptions import *  # noqa
 from crosspm.helpers.package import Package
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_LOCK_FILENAME
 
 
 CHUNK_SIZE = 1024
