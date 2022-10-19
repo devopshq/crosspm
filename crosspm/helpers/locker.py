@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-import os
-
-from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME
-from crosspm.helpers.content import DependenciesContent
+from typing import Optional, Dict
+from crosspm.helpers.package import Package
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.output import Output
 
@@ -12,31 +10,20 @@ class Locker(Downloader):
         # TODO: revise logic to allow recursive search without downloading
         super(Locker, self).__init__(config, do_load, recursive)
 
-        if not getattr(config, 'deps_path', ''):
-            config.deps_path = config.deps_file_name or CROSSPM_DEPENDENCY_FILENAME
-
-        deps_path = config.deps_path
-        if deps_path.__class__ is DependenciesContent:
-            # HACK
-            pass
-            self._deps_path = deps_path
-        else:
-            deps_path = config.deps_path.strip().strip('"').strip("'")
-            self._deps_path = os.path.realpath(os.path.expanduser(deps_path))
-
-    def lock_packages(self):
+    def lock_packages(self, packages: Optional[Dict[str, Package]] = None):
         """
         Lock packages. Downloader search packages
         """
 
-        if len(self._root_package.packages) == 0:
-            self.search_dependencies(self._deps_path)
+        if packages:
+            self._root_package.packages = packages
 
-        self._log.info('Writing lock file [{}]'.format(self._depslock_path))
+        if len(self._root_package.packages) == 0:
+            self.search_dependencies(self._config.deps_file_path, self._config.deps_content)
 
         output_params = {
             'out_format': 'lock',
-            'output': self._depslock_path,
+            'output': self._config.deps_lock_file_path,
         }
         Output(config=self._config).write_output(output_params, self._root_package.packages)
         self._log.info('Done!')

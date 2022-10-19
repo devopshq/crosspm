@@ -199,11 +199,11 @@ class CrossPM:
     def read_config(self):
         _deps_path = self._args['--deps-path']
         # Передаём содержимое напрямую
-        if _deps_path is None and self._args['--dependencies-content'] is not None:
-            _deps_path = DependenciesContent(self._args['--dependencies-content'])
+        _deps_content = DependenciesContent(self._args['--dependencies-content']) \
+            if _deps_path is None and self._args['--dependencies-content'] is not None else None
         _depslock_path = self._args['--depslock-path']
-        if _depslock_path is None and self._args['--dependencies-lock-content'] is not None:
-            _depslock_path = DependenciesContent(self._args['--dependencies-lock-content'])
+        _depslock_content = DependenciesContent(self._args['--dependencies-lock-content']) \
+            if _depslock_path is None and self._args['--dependencies-lock-content'] is not None else None
         if self._args['lock']:
             if self._args['DEPS']:
                 _deps_path = self._args['DEPS']
@@ -211,7 +211,9 @@ class CrossPM:
                 _depslock_path = self._args['DEPSLOCK']
         self._config = Config(self._args['--config'], self._args['--options'], self._args['--no-fails'], _depslock_path,
                               _deps_path, self._args['--lock-on-success'],
-                              self._args['--prefer-local'])
+                              self._args['--prefer-local'],
+                              deps_content=_deps_content,
+                              deps_lock_content=_depslock_content)
         self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
 
     def exit(self, code, msg):

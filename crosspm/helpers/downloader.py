@@ -4,7 +4,6 @@ import os
 from collections import OrderedDict, defaultdict
 
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME, Config  # noqa
-from crosspm.helpers.content import DependenciesContent
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.package import Package
 from crosspm.helpers.parser import Parser
@@ -26,29 +25,6 @@ class Downloader(Command):
                                      self.common_parser)
         self.recursive = recursive
 
-        if not config.deps_path:
-            config.deps_path = \
-                config.deps_file_name if config.deps_file_name else CROSSPM_DEPENDENCY_FILENAME
-        deps_path = config.deps_path
-        if deps_path.__class__ is DependenciesContent:
-            # HACK
-            pass
-            self._deps_path = deps_path
-        else:
-            deps_path = config.deps_path.strip().strip('"').strip("'")
-            self._deps_path = os.path.realpath(os.path.expanduser(deps_path))
-
-        if not config.depslock_path:
-            config.depslock_path = \
-                config.deps_lock_file_name if config.deps_lock_file_name else CROSSPM_DEPENDENCY_LOCK_FILENAME
-        depslock_path = config.depslock_path
-        if depslock_path.__class__ is DependenciesContent:
-            # HACK
-            self._depslock_path = depslock_path
-        else:
-            depslock_path = depslock_path.strip().strip('"').strip("'")
-            self._depslock_path = os.path.realpath(os.path.expanduser(depslock_path))
-
         self.do_load = do_load
 
     def update_progress(self, msg, progress):
@@ -63,9 +39,9 @@ class Downloader(Command):
         we can skip validate part
         """
         if list_or_file_path is None:
-            list_or_file_path = self._depslock_path
+            list_or_file_path = self._config.deps_lock_file_path
             if not os.path.isfile(list_or_file_path):
-                list_or_file_path = self._deps_path
+                list_or_file_path = self._config.deps_file_path
 
         _packages = OrderedDict()
         if isinstance(list_or_file_path, str):
@@ -96,9 +72,9 @@ class Downloader(Command):
         :return:
         """
         if list_or_file_path is None:
-            list_or_file_path = self._depslock_path
+            list_or_file_path = self._config.deps_lock_file_name
             if not os.path.isfile(list_or_file_path):
-                list_or_file_path = self._deps_path
+                list_or_file_path = self._config.deps_file_name
 
         _packages = OrderedDict()
         if isinstance(list_or_file_path, str):
@@ -122,17 +98,15 @@ class Downloader(Command):
 
     # Download packages or just unpack already loaded (it's up to adapter to decide)
     def download_packages(self, depslock_file_path=None):
-        deps_content = self._deps_path if isinstance(self._deps_path, DependenciesContent) else None
+        deps_content = self._config.deps_content \
+            if not self._config.deps_lock_content \
+            else self._config.deps_lock_content
         if depslock_file_path is None:
-            depslock_file_path = self._depslock_path
-        if depslock_file_path.__class__ is DependenciesContent:
-            # HACK для возможности проставления контента файла, а не пути
-            pass
-        elif isinstance(depslock_file_path, str):
-            if os.path.isfile(depslock_file_path):
-                self.search_dependencies(depslock_file_path, deps_content=deps_content)
-            else:
-                self.search_dependencies(self._deps_path, deps_content=deps_content)
+            depslock_file_path = self._config.deps_lock_file_path
+        if os.path.isfile(depslock_file_path):
+            self.search_dependencies(depslock_file_path, deps_content=deps_content)
+        else:
+            self.search_dependencies(self._config.deps_file_path, deps_content=deps_content)
 
         if self.do_load:
             self._log.info('Unpack ...')
@@ -149,7 +123,8 @@ class Downloader(Command):
 
             if self._config.lock_on_success:
                 from crosspm.helpers.locker import Locker
-                Locker(self._config, do_load=self.do_load, recursive=self.recursive).lock_packages()
+                Locker(self._config, do_load=self.do_load, recursive=self.recursive).\
+                    lock_packages(self._root_package.packages)
 
         return self._root_package.all_packages
 
