@@ -33,11 +33,11 @@ crosspm lock --recursive False
 crosspm lock --recursive
 crosspm lock --recursive=True
 
-# скачать все дерево пакетов вместе с зависимостями
+# скачать без зависимостей, только пакеты указанные в dependencies
 crosspm download # поведение по умолчанию - только первый уровень
 crosspm download --recursive=False
 crosspm download --recursive False
-# скачать без зависимостей, только пакеты указанные в dependencies
+# скачать все дерево пакетов вместе с зависимостями
 crosspm download --recursive
 crosspm download --recursive=True
 ```
