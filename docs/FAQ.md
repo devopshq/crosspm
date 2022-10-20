@@ -23,7 +23,7 @@ Frequently Asked Questions
 ## Как запретить рекурсивное выкачивание пакетов?
 <a class="mk-toclify" id="cli"></a>
 ### При вызове crosspm в командной строке
-Используйте флаг `--recursive=False` при вызове `crosspm`. **Важно** - у команд `download` и `lock` поведение по умолчанию отличается
+Используйте флаг `--recursive=False` при вызове `crosspm`.
 ```python
 # сделать lock-файл с пакетами только первого уровня, не рекурсивно
 crosspm lock # поведение по умолчанию - только первый уровень
@@ -34,12 +34,12 @@ crosspm lock --recursive
 crosspm lock --recursive=True
 
 # скачать все дерево пакетов вместе с зависимостями
-crosspm download # поведение по умолчанию - рекурсия
-crosspm download --recursive
-crosspm download --recursive=True
-# скачать без зависимостей, только пакеты указанные в dependencies
+crosspm download # поведение по умолчанию - только первый уровень
 crosspm download --recursive=False
 crosspm download --recursive False
+# скачать без зависимостей, только пакеты указанные в dependencies
+crosspm download --recursive
+crosspm download --recursive=True
 ```
 
 <a class="mk-toclify" id="config"></a>

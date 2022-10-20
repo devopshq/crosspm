@@ -3,10 +3,11 @@ from typing import Optional, Dict
 from crosspm.helpers.package import Package
 from crosspm.helpers.downloader import Downloader
 from crosspm.helpers.output import Output
+from crosspm.helpers.config import Config
 
 
 class Locker(Downloader):
-    def __init__(self, config, do_load, recursive):
+    def __init__(self, config: Config, do_load: bool, recursive: Optional[bool] = None):
         # TODO: revise logic to allow recursive search without downloading
         super(Locker, self).__init__(config, do_load, recursive)
 

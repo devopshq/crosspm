@@ -8,6 +8,7 @@ CrossPM Config
       * [cpm:dependencies and cpm:dependencies-lock](#cpmdependencies-and-cpmdependencies-lock)
       * [cpm:lock-on-success](#cpmlock-on-success)
       * [cpm: prefer-local](#cpm-prefer-local)
+      * [cpm: recursive](#cpm-recursive)
    * [cache](#cache)
       * [cache:storage](#cachestorage)
       * [cache:clear - NOT used](#cacheclear---not-used)
@@ -68,6 +69,9 @@ Work only with:
 - FIXED extenstion
 - download-mode only (in lock it does not work)
 - only in artifactory-aql adapters
+
+## `cpm: recursive`
+If set to `true` (or yes or 1) - crosspm will process all packages recursively to find and lock all dependencies.
 
 # `cache`
 Parameters for cache handling

@@ -1,0 +1,16 @@
+cpm:
+  recursive: false
+
+common:
+  server: https://stub/artifactory
+  parser: artifactory
+  type: jfrog-artifactory-aql
+
+parsers:
+  artifactory:
+    path: '{server}/{repo}/{package}.{version}[.tar.gz|.zip]'
+    properties: ''
+
+sources:
+  - repo:
+    - stub
