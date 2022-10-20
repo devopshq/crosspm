@@ -225,16 +225,10 @@ class CrossPM:
 
     @property
     def recursive(self):
-        if self.command_ is Downloader:
-            if self._args['--recursive'] is None:
-                recursive = True
-            else:
-                recursive = self._args['--recursive']
+        if self._args['--recursive'] is None:
+            recursive = False
         else:
-            if self._args['--recursive'] is None:
-                recursive = False
-            else:
-                recursive = self._args['--recursive']
+            recursive = self._args['--recursive']
         return recursive
 
     @do_run
