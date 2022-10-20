@@ -50,5 +50,3 @@ and manifest file with the list of packages you need to download.
 
 Configuration file format is YAML, as you could see from its filename, so you free to use yaml hints and tricks,
 as long, as main configuration parameters remains on their levels :)
-
-

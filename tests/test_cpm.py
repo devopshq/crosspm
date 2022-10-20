@@ -133,4 +133,3 @@ def test_stdout_flag():
     os.environ['CROSSPM_STDOUT'] = '1'
     cpm = CrossPM("download")
     assert cpm.stdout is True
-
