@@ -43,6 +43,8 @@ import shlex
 import sys
 import time
 
+from typing import Optional
+
 from docopt import docopt
 
 from crosspm import version
@@ -86,8 +88,8 @@ class CrossPM:
     _ready = False
 
     def __init__(self, args=None, throw_exceptions=None, return_result=False):
-        self._config = None
-        self._output = None
+        self._config: Optional[Config] = None
+        self._output: Optional[Output] = None
         self._return_result = return_result
 
         if throw_exceptions is None:
@@ -213,7 +215,8 @@ class CrossPM:
                               _deps_path, self._args['--lock-on-success'],
                               self._args['--prefer-local'],
                               deps_content=_deps_content,
-                              deps_lock_content=_depslock_content)
+                              deps_lock_content=_depslock_content,
+                              recursive=self._args['--recursive'])
         self._output = Output(self._config.output('result', None), self._config.name_column, self._config)
 
     def exit(self, code, msg):
@@ -222,20 +225,6 @@ class CrossPM:
             sys.exit(code)
         else:
             return code, msg
-
-    @property
-    def recursive(self):
-        if self.command_ is Downloader:
-            if self._args['--recursive'] is None:
-                recursive = True
-            else:
-                recursive = self._args['--recursive']
-        else:
-            if self._args['--recursive'] is None:
-                recursive = False
-            else:
-                recursive = self._args['--recursive']
-        return recursive
 
     @do_run
     def check_common_args(self):
@@ -378,9 +367,9 @@ class CrossPM:
         do_load = not self._args['--list']
         # hack for Locker
         if command_ is Locker:
-            do_load = self.recursive
+            do_load = self._config.recursive
 
-        cpm_ = command_(self._config, do_load, self.recursive)
+        cpm_ = command_(self._config, do_load)
         cpm_.entrypoint()
 
         if self._return_result:

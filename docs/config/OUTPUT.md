@@ -82,7 +82,7 @@ cat ./paths.sh
  }
 }
 ```
-    
+
 
 ## python
 [Лучшая практика использования в python](../usage/USAGE-PYTHON)

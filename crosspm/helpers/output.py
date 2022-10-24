@@ -8,9 +8,12 @@ import sys
 
 from jinja2 import Environment, FileSystemLoader
 from collections import OrderedDict
+from typing import Dict
 
 from crosspm.helpers.exceptions import *
 from crosspm.helpers.parser import Parser
+from crosspm.helpers.config import Config
+from crosspm.helpers.package import Package
 
 _output_format_map = {}  # Contain map for output format, load from decorator
 
@@ -89,7 +92,7 @@ class Output:
 
     def __init__(self, data=None, name_column='', config=None):
         self._log = logging.getLogger('crosspm')
-        self._config = config
+        self._config: Config = config
         if name_column:
             self._name_column = name_column
             self._output_config['key'] = name_column
@@ -199,7 +202,7 @@ class Output:
     def get_output_types():
         return list(_output_format_map.keys())
 
-    def write_output(self, params, packages):
+    def write_output(self, params, packages: Dict[str, Package]):
         """
         Функция вызывает определенную функцию для фиксированного out-format
         :param params:
@@ -279,7 +282,14 @@ class Output:
         tmp_packages = OrderedDict()
         columns = self._config.get_columns()
         widths = {}
-        for _pkg in packages.values():
+        _packages = []
+
+        for _package in packages.values():
+            if _package:
+                _packages.append(_package)
+                _packages += _package.all_packages
+
+        for _pkg in _packages:
             _pkg_name = _pkg.package_name
             _params = _pkg.get_params(columns, merged=True, raw=False)
             if _pkg_name not in tmp_packages:

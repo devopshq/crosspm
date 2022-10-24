@@ -40,7 +40,7 @@ class TestParser(BaseParserTest):
           - version
           - '*'
         index: -1
-        
+
 
       artifactory:
         path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
@@ -56,7 +56,7 @@ class TestParser(BaseParserTest):
             "deb.name": "package"
             "deb.version": "version"
             "qaverdict": "qaverdict"
-            
+
           path-parser: 'https://repo.example.com/artifactory/libs-cpp-release.snapshot/(?P<package>.*?)/(?P<branch>.*?)/(?P<version>.*?)/(?P<compiler>.*?)/(?P<arch>.*?)/(?P<osname>.*?)/.*.tar.gz'
     """
 

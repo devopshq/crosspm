@@ -1,0 +1,16 @@
+cpm:
+  dependencies-lock: test2_dependencies.txt.lock
+
+common:
+  server: https://stub/artifactory
+  parser: artifactory
+  type: jfrog-artifactory-aql
+
+parsers:
+  artifactory:
+    path: '{server}/{repo}/{package}.{version}[.tar.gz|.zip]'
+    properties: ''
+
+sources:
+  - repo:
+    - stub

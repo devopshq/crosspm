@@ -8,6 +8,7 @@ CrossPM Config
       * [cpm:dependencies and cpm:dependencies-lock](#cpmdependencies-and-cpmdependencies-lock)
       * [cpm:lock-on-success](#cpmlock-on-success)
       * [cpm: prefer-local](#cpm-prefer-local)
+      * [cpm: recursive](#cpm-recursive)
    * [cache](#cache)
       * [cache:storage](#cachestorage)
       * [cache:clear - NOT used](#cacheclear---not-used)
@@ -44,30 +45,33 @@ Main configuration such as manifest file name and cache path.
 cpm:
   # Short description of your configuration file
   description: Simple example configuration
-  
+
   dependencies: dependencies.txt
   dependencies-lock: dependencies.txt.lock
   lock-on-success: true
-  prefer-local: True 
+  prefer-local: True
 ```
 
 ## `cpm:dependencies` and `cpm:dependencies-lock`
 - `cpm:dependencies` - manifest file name (not path - just filename)
-- `cpm:dependencies-lock` - manifest with locked dependencies (without masks and conditions) file name (not path - just filename). 
+- `cpm:dependencies-lock` - manifest with locked dependencies (without masks and conditions) file name (not path - just filename).
 Equals to "dependencies" if not set.
 
 
 ## `cpm:lock-on-success`
-If set to `true` (or yes or 1) - dependencies lock file will be generated after successfull **download**. 
-Lock file will be saved near original dependencies file. 
+If set to `true` (or yes or 1) - dependencies lock file will be generated after successfull **download**.
+Lock file will be saved near original dependencies file.
 
 ## `cpm: prefer-local`
-Search in local cache before query repo. 
+Search in local cache before query repo.
 Work only with:
 - FIXED package version, without mask
 - FIXED extenstion
 - download-mode only (in lock it does not work)
 - only in artifactory-aql adapters
+
+## `cpm: recursive`
+If set to `true` (or yes or 1) - crosspm will process all packages recursively to find and lock all dependencies.
 
 # `cache`
 Parameters for cache handling
@@ -91,7 +95,7 @@ Several way to set where crosspm stored files (archive and unpacked package)
 ## cache:storage
 Local storage setting, how `crosspm` will be stored files:
 - `storage:packed` - path to packed file
-- `storage:unpacked` - path to unpacked file 
+- `storage:unpacked` - path to unpacked file
 
 ## `cache:clear` - NOT used
 
@@ -233,19 +237,19 @@ Means that version column contains three numeric parts divided by a dot, followe
 ```yaml
 version: "{int}.{int}.{int}[.{int}][-{str}]"
 ```
-- `sort` - List of column names in sorting order. Used for sorting packages if more than one version found 
+- `sort` - List of column names in sorting order. Used for sorting packages if more than one version found
 for defined parameters. Asterisk can be one of values of a list representing all columns not mentioned here.
 - `index` - Used for picking one element from sorted list. It's just a list index as in python.
 - `properties` - Extra properties. i.e. object properties in Artifactory.
 
 ## `parsers:path`
-Path template for searching packages in repository. Here {} is column, [|] is variation. 
+Path template for searching packages in repository. Here {} is column, [|] is variation.
 
 ```yaml
 path: "{server}/{repo}/{package}/{compiler|any}/{osname}/{package}.{version}[.zip|.tar.gz]
 ```
 these paths will be searched:
-    
+
 ```yaml
 https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.zip
 https://repo.some.org/artifactory/libs-release.snapshot/boost/gcc4/linux/boost.1.60.204.tar.gz
@@ -271,7 +275,7 @@ parsers:
   artifactory-nupkg:
     path: '{server}/{repo}/pool/*/{package}.{version}.nupkg'
 ```
-    
+
 
 # `defaults`
 Default values for columns not defined in "options".
@@ -364,15 +368,15 @@ cpm:
   dependencies: dependencies.txt
   dependencies-lock: dependencies.txt.lock
   lock-on-success: true
-  
-  # search in local cache before query repo. 
+
+  # search in local cache before query repo.
   # Work only with:
   # - FIXED package version, without mask
   # - FIXED extenstion
   # - download-mode only (in lock it does not work)
   # - only in artifactory-aql adapters
-  prefer-local: True 
-  
+  prefer-local: True
+
 cache:
   cmdline: cache
   env: CROSSPM_CACHE_ROOT
@@ -427,7 +431,7 @@ parsers:
   artifactory:
     path: "{server}/{repo}/{package}/{branch}/{version}/{compiler|any}/{arch|any}/{osname}/{package}.{version}[.zip|.tar.gz|.nupkg]"
     properties: "some.org.quality = {quality}"
-    
+
 defaults:
   branch: master
   quality: stable

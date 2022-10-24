@@ -52,7 +52,7 @@ sources:
 #  dependencies: dependencies
 #  dependencies-lock: dependencies
 #  prefer-local: True
-  
+
 # --------------
 # Тут определён файл весь конфигурации, кроме секции cpm
 # Так же допустимо использовать yaml-anchor для чувствительной информации
@@ -63,7 +63,7 @@ sources:
 import:
   - cred.yaml
   - crosspm.main.yaml
-  
+
 cpm:
  dependencies: dependencies.txt
  dependencies-lock: dependencies.txt.lock
@@ -75,7 +75,7 @@ cpm:
 import:
   - cred.yaml
   - crosspm.main.yaml
-  
+
 cpm:
  dependencies: no-dependencies.txt
  dependencies-lock: no-dependencies.txt.lock
@@ -87,7 +87,7 @@ cpm:
 crosspm download ^
     --options cl="vc140",arch="x86_64",os="win" ^
     --config=".\crosspm.dependencies.yaml"
-    
+
 crosspm download ^
     --options cl="vc140",arch="x86_64",os="win" ^
     --config=".\crosspm.no-dependencies.yaml"

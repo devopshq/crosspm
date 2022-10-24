@@ -1,0 +1,17 @@
+cpm:
+  dependencies: test3_dependencies.txt
+  dependencies-lock: test4_dependencies.txt.lock
+
+common:
+  server: https://stub/artifactory
+  parser: artifactory
+  type: jfrog-artifactory-aql
+
+parsers:
+  artifactory:
+    path: '{server}/{repo}/{package}.{version}[.tar.gz|.zip]'
+    properties: ''
+
+sources:
+  - repo:
+    - stub

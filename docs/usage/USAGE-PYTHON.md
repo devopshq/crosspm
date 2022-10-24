@@ -65,7 +65,7 @@ NB: version is list
   "osname": "win",
   "package": "libiconv",
   "repo": "libs-cpp-release",
-  "version": ["1", "9", "131", "feature"] 
+  "version": ["1", "9", "131", "feature"]
 }
 """
 
@@ -100,7 +100,7 @@ NB: version is list
   "version": "1.9.131-feature",
 }
 """
-    
+
 ```
 
 ### Logging
@@ -117,4 +117,3 @@ err, crosspm_packages = cpm.run()
 ```
 
 **NOTE**: If you set your logging setting and not suppressing `crosspm`-logging, you will have two logs, one in `stderr`, other in `stdout`
-

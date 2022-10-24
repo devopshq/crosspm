@@ -52,7 +52,7 @@ class Config:
     windows = WINDOWS
 
     def __init__(self, config_file_name='', cmdline='', no_fails=False, deps_lock_file_path='', deps_file_path='',
-                 lock_on_success=False, prefer_local=False, deps_content=None, deps_lock_content=None):
+                 lock_on_success=False, prefer_local=False, deps_content=None, deps_lock_content=None, recursive=None):
         self._log = logging.getLogger('crosspm')
         self._config_path_env = []
         self._sources = []
@@ -73,6 +73,7 @@ class Config:
         self.deps_lock_file_path = ''
         self.lock_on_success = lock_on_success
         self.prefer_local = prefer_local
+        self.recursive = recursive
         self.crosspm_cache_root = ''
         self.deps_content = deps_content
         self.deps_lock_content = deps_lock_content
@@ -550,6 +551,9 @@ class Config:
                 self.deps_lock_file_name = self.deps_file_name
             elif 'dependencies-lock' not in crosspm:
                 self.deps_lock_file_name = self.deps_file_name + ".lock"
+
+        if self.recursive is None:
+            self.recursive = crosspm.get('recursive', False)
 
         if not self.prefer_local:
             self.prefer_local = crosspm.get('prefer-local', False)
