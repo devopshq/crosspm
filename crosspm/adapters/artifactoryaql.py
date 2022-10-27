@@ -127,7 +127,6 @@ class Adapter(BaseAdapter):
         for item in list_or_file_path_alt:
             print(item)
 
-
         for _paths in parser.get_paths(list_or_file_path, source):
 
             # If "parser"-column specified - find only in this parser
