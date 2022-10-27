@@ -2,6 +2,7 @@
 import logging
 import os
 from collections import OrderedDict, defaultdict
+from typing import Optional
 
 from crosspm.helpers.config import CROSSPM_DEPENDENCY_FILENAME, CROSSPM_DEPENDENCY_LOCK_FILENAME, Config  # noqa
 from crosspm.helpers.exceptions import *
@@ -15,10 +16,10 @@ class Command(object):
 
 
 class Downloader(Command):
+
     altsearch = False
     altsearchbranch = ''
-
-    def __init__(self, config, do_load, recursive, altsearch, altsearchbranch):
+    def __init__(self,altsearch, altsearchbranch, config: Config, do_load: bool, recursive: Optional[bool] = None):
         self._log = logging.getLogger('crosspm')
         self._config = config  # type: Config
         self.cache = config.cache
@@ -26,10 +27,11 @@ class Downloader(Command):
         self.common_parser = Parser('common', {}, config)
         self._root_package = Package('<root>', 0, {self._config.name_column: '<root>'}, self, None,
                                      self.common_parser)
-        self.recursive = recursive
+
+        self.recursive = config.recursive if recursive is None else recursive
         if altsearch:
             self.altsearch = altsearch
-            self.altsearchbranch = altsearchbranch
+            self.altsearchbranch = altsearchbranch		
 
         self.do_load = do_load
 
@@ -46,7 +48,7 @@ class Downloader(Command):
         """
         if list_or_file_path is None:
             list_or_file_path = self._config.deps_lock_file_path
-            if not os.path.isfile(list_or_file_path):
+            if not os.path.isfile(list_or_file_path) or self._config.lock_on_success:
                 list_or_file_path = self._config.deps_file_path
 
         _packages = OrderedDict()
@@ -109,7 +111,7 @@ class Downloader(Command):
             else self._config.deps_lock_content
         if depslock_file_path is None:
             depslock_file_path = self._config.deps_lock_file_path
-        if os.path.isfile(depslock_file_path):
+        if os.path.isfile(depslock_file_path) and not self._config.lock_on_success:
             self.search_dependencies(depslock_file_path, deps_content=deps_content)
         else:
             self.search_dependencies(self._config.deps_file_path, deps_content=deps_content)

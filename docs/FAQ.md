@@ -23,7 +23,7 @@ Frequently Asked Questions
 ## Как запретить рекурсивное выкачивание пакетов?
 <a class="mk-toclify" id="cli"></a>
 ### При вызове crosspm в командной строке
-Используйте флаг `--recursive=False` при вызове `crosspm`. **Важно** - у команд `download` и `lock` поведение по умолчанию отличается
+Используйте флаг `--recursive=False` при вызове `crosspm`.
 ```python
 # сделать lock-файл с пакетами только первого уровня, не рекурсивно
 crosspm lock # поведение по умолчанию - только первый уровень
@@ -33,13 +33,13 @@ crosspm lock --recursive False
 crosspm lock --recursive
 crosspm lock --recursive=True
 
-# скачать все дерево пакетов вместе с зависимостями
-crosspm download # поведение по умолчанию - рекурсия
-crosspm download --recursive
-crosspm download --recursive=True
 # скачать без зависимостей, только пакеты указанные в dependencies
+crosspm download # поведение по умолчанию - только первый уровень
 crosspm download --recursive=False
 crosspm download --recursive False
+# скачать все дерево пакетов вместе с зависимостями
+crosspm download --recursive
+crosspm download --recursive=True
 ```
 
 <a class="mk-toclify" id="config"></a>
@@ -215,9 +215,9 @@ crosspm usedby -c config.yaml --dependencies-content "packagename 1.2.* master"
 ```
 
 <a class="mk-toclify" id="creds"></a>
-## Как просто и безопасно передавать учётные данные в рамках crosspm. 
+## Как просто и безопасно передавать учётные данные в рамках crosspm.
 
-Для этого нужно задать переменные в конфигурационном файле. 
+Для этого нужно задать переменные в конфигурационном файле.
 
 Подробнее можно [почитать тут](usage/USAGE-CREDS.md)
 
@@ -236,5 +236,3 @@ set CROSSPM_STDOUT=1
 crosspm download # аналогично --stdout
 ```
 В конфигурационный файл задать этот параметр нельзя, т.к. логирование происходит до прочтения конфигурационного файла.
-
-
