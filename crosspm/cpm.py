@@ -378,7 +378,7 @@ class CrossPM:
         if command_ is Locker:
             do_load = self._config.recursive
 
-        cpm_ = command_(self._config, do_load, self.altsearch, self.altsearch_branch)
+        cpm_ = command_(self.altsearch, self.altsearch_branch, self._config, do_load)
         cpm_.entrypoint()
 
         if self._return_result:
