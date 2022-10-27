@@ -44,6 +44,38 @@ class Adapter(BaseAdapter):
                 list_or_file_path_alt['raw'].remove(element)
         return list_or_file_path_alt
 
+    def artifactory_search(self, _tmp_params, _art_auth_etc, _file_name_pattern,_path_pattern, _path_fixed):
+        _artifactory_server = _tmp_params['server']
+        _search_repo = _tmp_params['repo']
+
+        # Get AQL path pattern, with fixed part path, without artifactory url and repository name
+        _aql_path_pattern = _path_fixed[len(_artifactory_server) + 1 + len(_search_repo) + 1:]
+        if _path_pattern:
+            _aql_path_pattern = _aql_path_pattern + "/" + _path_pattern
+
+        _aql_query_url = '{}/api/search/aql'.format(_artifactory_server)
+        _aql_query_dict = {
+            "repo": {
+                "$eq": _search_repo,
+            },
+            "path": {
+                "$match": _aql_path_pattern,
+            },
+            "name": {
+                "$match": _file_name_pattern,
+            },
+        }
+        # Remove path if is empty string
+        if not _aql_path_pattern:
+            _aql_query_dict.pop('path')
+        query = 'items.find({query_dict}).include("*", "property")'.format(
+            query_dict=json.dumps(_aql_query_dict))
+        session.auth = _art_auth_etc['auth']
+        response = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
+        response.raise_for_status()
+
+        return response
+
     def get_packages(self, source, parser, downloader, list_or_file_path, property_validate=True):
         """
 
@@ -121,6 +153,8 @@ class Adapter(BaseAdapter):
             for _sub_paths in _paths['paths']:
                 _tmp_params = dict(_paths['params'])
                 self._log.info('repo: {}'.format(_sub_paths['repo']))
+
+#обработка конкретного пути
                 for _path in _sub_paths['paths']:
                     _tmp_params['repo'] = _sub_paths['repo']
                     # ------ START ----
@@ -147,39 +181,12 @@ class Adapter(BaseAdapter):
                         # ------ END  ----
                     _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
                     try:
-                        _artifactory_server = _tmp_params['server']
-                        _search_repo = _tmp_params['repo']
+                        searchresults = self.artifactory_search( _tmp_params, _art_auth_etc, _file_name_pattern,_path_pattern, _path_fixed)
 
-                        # Get AQL path pattern, with fixed part path, without artifactory url and repository name
-                        _aql_path_pattern = _path_fixed[len(_artifactory_server) + 1 + len(_search_repo) + 1:]
-                        if _path_pattern:
-                            _aql_path_pattern = _aql_path_pattern + "/" + _path_pattern
-
-                        _aql_query_url = '{}/api/search/aql'.format(_artifactory_server)
-                        _aql_query_dict = {
-                            "repo": {
-                                "$eq": _search_repo,
-                            },
-                            "path": {
-                                "$match": _aql_path_pattern,
-                            },
-                            "name": {
-                                "$match": _file_name_pattern,
-                            },
-                        }
-                        # Remove path if is empty string
-                        if not _aql_path_pattern:
-                            _aql_query_dict.pop('path')
-                        query = 'items.find({query_dict}).include("*", "property")'.format(
-                            query_dict=json.dumps(_aql_query_dict))
-                        session.auth = _art_auth_etc['auth']
-                        r = session.post(_aql_query_url, data=query, verify=_art_auth_etc['verify'])
-                        r.raise_for_status()
-
-                        _found_paths = r.json()
+                        _found_paths = searchresults.json()
                         for _found in _found_paths['results']:
                             _repo_path = "{artifactory}/{repo}/{path}/{file_name}".format(
-                                artifactory=_artifactory_server,
+                                artifactory=_tmp_params['server'],
                                 repo=_found['repo'],
                                 path=_found['path'],
                                 file_name=_found['name'])
