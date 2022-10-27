@@ -31,6 +31,19 @@ session = requests.Session()
 
 
 class Adapter(BaseAdapter):
+
+    def get_alt_paths_list(self, list_or_file_path, downloader):
+        list_or_file_path_alt = copy.deepcopy(list_or_file_path)
+
+        for element in list_or_file_path_alt["raw"]:
+            if element['altsearch'] and element['altsearch'] == '+':
+                element['branch'] = downloader.altsearchbranch
+
+        for element in list_or_file_path['raw']:
+            if not (element['altsearch'] and element['altsearch'] == '+'):
+                list_or_file_path_alt['raw'].remove(element)
+        return list_or_file_path_alt
+
     def get_packages(self, source, parser, downloader, list_or_file_path, property_validate=True):
         """
 
@@ -77,6 +90,9 @@ class Adapter(BaseAdapter):
         _packed_exist = False
         _packed_cache_params = None
         self._log.info('parser: {}'.format(parser._name))
+
+        list_or_file_path_alt = self.get_alt_paths_list(list_or_file_path, downloader)
+
         for _paths in parser.get_paths(list_or_file_path, source):
 
             # If "parser"-column specified - find only in this parser
