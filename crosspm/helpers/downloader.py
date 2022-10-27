@@ -19,6 +19,7 @@ class Downloader(Command):
 
     altsearch = False
     altsearchbranch = ''
+
     def __init__(self, altsearch, altsearchbranch, config: Config, do_load: bool, recursive: Optional[bool] = None):
         self._log = logging.getLogger('crosspm')
         self._config = config  # type: Config
@@ -31,7 +32,7 @@ class Downloader(Command):
         self.recursive = config.recursive if recursive is None else recursive
         if altsearch:
             self.altsearch = altsearch
-            self.altsearchbranch = altsearchbranch		
+            self.altsearchbranch = altsearchbranch
 
         self.do_load = do_load
 
