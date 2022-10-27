@@ -44,7 +44,7 @@ class Adapter(BaseAdapter):
                 list_or_file_path_alt['raw'].remove(element)
         return list_or_file_path_alt
 
-    def artifactory_search(self, _tmp_params, _art_auth_etc, _file_name_pattern,_path_pattern, _path_fixed):
+    def artifactory_search(self, _tmp_params, _art_auth_etc, _file_name_pattern, _path_pattern, _path_fixed):
         _artifactory_server = _tmp_params['server']
         _search_repo = _tmp_params['repo']
 
@@ -78,7 +78,6 @@ class Adapter(BaseAdapter):
 
     def get_packages(self, source, parser, downloader, list_or_file_path, property_validate=True):
         """
-
         :param source:
         :param parser:
         :param downloader:
@@ -154,7 +153,7 @@ class Adapter(BaseAdapter):
                 _tmp_params = dict(_paths['params'])
                 self._log.info('repo: {}'.format(_sub_paths['repo']))
 
-#обработка конкретного пути
+# обработка конкретного пути
                 for _path in _sub_paths['paths']:
                     _tmp_params['repo'] = _sub_paths['repo']
                     # ------ START ----
@@ -180,8 +179,11 @@ class Adapter(BaseAdapter):
                         break  # break connect to artifactory
                         # ------ END  ----
                     _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
+
+# непосредственно, поиск в артифактории
                     try:
-                        searchresults = self.artifactory_search( _tmp_params, _art_auth_etc, _file_name_pattern,_path_pattern, _path_fixed)
+                        searchresults = self.artifactory_search(_tmp_params, _art_auth_etc,
+                                                                _file_name_pattern, _path_pattern, _path_fixed)
 
                         _found_paths = searchresults.json()
                         for _found in _found_paths['results']:
