@@ -37,7 +37,7 @@ jobs:
       - name: Run Tests on Python ${{ matrix.python-version }}
         run: |
           python -mflake8 crosspm
-          python -mcoverage run -m py.test tests
+          python -mcoverage run -m pytest tests
   build-artifact:
     uses: ./.github/workflows/build.yml
     needs: tests
