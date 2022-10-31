@@ -122,13 +122,13 @@ class Adapter(BaseAdapter):
         _packed_cache_params = None
         self._log.info('parser: {}'.format(parser._name))
 
-        list_or_file_path_alt = self.get_alt_paths_list(list_or_file_path, downloader)
-# временный цикл, чтобы тесты не ругались
-        for item in list_or_file_path_alt:
-            print(item)
+        if downloader.altsearch:
+            list_or_file_path_alt = self.get_alt_paths_list(list_or_file_path, downloader)
+            altpaths = parser.get_paths(list_or_file_path_alt, source)
+
 
         for _paths in parser.get_paths(list_or_file_path, source):
-
+            _altpath = []
             # If "parser"-column specified - find only in this parser
             parser_names = _paths['params'].get('parser')
             if parser_names and parser_names != "*":
@@ -143,6 +143,13 @@ class Adapter(BaseAdapter):
             _params_found_raw = {}
             last_error = ''
             _pkg_name = _paths['params'][_pkg_name_column]
+# выбор нужного альтернативного пути
+            if downloader.altsearch:
+                for item in altpaths:
+                    if item['params'][_pkg_name_column] == _pkg_name:
+                        _altpath = item
+                        break
+
             if _pkg_name != _pkg_name_old:
                 _pkg_name_old = _pkg_name
                 self._log.info(
