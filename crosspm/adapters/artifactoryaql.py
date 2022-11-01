@@ -77,100 +77,111 @@ class Adapter(BaseAdapter):
         return response
 
 
-    def searchpackage(self, downloader, _sub_paths, parser, _paths, _art_auth_etc, property_validate):
-        for _path in _sub_paths['paths']:
-            self._tmp_params['repo'] = _sub_paths['repo']
-            # ------ START ----
-            # HACK for prefer-local
-            if self._config.prefer_local and not parser.has_rule('properties'):
-                params = parser.get_params_with_extra('path', _paths['params'])
-                for param in params:
-                    _repo_path = ArtifactoryPath(_path, **_art_auth_etc)
-                    param['repo'] = self._tmp_params['repo']
-                    param['filename'] = str(_repo_path.name)
-                    # downloader.cache.path_any doesn't work with wildcards.
-                    # without unnecessary checks search will be faster
-                    if '*' in param['filename']:
-                        self._packed_exist = False
-                    else:
-                        _path_packed = downloader.cache.path_packed(None, param)
-                        self._packed_exist = os.path.isfile(_path_packed)
-                    if self._packed_exist:
-                        self._log.info("Skip searching, use package cache in path {}".format(_path_packed))
-                        _packed_cache_params = param
-                        break  # break check local cache
-            if self._packed_exist:
-                break  # break connect to artifactory
-                # ------ END  ----
-            _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
+    def searchpackage(self, downloader, parser, _paths, _art_auth_etc, property_validate):
+        packagefound = False
+        for _sub_paths in _paths['paths']:
+            self._tmp_params = dict(_paths['params'])
+            self._log.info('repo: {}'.format(_sub_paths['repo']))
 
-            # непосредственно, поиск в артифактории
-            try:
-                searchresults = self.artifactory_search(self._tmp_params, _art_auth_etc,
-                                                        _file_name_pattern, _path_pattern, _path_fixed)
-
-                _found_paths = searchresults.json()
-                for _found in _found_paths['results']:
-                    _repo_path = "{artifactory}/{repo}/{path}/{file_name}".format(
-                        artifactory=self._tmp_params['server'],
-                        repo=_found['repo'],
-                        path=_found['path'],
-                        file_name=_found['name'])
-                    _repo_path = ArtifactoryPath(_repo_path, **_art_auth_etc)
-
-                    _mark = 'found'
-                    _matched, _params, _params_raw = parser.validate_path(str(_repo_path), self._tmp_params)
-                    if _matched:
-                        self._params_found[_repo_path] = {k: v for k, v in _params.items()}
-                        self._params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
-                        _mark = 'match'
-
-                        # Check if it's `root` packages or from `lock` file
-                        # ALSO, if from `lock` and have * in name - validate with property
-                        property_validate_tmp = property_validate or '*' in _file_name_pattern
-                        property_found = 'properties' in _found.keys()
-                        # If have not rule in config, skip this part
-                        if parser.has_rule('properties') and property_validate_tmp and property_found:
-                            _found_properties = {x['key']: x.get('value', '') for x in _found['properties']}
-                            _valid, _params = parser.validate(_found_properties, 'properties', self._tmp_params,
-                                                              return_params=True)
+            for _path in _sub_paths['paths']:
+                self._tmp_params['repo'] = _sub_paths['repo']
+                # ------ START ----
+                # HACK for prefer-local
+                if self._config.prefer_local and not parser.has_rule('properties'):
+                    params = parser.get_params_with_extra('path', _paths['params'])
+                    for param in params:
+                        _repo_path = ArtifactoryPath(_path, **_art_auth_etc)
+                        param['repo'] = self._tmp_params['repo']
+                        param['filename'] = str(_repo_path.name)
+                        # downloader.cache.path_any doesn't work with wildcards.
+                        # without unnecessary checks search will be faster
+                        if '*' in param['filename']:
+                            self._packed_exist = False
                         else:
-                            _valid, _params = True, {}
-                        if _valid:
-                            _mark = 'valid'
-                            self._packages += [_repo_path]
-                            self._params_found[_repo_path].update({k: v for k, v in _params.items()})
-                            self._params_found[_repo_path]['filename'] = str(_repo_path.name)
-                            self._params_found[_repo_path]['parser'] = parser._name
-                    self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
-            except RuntimeError as e:
+                            _path_packed = downloader.cache.path_packed(None, param)
+                            self._packed_exist = os.path.isfile(_path_packed)
+                        if self._packed_exist:
+                            self._log.info("Skip searching, use package cache in path {}".format(_path_packed))
+                            _packed_cache_params = param
+                            break  # break check local cache
+                if self._packed_exist:
+                    break  # break connect to artifactory
+                    # ------ END  ----
+                _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
+
+                # непосредственно, поиск в артифактории
                 try:
-                    err = json.loads(e.args[0])
-                except Exception:
-                    err = {}
-                if isinstance(err, dict):
-                    # Check errors
-                    # :e.args[0]: {
-                    #                 "errors" : [ {
-                    #                     "status" : 404,
-                    #                     "message" : "Not Found"
-                    #                  } ]
-                    #             }
-                    for error in err.get('errors', []):
-                        err_status = error.get('status', -1)
-                        err_msg = error.get('message', '')
-                        if err_status == 401:
-                            msg = 'Authentication error[{}]{}'.format(err_status,
-                                                                      (': {}'.format(
-                                                                          err_msg)) if err_msg else '')
-                        elif err_status == 404:
-                            msg = last_error
-                        else:
-                            msg = 'Error[{}]{}'.format(err_status,
-                                                       (': {}'.format(err_msg)) if err_msg else '')
-                        if last_error != msg:
-                            self._log.error(msg)
-                        last_error = msg
+                    searchresults = self.artifactory_search(self._tmp_params, _art_auth_etc,
+                                                            _file_name_pattern, _path_pattern, _path_fixed)
+
+                    _found_paths = searchresults.json()
+                    if _found_paths['results'] != []:
+                        packagefound = True
+                    for _found in _found_paths['results']:
+                        _repo_path = "{artifactory}/{repo}/{path}/{file_name}".format(
+                            artifactory=self._tmp_params['server'],
+                            repo=_found['repo'],
+                            path=_found['path'],
+                            file_name=_found['name'])
+                        _repo_path = ArtifactoryPath(_repo_path, **_art_auth_etc)
+
+                        _mark = 'found'
+                        _matched, _params, _params_raw = parser.validate_path(str(_repo_path), self._tmp_params)
+                        if _matched:
+                            self._params_found[_repo_path] = {k: v for k, v in _params.items()}
+                            self._params_found_raw[_repo_path] = {k: v for k, v in _params_raw.items()}
+                            _mark = 'match'
+
+                            # Check if it's `root` packages or from `lock` file
+                            # ALSO, if from `lock` and have * in name - validate with property
+                            property_validate_tmp = property_validate or '*' in _file_name_pattern
+                            property_found = 'properties' in _found.keys()
+                            # If have not rule in config, skip this part
+                            if parser.has_rule('properties') and property_validate_tmp and property_found:
+                                _found_properties = {x['key']: x.get('value', '') for x in _found['properties']}
+                                _valid, _params = parser.validate(_found_properties, 'properties', self._tmp_params,
+                                                                  return_params=True)
+                            else:
+                                _valid, _params = True, {}
+                            if _valid:
+                                _mark = 'valid'
+                                self._packages += [_repo_path]
+                                self._params_found[_repo_path].update({k: v for k, v in _params.items()})
+                                self._params_found[_repo_path]['filename'] = str(_repo_path.name)
+                                self._params_found[_repo_path]['parser'] = parser._name
+                        self._log.debug('  {}: {}'.format(_mark, str(_repo_path)))
+                except RuntimeError as e:
+                    try:
+                        err = json.loads(e.args[0])
+                    except Exception:
+                        err = {}
+                    if isinstance(err, dict):
+                        # Check errors
+                        # :e.args[0]: {
+                        #                 "errors" : [ {
+                        #                     "status" : 404,
+                        #                     "message" : "Not Found"
+                        #                  } ]
+                        #             }
+                        for error in err.get('errors', []):
+                            err_status = error.get('status', -1)
+                            err_msg = error.get('message', '')
+                            if err_status == 401:
+                                msg = 'Authentication error[{}]{}'.format(err_status,
+                                                                          (': {}'.format(
+                                                                              err_msg)) if err_msg else '')
+                            elif err_status == 404:
+                                msg = last_error
+                            else:
+                                msg = 'Error[{}]{}'.format(err_status,
+                                                           (': {}'.format(err_msg)) if err_msg else '')
+                            if last_error != msg:
+                                self._log.error(msg)
+                            last_error = msg
+        return packagefound
+
+
+
 
     def get_packages(self, source, parser, downloader, list_or_file_path, property_validate=True):
         """
@@ -240,6 +251,7 @@ class Adapter(BaseAdapter):
             last_error = ''
             _pkg_name = _paths['params'][_pkg_name_column]
 # выбор нужного альтернативного пути
+#_altpath - альтернатива _paths
             if downloader.altsearch:
                 for item in altpaths:
                     if item['params'][_pkg_name_column] == _pkg_name:
@@ -255,12 +267,19 @@ class Adapter(BaseAdapter):
                                      }
                                     )
                 )
-            for _sub_paths in _paths['paths']:
-                self._tmp_params = dict(_paths['params'])
-                self._log.info('repo: {}'.format(_sub_paths['repo']))
-
 # обработка конкретного пути
-            self.searchpackage(downloader, _sub_paths, parser, _paths, _art_auth_etc, property_validate)
+
+            if downloader.altsearch:
+                if self.searchpackage(downloader, parser, _altpath, _art_auth_etc, property_validate):
+                    print('FOUND ALTERNATIVE PACKAGE: {}!'.format(_pkg_name))
+                    break
+                elif self.searchpackage(downloader, parser, _paths, _art_auth_etc, property_validate):
+                    print ('FOUND PACKAGE{}!'.format(_pkg_name))
+                    break
+                else:
+                    print('NOT FOUND!!')
+            else:
+                isfound = self.searchpackage(downloader, parser, _paths, _art_auth_etc, property_validate)
 
             _package = None
 
@@ -391,7 +410,6 @@ class Adapter(BaseAdapter):
 
     def get_usedby(self, source, parser, downloader, list_or_file_path, property_validate=True):
         """
-
         :param source:
         :param parser:
         :param downloader:
