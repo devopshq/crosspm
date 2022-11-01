@@ -76,7 +76,6 @@ class Adapter(BaseAdapter):
 
         return response
 
-
     def searchpackage(self, downloader, parser, _paths, _art_auth_etc, property_validate):
         packagefound = False
         for _sub_paths in _paths['paths']:
@@ -180,9 +179,6 @@ class Adapter(BaseAdapter):
                             last_error = msg
         return packagefound
 
-
-
-
     def get_packages(self, source, parser, downloader, list_or_file_path, property_validate=True):
         """
         :param source:
@@ -233,7 +229,6 @@ class Adapter(BaseAdapter):
             list_or_file_path_alt = self.get_alt_paths_list(list_or_file_path, downloader)
             altpaths = parser.get_paths(list_or_file_path_alt, source)
 
-
         for _paths in parser.get_paths(list_or_file_path, source):
             _altpath = []
             # If "parser"-column specified - find only in this parser
@@ -248,7 +243,7 @@ class Adapter(BaseAdapter):
             self._packages = []
             self._params_found = {}
             self._params_found_raw = {}
-            last_error = ''
+            self.last_error = ''
             _pkg_name = _paths['params'][_pkg_name_column]
 # выбор нужного альтернативного пути
 #_altpath - альтернатива _paths
@@ -274,12 +269,12 @@ class Adapter(BaseAdapter):
                     print('FOUND ALTERNATIVE PACKAGE: {}!'.format(_pkg_name))
                     break
                 elif self.searchpackage(downloader, parser, _paths, _art_auth_etc, property_validate):
-                    print ('FOUND PACKAGE{}!'.format(_pkg_name))
+                    print('FOUND PACKAGE{}!'.format(_pkg_name))
                     break
                 else:
                     print('NOT FOUND!!')
             else:
-                isfound = self.searchpackage(downloader, parser, _paths, _art_auth_etc, property_validate)
+                self.searchpackage(downloader, parser, _paths, _art_auth_etc, property_validate)
 
             _package = None
 
@@ -449,7 +444,7 @@ class Adapter(BaseAdapter):
             self._packages = []
             self._params_found = {}
             self._params_found_raw = {}
-            last_error = ''
+            self.last_error = ''
             _pkg_name = _paths['params'][_pkg_name_col]
             if _pkg_name != _pkg_name_old:
                 _pkg_name_old = _pkg_name
@@ -539,13 +534,13 @@ class Adapter(BaseAdapter):
                                                                           (': {}'.format(
                                                                               err_msg)) if err_msg else '')
                             elif err_status == 404:
-                                msg = last_error
+                                msg = self.last_error
                             else:
                                 msg = 'Error[{}]{}'.format(err_status,
                                                            (': {}'.format(err_msg)) if err_msg else '')
-                            if last_error != msg:
+                            if self.last_error != msg:
                                 self._log.error(msg)
-                            last_error = msg
+                            self.last_error = msg
 
         return _packages_found
 
