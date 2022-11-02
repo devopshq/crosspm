@@ -44,9 +44,9 @@ class Adapter(BaseAdapter):
                 list_or_file_path_alt['raw'].remove(element)
         return list_or_file_path_alt
 
-    def artifactory_search(self, _tmp_params, _art_auth_etc, _file_name_pattern, _path_pattern, _path_fixed):
-        _artifactory_server = _tmp_params['server']
-        _search_repo = _tmp_params['repo']
+    def artifactory_search(self, _art_auth_etc, _file_name_pattern, _path_pattern, _path_fixed):
+        _artifactory_server = self._tmp_params['server']
+        _search_repo = self._tmp_params['repo']
 
         # Get AQL path pattern, with fixed part path, without artifactory url and repository name
         _aql_path_pattern = _path_fixed[len(_artifactory_server) + 1 + len(_search_repo) + 1:]
@@ -110,7 +110,7 @@ class Adapter(BaseAdapter):
 
                 # непосредственно, поиск в артифактории
                 try:
-                    searchresults = self.artifactory_search(self._tmp_params, _art_auth_etc,
+                    searchresults = self.artifactory_search(_art_auth_etc,
                                                             _file_name_pattern, _path_pattern, _path_fixed)
 
                     _found_paths = searchresults.json()
@@ -170,13 +170,13 @@ class Adapter(BaseAdapter):
                                                                           (': {}'.format(
                                                                               err_msg)) if err_msg else '')
                             elif err_status == 404:
-                                msg = last_error
+                                msg = self.last_error
                             else:
                                 msg = 'Error[{}]{}'.format(err_status,
                                                            (': {}'.format(err_msg)) if err_msg else '')
-                            if last_error != msg:
+                            if self.last_error != msg:
                                 self._log.error(msg)
-                            last_error = msg
+                            self.last_error = msg
         return packagefound
 
     def get_packages(self, source, parser, downloader, list_or_file_path, property_validate=True):
@@ -246,7 +246,7 @@ class Adapter(BaseAdapter):
             self.last_error = ''
             _pkg_name = _paths['params'][_pkg_name_column]
 # выбор нужного альтернативного пути
-#_altpath - альтернатива _paths
+# _altpath - альтернатива _paths
             if downloader.altsearch:
                 for item in altpaths:
                     if item['params'][_pkg_name_column] == _pkg_name:
@@ -264,18 +264,15 @@ class Adapter(BaseAdapter):
                 )
 # обработка конкретного пути
 
-            if downloader.altsearch:
+            if downloader.altsearch and _altpath != [] and _altpath['params'][_pkg_name_column] == _pkg_name:
                 if self.searchpackage(downloader, parser, _altpath, _art_auth_etc, property_validate):
                     print('FOUND ALTERNATIVE PACKAGE: {}!'.format(_pkg_name))
-                    break
                 elif self.searchpackage(downloader, parser, _paths, _art_auth_etc, property_validate):
                     print('FOUND PACKAGE{}!'.format(_pkg_name))
-                    break
                 else:
                     print('NOT FOUND!!')
             else:
                 self.searchpackage(downloader, parser, _paths, _art_auth_etc, property_validate)
-
             _package = None
 
             # HACK for prefer-local
