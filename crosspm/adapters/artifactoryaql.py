@@ -101,7 +101,7 @@ class Adapter(BaseAdapter):
                             self._packed_exist = os.path.isfile(_path_packed)
                         if self._packed_exist:
                             self._log.info("Skip searching, use package cache in path {}".format(_path_packed))
-                            _packed_cache_params = param
+                            self._packed_cache_params = param
                             break  # break check local cache
                 if self._packed_exist:
                     break  # break connect to artifactory
@@ -222,7 +222,7 @@ class Adapter(BaseAdapter):
         _packages_found = OrderedDict()
         _pkg_name_old = ""
         self._packed_exist = False
-        _packed_cache_params = None
+        self._packed_cache_params = None
         self._log.info('parser: {}'.format(parser._name))
 
         if downloader.altsearch:
@@ -278,12 +278,12 @@ class Adapter(BaseAdapter):
             # HACK for prefer-local
             if self._packed_exist:
                 # HACK - Normalize params for cached archive
-                for key, value in _packed_cache_params.items():
+                for key, value in self._packed_cache_params.items():
                     if isinstance(value, list):
                         value = ['' if x is None else x for x in value]
-                        _packed_cache_params[key] = value
+                        self._packed_cache_params[key] = value
                 _package = Package(_pkg_name, None, _paths['params'], downloader, self, parser,
-                                   _packed_cache_params, list_or_file_path['raw'], {}, in_cache=True)
+                                   self._packed_cache_params, list_or_file_path['raw'], {}, in_cache=True)
             # END HACK
             if self._packages:
                 _tmp = copy.deepcopy(self._params_found)
