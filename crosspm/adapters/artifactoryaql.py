@@ -245,8 +245,7 @@ class Adapter(BaseAdapter):
             self._params_found_raw = {}
             self.last_error = ''
             _pkg_name = _paths['params'][_pkg_name_column]
-# выбор нужного альтернативного пути
-# _altpath - альтернатива _paths
+# _altpath is alternative to _paths
             if downloader.altsearch:
                 for item in altpaths:
                     if item['params'][_pkg_name_column] == _pkg_name:
@@ -262,15 +261,14 @@ class Adapter(BaseAdapter):
                                      }
                                     )
                 )
-# обработка конкретного пути
 
             if downloader.altsearch and _altpath != [] and _altpath['params'][_pkg_name_column] == _pkg_name:
                 if self.searchpackage(downloader, parser, _altpath, _art_auth_etc, property_validate):
                     print('FOUND ALTERNATIVE PACKAGE: {}!'.format(_pkg_name))
                 elif self.searchpackage(downloader, parser, _paths, _art_auth_etc, property_validate):
-                    print('FOUND PACKAGE{}!'.format(_pkg_name))
+                    print('FOUND PACKAGE INSTEAD OF ALTERNATIVE: {}!'.format(_pkg_name))
                 else:
-                    print('NOT FOUND!!')
+                    print('{} NOT FOUND!!'.format(_pkg_name))
             else:
                 self.searchpackage(downloader, parser, _paths, _art_auth_etc, property_validate)
             _package = None
