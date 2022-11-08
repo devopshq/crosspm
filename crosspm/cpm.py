@@ -34,7 +34,7 @@ Options:
     --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
     --prefer-local                       Do not search package if exist in cache
     --stdout                             Print info and debug message to STDOUT, error to STDERR. Otherwise - all messages to STDERR
-    --altsearch=VALUE                    First search artifact in current branch repo then if not found in branch from config
+    --altsearch=VALUE                    First search artifact in VALUE branch then if it's not found in branch from config
 
 """  # noqa
 
