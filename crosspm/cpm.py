@@ -34,6 +34,7 @@ Options:
     --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
     --prefer-local                       Do not search package if exist in cache
     --stdout                             Print info and debug message to STDOUT, error to STDERR. Otherwise - all messages to STDERR
+    --altsearch-branch=VALUE             First search artifact in VALUE branch then if it's not found in branch from config
 
 """  # noqa
 
@@ -86,6 +87,8 @@ def do_run(func):
 
 class CrossPM:
     _ready = False
+    altsearch = False
+    altsearch_branch = ''
 
     def __init__(self, args=None, throw_exceptions=None, return_result=False):
         self._config: Optional[Config] = None
@@ -124,6 +127,11 @@ class CrossPM:
                 self._args['--recursive'] = False
             else:
                 raise Exception("Unknown value to --recursive: {}".format(recursive_str))
+
+        if self._args['--altsearch-branch']:
+            self.altsearch = True
+            self.altsearch_branch = self._args['--altsearch-branch']
+            self._log.info("Alternative search is on. Priority searching in [%s] branch", self.altsearch_branch)
 
         if isinstance(self._args, str):
             if self._throw_exceptions:
@@ -337,6 +345,7 @@ class CrossPM:
                 'out_format': ['--out-format', ''],
                 'output': ['--output', ''],
                 'output_template': ['--output-template', ''],
+                'altsearch': ['--altsearch-branch', ''],
                 # 'out_prefix': ['--out-prefix', ''],
                 # 'depslock_path': ['--depslock-path', ''],
             }
@@ -369,7 +378,7 @@ class CrossPM:
         if command_ is Locker:
             do_load = self._config.recursive
 
-        cpm_ = command_(self._config, do_load)
+        cpm_ = command_(self.altsearch, self.altsearch_branch, self._config, do_load)
         cpm_.entrypoint()
 
         if self._return_result:

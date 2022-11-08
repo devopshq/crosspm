@@ -9,7 +9,7 @@ from crosspm.helpers.config import Config
 class Locker(Downloader):
     def __init__(self, config: Config, do_load: bool, recursive: Optional[bool] = None):
         # TODO: revise logic to allow recursive search without downloading
-        super(Locker, self).__init__(config, do_load, recursive)
+        super(Locker, self).__init__(self.altsearch, self.altsearchbranch, config, do_load, recursive)
 
     def lock_packages(self, packages: Optional[Dict[str, Package]] = None):
         """
