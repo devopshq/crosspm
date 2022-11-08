@@ -34,7 +34,7 @@ Options:
     --recursive=VALUE                    Process all packages recursively to find and lock all dependencies
     --prefer-local                       Do not search package if exist in cache
     --stdout                             Print info and debug message to STDOUT, error to STDERR. Otherwise - all messages to STDERR
-    --altsearch=VALUE                    First search artifact in VALUE branch then if it's not found in branch from config
+    --altsearch-branch=VALUE             First search artifact in VALUE branch then if it's not found in branch from config
 
 """  # noqa
 
@@ -128,9 +128,9 @@ class CrossPM:
             else:
                 raise Exception("Unknown value to --recursive: {}".format(recursive_str))
 
-        if self._args['--altsearch']:
+        if self._args['--altsearch-branch']:
             self.altsearch = True
-            self.altsearch_branch = self._args['--altsearch']
+            self.altsearch_branch = self._args['--altsearch-branch']
             self._log.info("Alternative search is on. Priority searching in [%s] branch", self.altsearch_branch)
 
         if isinstance(self._args, str):
@@ -345,7 +345,7 @@ class CrossPM:
                 'out_format': ['--out-format', ''],
                 'output': ['--output', ''],
                 'output_template': ['--output-template', ''],
-                'altsearch': ['--altsearch', ''],
+                'altsearch': ['--altsearch-branch', ''],
                 # 'out_prefix': ['--out-prefix', ''],
                 # 'depslock_path': ['--depslock-path', ''],
             }
