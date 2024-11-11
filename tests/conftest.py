@@ -6,6 +6,12 @@ from crosspm.helpers.output import Output
 from crosspm.helpers.package import Package
 
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "artifactoryaql: testing artifactoryaql"
+    )
+
+
 @pytest.fixture(scope="function")
 def package():
     params = {'arch': 'x86', 'osname': 'win', 'package': 'package'}
