@@ -69,7 +69,6 @@ class Adapter(BaseAdapter):
         _packages_found = OrderedDict()
         _pkg_name_old = ""
         _packed_exist = False
-        _packed_cache_params = None
         self._log.info('parser: {}'.format(parser._name))
         for _paths in parser.get_paths(list_or_file_path, source):
 
@@ -118,11 +117,8 @@ class Adapter(BaseAdapter):
                                 _packed_exist = os.path.isfile(_path_packed)
                             if _packed_exist:
                                 self._log.info("Skip searching, use package cache in path {}".format(_path_packed))
-                                _packed_cache_params = param
                                 break  # break check local cache
-                    if _packed_exist:
-                        break  # break connect to artifactory
-                        # ------ END  ----
+                    # ------ END  ----
                     _path_fixed, _path_pattern, _file_name_pattern = parser.split_fixed_pattern_with_file_name(_path)
                     try:
                         _artifactory_server = _tmp_params['server']
@@ -218,17 +214,6 @@ class Adapter(BaseAdapter):
                                 last_error = msg
 
             _package = None
-
-            # HACK for prefer-local
-            if _packed_exist:
-                # HACK - Normalize params for cached archive
-                for key, value in _packed_cache_params.items():
-                    if isinstance(value, list):
-                        value = ['' if x is None else x for x in value]
-                        _packed_cache_params[key] = value
-                _package = Package(_pkg_name, None, _paths['params'], downloader, self, parser,
-                                   _packed_cache_params, list_or_file_path['raw'], {}, in_cache=True)
-            # END HACK
             if _packages:
                 _tmp = copy.deepcopy(_params_found)
                 _packages = parser.filter_one(_packages, _paths['params'], _tmp)
@@ -272,10 +257,10 @@ class Adapter(BaseAdapter):
             if _added and (_package is not None):
                 if downloader.do_load:
                     _package.download()
-                    _deps_file = _package.get_file(self._config.deps_lock_file_name)
-                    if not _deps_file:
-                        _deps_file = _package.get_file(CROSSPM_DEPENDENCY_LOCK_FILENAME)
                     if downloader.recursive:
+                        _deps_file = _package.get_file(self._config.deps_lock_file_name)
+                        if not _deps_file:
+                            _deps_file = _package.get_file(CROSSPM_DEPENDENCY_LOCK_FILENAME)
                         if _deps_file:
                             _package.find_dependencies(_deps_file, property_validate=False)
                         elif self._config.deps_file_name:
